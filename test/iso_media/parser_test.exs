@@ -53,4 +53,20 @@ defmodule ISOMedia.ParserTest do
     assert box.uuid == uuid
     assert box.data == <<1, 2, 3>>
   end
+
+  test "unknown box stays a leaf without :heuristic" do
+    inner = <<8::32, "free">>
+    bin = <<8 + byte_size(inner)::32, "XBOX", inner::binary>>
+    assert {:ok, [box]} = Parser.parse(bin)
+    assert box.data == inner
+    assert box.children == []
+  end
+
+  test "unknown box recurses with :heuristic enabled" do
+    inner = <<8::32, "free">>
+    bin = <<8 + byte_size(inner)::32, "XBOX", inner::binary>>
+    assert {:ok, [box]} = Parser.parse(bin, heuristic: true)
+    assert box.data == nil
+    assert [%{type: "free"}] = box.children
+  end
 end

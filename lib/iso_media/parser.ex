@@ -56,5 +56,8 @@ defmodule ISOMedia.Parser do
   defp take_uuid("uuid", <<uuid::binary-size(16), payload::binary>>), do: {uuid, payload}
   defp take_uuid(_type, payload), do: {nil, payload}
 
-  defp container?(type, _payload, _opts), do: Registry.container?(type)
+  defp container?(type, payload, opts) do
+    Registry.container?(type) or
+      (Keyword.get(opts, :heuristic, false) and Registry.looks_like_boxes?(payload))
+  end
 end
