@@ -5,19 +5,22 @@ defmodule ISOMedia.Boxes.Handler do
   Layout (FullBox): pre_defined(32) · handler_type(4) · reserved(32)x3 ·
   name (UTF-8, NUL-terminated, to end of box).
 
-  `name` is exposed without its trailing NUL; the original terminator is
-  reproduced on encode.
+  `name` is exposed as the stripped name (the bytes before the first NUL),
+  making it convenient to read or edit. `name_suffix` preserves the original
+  terminator and any trailing bytes (everything from the first NUL onward, or
+  empty when there is no NUL) so that encode reproduces the input byte-for-byte.
   """
 
   alias ISOMedia.{Box, FullBox}
 
-  defstruct [:version, :flags, :handler_type, :name]
+  defstruct [:version, :flags, :handler_type, :name, :name_suffix]
 
   @type t :: %__MODULE__{
           version: non_neg_integer(),
           flags: <<_::24>>,
           handler_type: String.t(),
-          name: String.t()
+          name: String.t(),
+          name_suffix: binary()
         }
 
   @doc "Decode an `hdlr` box into a `%Handler{}`."
@@ -27,25 +30,25 @@ defmodule ISOMedia.Boxes.Handler do
     <<_pre_defined::32, handler_type::binary-size(4), _reserved::binary-size(12), name_field::binary>> =
       body
 
+    {name, name_suffix} =
+      case :binary.split(name_field, <<0>>) do
+        [name, tail] -> {name, <<0, tail::binary>>}
+        [name] -> {name, <<>>}
+      end
+
     %__MODULE__{
       version: version,
       flags: flags,
       handler_type: handler_type,
-      name: strip_nul(name_field)
+      name: name,
+      name_suffix: name_suffix
     }
   end
 
   @doc "Encode a `%Handler{}` back into an `hdlr` box."
   def encode(%__MODULE__{} = h) do
-    body = [<<0::32>>, h.handler_type, <<0::32, 0::32, 0::32>>, h.name, <<0>>]
+    body = [<<0::32>>, h.handler_type, <<0::32, 0::32, 0::32>>, h.name, h.name_suffix]
     data = IO.iodata_to_binary(FullBox.encode(h.version, h.flags, body))
     %Box{type: "hdlr", data: data}
-  end
-
-  defp strip_nul(bin) do
-    case :binary.split(bin, <<0>>) do
-      [name | _] -> name
-      [] -> ""
-    end
   end
 end

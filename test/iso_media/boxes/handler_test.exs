@@ -17,4 +17,17 @@ defmodule ISOMedia.Boxes.HandlerTest do
     box = %Box{type: "hdlr", data: @data}
     assert Handler.encode(Handler.decode(box)) == box
   end
+
+  test "round-trips a name field with no trailing NUL" do
+    data = <<0, 0, 0, 0, 0::32, "vide", 0::32, 0::32, 0::32, "VideoHandler">>
+    box = %Box{type: "hdlr", data: data}
+    assert Handler.encode(Handler.decode(box)) == box
+  end
+
+  test "round-trips a name field with an embedded NUL and trailing bytes" do
+    data = <<0, 0, 0, 0, 0::32, "vide", 0::32, 0::32, 0::32, "abc", 0, "def">>
+    box = %Box{type: "hdlr", data: data}
+    assert Handler.decode(box).name == "abc"
+    assert Handler.encode(Handler.decode(box)) == box
+  end
 end

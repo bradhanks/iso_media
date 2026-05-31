@@ -8,6 +8,17 @@ defmodule ISOMedia.Boxes.TrackHeader do
 
   defstruct [:version, :flags, :creation_time, :modification_time, :track_id, :duration, :rest]
 
+  @type t :: %__MODULE__{
+          version: non_neg_integer(),
+          flags: <<_::24>>,
+          creation_time: non_neg_integer(),
+          modification_time: non_neg_integer(),
+          track_id: non_neg_integer(),
+          duration: non_neg_integer(),
+          rest: binary()
+        }
+
+  @doc "Decode a `tkhd` box into a `%TrackHeader{}`."
   def decode(%Box{type: "tkhd", data: data}) do
     {version, flags, body} = FullBox.parse(data)
     {ctime, mtime, track_id, duration, rest} = split(version, body)
@@ -23,6 +34,7 @@ defmodule ISOMedia.Boxes.TrackHeader do
     }
   end
 
+  @doc "Encode a `%TrackHeader{}` back into a `tkhd` box."
   def encode(%__MODULE__{version: 0} = h) do
     body = [<<h.creation_time::32, h.modification_time::32, h.track_id::32, 0::32, h.duration::32>>, h.rest]
     wrap(h, body)

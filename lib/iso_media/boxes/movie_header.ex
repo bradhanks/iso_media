@@ -9,6 +9,17 @@ defmodule ISOMedia.Boxes.MovieHeader do
 
   defstruct [:version, :flags, :creation_time, :modification_time, :timescale, :duration, :rest]
 
+  @type t :: %__MODULE__{
+          version: non_neg_integer(),
+          flags: <<_::24>>,
+          creation_time: non_neg_integer(),
+          modification_time: non_neg_integer(),
+          timescale: non_neg_integer(),
+          duration: non_neg_integer(),
+          rest: binary()
+        }
+
+  @doc "Decode an `mvhd` box into a `%MovieHeader{}`."
   def decode(%Box{type: "mvhd", data: data}) do
     {version, flags, body} = FullBox.parse(data)
     {ctime, mtime, timescale, duration, rest} = split(version, body)
@@ -24,6 +35,7 @@ defmodule ISOMedia.Boxes.MovieHeader do
     }
   end
 
+  @doc "Encode a `%MovieHeader{}` back into an `mvhd` box."
   def encode(%__MODULE__{version: 0} = h) do
     body = [<<h.creation_time::32, h.modification_time::32, h.timescale::32, h.duration::32>>, h.rest]
     wrap(h, body)
