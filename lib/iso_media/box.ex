@@ -25,4 +25,18 @@ defmodule ISOMedia.Box do
   @doc "True when the box holds a raw payload rather than children."
   def leaf?(%__MODULE__{data: nil}), do: false
   def leaf?(%__MODULE__{}), do: true
+
+  @doc "Return the first box matching the type-path, or `nil`."
+  def find(boxes, path) when is_list(boxes), do: boxes |> find_all(path) |> List.first()
+
+  @doc "Return every box matching the type-path."
+  def find_all(boxes, [type]) when is_list(boxes) do
+    Enum.filter(boxes, &(&1.type == type))
+  end
+
+  def find_all(boxes, [type | rest]) when is_list(boxes) do
+    boxes
+    |> Enum.filter(&(&1.type == type))
+    |> Enum.flat_map(&find_all(&1.children, rest))
+  end
 end
