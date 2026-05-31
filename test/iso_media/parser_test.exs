@@ -43,4 +43,14 @@ defmodule ISOMedia.ParserTest do
     assert {:ok, [box]} = Parser.parse(bin)
     assert %Box{type: "mdat", data: <<7, 7, 7>>, size_mode: :eof} = box
   end
+
+  test "parses a uuid box, splitting out the 16-byte extended type" do
+    uuid = <<0::128>>
+    # size = 8 header + 16 uuid + 3 payload = 27
+    bin = <<27::32, "uuid", uuid::binary, 1, 2, 3>>
+    assert {:ok, [box]} = Parser.parse(bin)
+    assert box.type == "uuid"
+    assert box.uuid == uuid
+    assert box.data == <<1, 2, 3>>
+  end
 end
