@@ -77,8 +77,13 @@ defmodule ISOMedia.Box do
   `at` is `:start`, `:end`, or a zero-based integer index.
   """
   def insert(boxes, path, new_box, at \\ :end) when is_list(boxes) do
-    update(boxes, path, fn container ->
-      %{container | children: splice(container.children, new_box, at)}
+    update(boxes, path, fn
+      %__MODULE__{data: nil} = container ->
+        %{container | children: splice(container.children, new_box, at)}
+
+      %__MODULE__{type: type} ->
+        raise ArgumentError,
+              "cannot insert into leaf box #{inspect(type)} (it has a data payload, not children)"
     end)
   end
 

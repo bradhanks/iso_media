@@ -36,4 +36,14 @@ defmodule ISOMedia.SerializerTest do
     {:ok, [box]} = Parser.parse(<<8::32, "free">>)
     assert Serializer.serialize(box) == <<8::32, "free">>
   end
+
+  test "serializing a box with both data and children raises" do
+    bad = %ISOMedia.Box{
+      type: "moov",
+      data: <<1>>,
+      children: [%ISOMedia.Box{type: "free", data: ""}]
+    }
+
+    assert_raise ArgumentError, fn -> ISOMedia.Serializer.serialize([bad]) end
+  end
 end

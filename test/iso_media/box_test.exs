@@ -91,6 +91,12 @@ defmodule ISOMedia.BoxTest do
       assert %Box{type: "free"} = hd(Box.find(out, ~w(moov)).children)
     end
 
+    test "insert/4 raises when the target path is a leaf", %{tree: tree} do
+      assert_raise ArgumentError, fn ->
+        Box.insert(tree, ~w(moov trak tkhd), %Box{type: "free", data: ""}, :end)
+      end
+    end
+
     test "replace_data/2 turns a box into a leaf with new bytes" do
       box = %Box{type: "moov", children: [%Box{type: "x"}]}
       assert %Box{data: <<7>>, children: []} = Box.replace_data(box, <<7>>)

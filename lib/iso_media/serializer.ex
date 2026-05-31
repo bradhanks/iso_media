@@ -16,6 +16,11 @@ defmodule ISOMedia.Serializer do
     [encode_header(box, body_len), body]
   end
 
+  defp encode_payload(%Box{data: data, children: [_ | _]}) when not is_nil(data) do
+    raise ArgumentError,
+          "invalid box: has both data and children (cannot serialize unambiguously)"
+  end
+
   defp encode_payload(%Box{data: nil, children: children}), do: Enum.map(children, &encode_box/1)
   defp encode_payload(%Box{data: data}), do: data
 
