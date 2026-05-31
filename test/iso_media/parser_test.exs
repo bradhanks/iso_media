@@ -30,4 +30,17 @@ defmodule ISOMedia.ParserTest do
     assert moov.data == nil
     assert [%{type: "mvhd"}, %{type: "free"}] = moov.children
   end
+
+  test "parses a 64-bit largesize box" do
+    # size field == 1, largesize == 20 (16 header + 4 payload)
+    bin = <<1::32, "mdat", 20::64, 9, 9, 9, 9>>
+    assert {:ok, [box]} = Parser.parse(bin)
+    assert %Box{type: "mdat", data: <<9, 9, 9, 9>>, size_mode: :large} = box
+  end
+
+  test "parses a size-0 box that runs to end of input" do
+    bin = <<0::32, "mdat", 7, 7, 7>>
+    assert {:ok, [box]} = Parser.parse(bin)
+    assert %Box{type: "mdat", data: <<7, 7, 7>>, size_mode: :eof} = box
+  end
 end
