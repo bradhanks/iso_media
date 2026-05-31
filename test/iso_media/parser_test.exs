@@ -19,4 +19,15 @@ defmodule ISOMedia.ParserTest do
   test "empty input parses to an empty list" do
     assert {:ok, []} = Parser.parse(<<>>)
   end
+
+  test "recurses into a known container box" do
+    # moov(size 24) { mvhd(size 8, empty) ; free(size 8, empty) }
+    inner = <<8::32, "mvhd", 8::32, "free">>
+    bin = <<8 + byte_size(inner)::32, "moov", inner::binary>>
+
+    assert {:ok, [moov]} = Parser.parse(bin)
+    assert moov.type == "moov"
+    assert moov.data == nil
+    assert [%{type: "mvhd"}, %{type: "free"}] = moov.children
+  end
 end
