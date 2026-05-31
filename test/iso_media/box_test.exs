@@ -52,4 +52,48 @@ defmodule ISOMedia.BoxTest do
       assert [%Box{type: "ftyp"}] = Box.find_all(tree, ~w(ftyp))
     end
   end
+
+  describe "editing" do
+    setup do
+      tree = [
+        %Box{
+          type: "moov",
+          children: [
+            %Box{type: "trak", children: [%Box{type: "tkhd", data: <<1>>}]},
+            %Box{type: "udta", children: []}
+          ]
+        }
+      ]
+
+      %{tree: tree}
+    end
+
+    test "update/3 applies fun to all matches", %{tree: tree} do
+      updated = Box.update(tree, ~w(moov trak tkhd), &Box.replace_data(&1, <<9>>))
+      assert %Box{data: <<9>>} = Box.find(updated, ~w(moov trak tkhd))
+    end
+
+    test "remove/2 cuts matching boxes out", %{tree: tree} do
+      pruned = Box.remove(tree, ~w(moov udta))
+      assert Box.find(pruned, ~w(moov udta)) == nil
+      assert Box.find(pruned, ~w(moov trak)) != nil
+    end
+
+    test "insert/4 splices a box into the container at the path", %{tree: tree} do
+      name = %Box{type: "name", data: "hi"}
+      out = Box.insert(tree, ~w(moov udta), name, :end)
+      assert [%Box{type: "name", data: "hi"}] = Box.find(out, ~w(moov udta)).children
+    end
+
+    test "insert/4 at :start prepends", %{tree: tree} do
+      box = %Box{type: "free", data: ""}
+      out = Box.insert(tree, ~w(moov), box, :start)
+      assert %Box{type: "free"} = hd(Box.find(out, ~w(moov)).children)
+    end
+
+    test "replace_data/2 turns a box into a leaf with new bytes" do
+      box = %Box{type: "moov", children: [%Box{type: "x"}]}
+      assert %Box{data: <<7>>, children: []} = Box.replace_data(box, <<7>>)
+    end
+  end
 end
