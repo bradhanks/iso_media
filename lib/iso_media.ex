@@ -15,6 +15,12 @@ defmodule ISOMedia do
   @doc "Serialize a box or list of boxes back to a binary."
   def serialize(boxes), do: Serializer.serialize(boxes)
 
+  @doc "Recompute stco/co64 chunk offsets for the current box arrangement. See `ISOMedia.Offsets.fix_chunk_offsets/1`."
+  def fix_chunk_offsets(boxes), do: ISOMedia.Offsets.fix_chunk_offsets(boxes)
+
+  @doc "Move `moov` before `mdat` (faststart) and fix chunk offsets. See `ISOMedia.Offsets.faststart/1`."
+  def faststart(boxes), do: ISOMedia.Offsets.faststart(boxes)
+
   @doc "Read a file and parse it."
   def read(path, opts \\ []) do
     with {:ok, binary} <- File.read(path), do: parse(binary, opts)
