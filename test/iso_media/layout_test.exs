@@ -30,4 +30,11 @@ defmodule ISOMedia.LayoutTest do
     assert mdat.offset == 12
     assert mdat.payload_offset == 20
   end
+
+  test "box_size counts a FileSlice payload by its length" do
+    slice = %ISOMedia.FileSlice{path: "irrelevant", offset: 0, length: 5000}
+    box = %Box{type: "mdat", data: slice}
+    # compact header (8) + slice length (5000)
+    assert Layout.box_size(box) == 5008
+  end
 end
