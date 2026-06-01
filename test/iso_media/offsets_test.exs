@@ -87,4 +87,30 @@ defmodule ISOMedia.OffsetsTest do
 
     assert_raise ArgumentError, fn -> ISOMedia.fix_chunk_offsets(bad) end
   end
+
+  describe "co64 promotion" do
+    test "promotes stco to co64 when an offset exceeds the threshold, chunks still resolve" do
+      %{boxes: boxes, chunks: chunks} = build([<<10, 11>>, <<20, 21, 22>>])
+      fixed = ISOMedia.Offsets.fix_chunk_offsets(boxes, co64_threshold: 5)
+
+      co_box = ISOMedia.Box.find(fixed, ~w(moov co64))
+      assert co_box != nil, "table should have been promoted to co64"
+      co = ISOMedia.Boxes.ChunkOffset.decode(co_box)
+      assert co.kind == :co64
+
+      out = ISOMedia.serialize(fixed)
+
+      chunks
+      |> Enum.zip(co.offsets)
+      |> Enum.each(fn {chunk, off} -> assert binary_part(out, off, byte_size(chunk)) == chunk end)
+    end
+
+    test "promotion converges and is idempotent (latched, never demoted)" do
+      %{boxes: boxes} = build([<<1, 2>>, <<3, 4>>])
+      once = ISOMedia.Offsets.fix_chunk_offsets(boxes, co64_threshold: 5)
+      twice = ISOMedia.Offsets.fix_chunk_offsets(once, co64_threshold: 5)
+      assert ISOMedia.serialize(twice) == ISOMedia.serialize(once)
+      assert ISOMedia.Box.find(twice, ~w(moov co64)) != nil
+    end
+  end
 end
