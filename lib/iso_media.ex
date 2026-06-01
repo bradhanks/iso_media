@@ -20,6 +20,6 @@ defmodule ISOMedia do
     with {:ok, binary} <- File.read(path), do: parse(binary, opts)
   end
 
-  @doc "Serialize boxes and write them to a file."
-  def write(path, boxes), do: File.write(path, serialize(boxes))
+  @doc "Serialize boxes and write them to a file (streams iodata, no full-binary copy)."
+  def write(path, boxes), do: File.write(path, ISOMedia.Serializer.to_iodata(boxes))
 end

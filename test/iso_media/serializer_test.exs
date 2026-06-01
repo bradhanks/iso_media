@@ -46,4 +46,15 @@ defmodule ISOMedia.SerializerTest do
 
     assert_raise ArgumentError, fn -> ISOMedia.Serializer.serialize([bad]) end
   end
+
+  test "to_iodata returns iodata equal in bytes to serialize/1" do
+    boxes = [%ISOMedia.Box{type: "free", data: <<1, 2, 3>>}, %ISOMedia.Box{type: "mdat", data: <<9>>}]
+    iodata = ISOMedia.Serializer.to_iodata(boxes)
+    assert IO.iodata_to_binary(iodata) == ISOMedia.Serializer.serialize(boxes)
+  end
+
+  test "to_iodata accepts a single box" do
+    box = %ISOMedia.Box{type: "free", data: <<>>}
+    assert IO.iodata_to_binary(ISOMedia.Serializer.to_iodata(box)) == <<8::32, "free">>
+  end
 end

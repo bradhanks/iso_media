@@ -4,11 +4,11 @@ defmodule ISOMedia.Serializer do
   alias ISOMedia.Box
 
   @doc "Serialize a box or list of boxes to a binary."
-  def serialize(%Box{} = box), do: serialize([box])
+  def serialize(boxes), do: boxes |> to_iodata() |> IO.iodata_to_binary()
 
-  def serialize(boxes) when is_list(boxes) do
-    boxes |> Enum.map(&encode_box/1) |> IO.iodata_to_binary()
-  end
+  @doc "Serialize a box or list of boxes to iodata (no full-binary materialization)."
+  def to_iodata(%Box{} = box), do: to_iodata([box])
+  def to_iodata(boxes) when is_list(boxes), do: Enum.map(boxes, &encode_box/1)
 
   defp encode_box(%Box{} = box) do
     body = [box.uuid || <<>>, encode_payload(box)]
