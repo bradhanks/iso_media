@@ -113,4 +113,44 @@ defmodule ISOMedia.OffsetsTest do
       assert ISOMedia.Box.find(twice, ~w(moov co64)) != nil
     end
   end
+
+  describe "faststart" do
+    test "no-op when there is no moov or no mdat" do
+      boxes = [%Box{type: "ftyp", data: <<0, 0, 0, 0>>}]
+      assert ISOMedia.faststart(boxes) == boxes
+    end
+
+    test "moves moov before mdat and keeps every chunk resolvable on the real fixture" do
+      original = File.read!(Path.join([__DIR__, "..", "fixtures", "sample.mp4"]))
+      {:ok, boxes} = ISOMedia.parse(original)
+
+      old_offsets =
+        boxes |> ISOMedia.Box.find_all(~w(moov trak mdia minf stbl stco)) |> Enum.flat_map(fn b ->
+          ISOMedia.Boxes.ChunkOffset.decode(b).offsets
+        end)
+
+      assert old_offsets != [], "fixture should have at least one stco entry"
+
+      fixed = ISOMedia.faststart(boxes)
+      out = ISOMedia.serialize(fixed)
+
+      # moov now precedes mdat
+      types = Enum.map(fixed, & &1.type)
+      assert Enum.find_index(types, &(&1 == "moov")) < Enum.find_index(types, &(&1 == "mdat"))
+
+      new_offsets =
+        fixed |> ISOMedia.Box.find_all(~w(moov trak mdia minf stbl stco)) |> Enum.flat_map(fn b ->
+          ISOMedia.Boxes.ChunkOffset.decode(b).offsets
+        end)
+
+      # Each chunk's bytes at the new offset match the bytes at the old offset in the
+      # original file (first 16 bytes is enough to prove the offset points at the
+      # same chunk data).
+      Enum.zip(old_offsets, new_offsets)
+      |> Enum.each(fn {old, new} ->
+        k = min(16, byte_size(original) - old)
+        assert binary_part(out, new, k) == binary_part(original, old, k)
+      end)
+    end
+  end
 end
