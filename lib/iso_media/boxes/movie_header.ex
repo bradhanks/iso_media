@@ -37,12 +37,20 @@ defmodule ISOMedia.Boxes.MovieHeader do
 
   @doc "Encode a `%MovieHeader{}` back into an `mvhd` box."
   def encode(%__MODULE__{version: 0} = h) do
-    body = [<<h.creation_time::32, h.modification_time::32, h.timescale::32, h.duration::32>>, h.rest]
+    body = [
+      <<h.creation_time::32, h.modification_time::32, h.timescale::32, h.duration::32>>,
+      h.rest
+    ]
+
     wrap(h, body)
   end
 
   def encode(%__MODULE__{version: 1} = h) do
-    body = [<<h.creation_time::64, h.modification_time::64, h.timescale::32, h.duration::64>>, h.rest]
+    body = [
+      <<h.creation_time::64, h.modification_time::64, h.timescale::32, h.duration::64>>,
+      h.rest
+    ]
+
     wrap(h, body)
   end
 

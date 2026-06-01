@@ -27,7 +27,8 @@ defmodule ISOMedia.Boxes.Handler do
   def decode(%Box{type: "hdlr", data: data}) do
     {version, flags, body} = FullBox.parse(data)
 
-    <<_pre_defined::32, handler_type::binary-size(4), _reserved::binary-size(12), name_field::binary>> =
+    <<_pre_defined::32, handler_type::binary-size(4), _reserved::binary-size(12),
+      name_field::binary>> =
       body
 
     {name, name_suffix} =

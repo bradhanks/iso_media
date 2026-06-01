@@ -28,7 +28,13 @@ defmodule ISOMedia.Parser do
 
     box =
       if container?(type, payload, opts) do
-        %Box{type: type, data: nil, children: parse_boxes(payload, opts), uuid: uuid, size_mode: size_mode}
+        %Box{
+          type: type,
+          data: nil,
+          children: parse_boxes(payload, opts),
+          uuid: uuid,
+          size_mode: size_mode
+        }
       else
         %Box{type: type, data: payload, children: [], uuid: uuid, size_mode: size_mode}
       end

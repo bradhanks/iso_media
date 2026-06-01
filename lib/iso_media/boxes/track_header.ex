@@ -36,12 +36,20 @@ defmodule ISOMedia.Boxes.TrackHeader do
 
   @doc "Encode a `%TrackHeader{}` back into a `tkhd` box."
   def encode(%__MODULE__{version: 0} = h) do
-    body = [<<h.creation_time::32, h.modification_time::32, h.track_id::32, 0::32, h.duration::32>>, h.rest]
+    body = [
+      <<h.creation_time::32, h.modification_time::32, h.track_id::32, 0::32, h.duration::32>>,
+      h.rest
+    ]
+
     wrap(h, body)
   end
 
   def encode(%__MODULE__{version: 1} = h) do
-    body = [<<h.creation_time::64, h.modification_time::64, h.track_id::32, 0::32, h.duration::64>>, h.rest]
+    body = [
+      <<h.creation_time::64, h.modification_time::64, h.track_id::32, 0::32, h.duration::64>>,
+      h.rest
+    ]
+
     wrap(h, body)
   end
 
