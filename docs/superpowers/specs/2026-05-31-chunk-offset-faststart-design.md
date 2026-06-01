@@ -37,15 +37,22 @@ required. To know where an `mdat` *used* to be, the parser must remember it.
 
 ## Components
 
-### `ISOMedia.Box` — new `source_offset` field
-Add `source_offset` to the struct, default `nil`. The parser records the absolute
-byte offset at which each box started. It is metadata only: the serializer ignores
-it, so the Phase 1 byte-for-byte round-trip is unaffected, and hand-built boxes
-carry `nil`. This is the only change to the core.
+### `ISOMedia.Box` — new `source_offset` and `source_size` fields
+Add `source_offset` and `source_size` to the struct, both default `nil`. The
+parser records the absolute byte offset at which each box started, and the box's
+total serialized byte length as parsed. Both are metadata only: the serializer
+ignores them, so the Phase 1 byte-for-byte round-trip is unaffected, and hand-built
+boxes carry `nil`. This is the only change to the core.
 
-- `defstruct type: nil, data: nil, children: [], uuid: nil, size_mode: :compact, source_offset: nil`
-- Parser threads a running absolute offset through `parse_boxes/parse_box` and
-  stamps each box's `source_offset` as it is produced (top level and nested).
+- `defstruct type: nil, data: nil, children: [], uuid: nil, size_mode: :compact, source_offset: nil, source_size: nil`
+- Parser threads a running absolute offset through `parse_boxes/parse_box`, stamping
+  each box's `source_offset` (top level and nested) and its `source_size` (the
+  number of bytes the box occupied in the source).
+- `source_size` makes the integrity guard foolproof: an `mdat` whose current
+  `box_size` differs from its `source_size` had its content changed, which means
+  offsets can't be trusted (see Error handling). For a size-0 (`:eof`) `mdat`, the
+  in-memory model has already captured its full payload, so `source_size =
+  header_size + byte_size(data)` is exact — no file-length lookup is needed.
 
 ### `ISOMedia.Layout` — offset computation (pure)
 Walks a tree and computes the absolute file offset of every box in the *current*
@@ -69,6 +76,13 @@ Follows the existing `Boxes.*` `decode/1`/`encode/1` contract.
 - `encode(%ChunkOffset{})`: emits `stco` or `co64` box per `kind`, regenerating
   `entry_count`.
 
+### `ISOMedia.Serializer` — `to_iodata/1` (memory)
+Add `Serializer.to_iodata/1` returning the iolist (the existing `serialize/1`
+becomes `to_iodata/1 |> IO.iodata_to_binary/1`). `ISOMedia.write/2` then passes the
+iodata straight to `File.write/2` (which accepts iodata) instead of materializing
+the whole output binary, roughly halving peak memory during a write. See Memory
+characteristics.
+
 ### `ISOMedia.fix_chunk_offsets/1` — the primitive
 Takes a fully-arranged tree and returns a tree with corrected `stco`/`co64`.
 
@@ -78,22 +92,30 @@ then `fix_chunk_offsets/1`. Returns the rearranged, corrected tree.
 
 ## Algorithm (`fix_chunk_offsets/1`)
 
-1. **Original mdat ranges.** Find all top-level `mdat` boxes. For each, its
-   original byte range is `[source_offset, source_offset + box_size(mdat))`
-   (size derived from the box itself, since content is unchanged). Its original
-   payload start is `source_offset + header_size(mdat)`.
+0. **Integrity check.** For every top-level `mdat`, verify `source_offset != nil`
+   and `box_size(mdat) == source_size`. Otherwise raise (see Error handling).
+1. **Original mdat ranges.** For each top-level `mdat`, its original byte range is
+   `[source_offset, source_offset + source_size)` and its original payload start is
+   `source_offset + header_size(mdat)`. Ranges are disjoint; keep them **sorted** so
+   the step-4 lookup is a clean search.
 2. **New mdat positions.** Compute `Layout.offsets/1` on the current tree to get
    each `mdat`'s new payload start.
 3. **Per-mdat delta.** `delta(mdat) = new_payload_start − old_payload_start`.
 4. **Remap every chunk-offset table.** For each `stbl` `stco`/`co64`, decode it,
    and for each chunk offset `O`: find the `mdat` whose **original** range contains
-   `O` and add that mdat's delta. (Multiple `mdat`s are handled per-range.)
-5. **co64 promotion.** If any remapped offset for a table exceeds `0xFFFFFFFF`,
-   convert that `stco` to a `co64`. Promotion grows `moov`; if `moov` precedes the
-   affected `mdat`, that shifts offsets again, so **recompute layout and repeat
-   from step 2 until offsets are stable** (a fixpoint). Convergence is bounded
-   (≤ a small constant; cap iterations and raise if exceeded). The common <4 GB
-   case promotes nothing and completes in a single pass.
+   `O` and add that mdat's delta. With the typical single `mdat` this is O(C); for
+   many `mdat`s use binary search over the sorted ranges (`:gb_trees` if it ever
+   matters). An `O` in no range is unmappable → raise (see Error handling).
+5. **co64 promotion (with no-demotion latch).** If any remapped offset for a table
+   exceeds `0xFFFFFFFF`, convert that `stco` to a `co64`. **Once a table is promoted
+   to `:co64` in this run it stays `:co64` for all remaining iterations — never
+   demote back**, even if a later layout shift would let it fit in 32 bits. Without
+   this latch a table could oscillate between sizes and the loop would never settle;
+   with it, sizes only ever grow, so convergence is guaranteed. Promotion grows
+   `moov`; if `moov` precedes the affected `mdat`, that shifts offsets again, so
+   **recompute layout and repeat from step 2 until offsets are stable** (a
+   fixpoint). Iterations are capped (raise if exceeded). The common <4 GB case
+   promotes nothing and completes in a single pass.
 6. Write the corrected `stco`/`co64` boxes back into the tree (via existing
    `Box.update`).
 
@@ -103,7 +125,7 @@ then `fix_chunk_offsets/1`. Returns the rearranged, corrected tree.
 this phase). Guards:
 
 - An `mdat` with `source_offset == nil` (freshly synthesized), or whose current
-  `box_size` differs from its size at parse time, means the data changed or is not
+  `box_size` differs from its `source_size`, means the data changed or is not
   traceable → **raise `ArgumentError`** with a message pointing at the
   sample-editing limitation. (Consistent with `Box.insert/4` raising on misuse.)
 - A chunk offset that falls within no `mdat`'s original range (rare — e.g.
@@ -116,6 +138,23 @@ this phase). Guards:
 
 Both `fix_chunk_offsets/1` and `faststart/1` return the plain tree (raising on the
 misuse cases above), matching the editing API style.
+
+## Memory characteristics (known limitation)
+
+Phase 1 deliberately holds the whole file in memory (parsing produces zero-copy
+sub-binaries over one input binary). faststart therefore requires the file to fit
+in memory: `read/2` loads the entire file, and a chunk's `mdat` bytes are referenced
+(not copied) through rearrangement and serialization. The one avoidable cost is the
+output: `serialize/1` materializes the full binary, so a naive `write` peaks at
+~2× the file size. `Serializer.to_iodata/1` + an iodata-based `write/2` remove that
+extra copy (peak ≈ input size).
+
+This phase does **not** add lazy/file-backed payloads — that remains the separately
+scoped future phase from the Phase 1 spec. The new `source_offset`/`source_size`
+fields are exactly the metadata that future phase needs (an `mdat` payload could
+become `{:file_slice, path, offset, length}` resolved on demand), so this design is
+forward-compatible with it. For now, files larger than available memory are out of
+scope, and that limitation is documented in the README.
 
 ## Testing
 
@@ -161,9 +200,10 @@ Properties:
 ## Project layout (new/changed files)
 
 ```
-lib/iso_media.ex                       # + faststart/1, fix_chunk_offsets/1
-lib/iso_media/box.ex                   # + source_offset field
-lib/iso_media/parser.ex                # stamp source_offset during parse
+lib/iso_media.ex                       # + faststart/1, fix_chunk_offsets/1; write/2 uses iodata
+lib/iso_media/box.ex                   # + source_offset, source_size fields
+lib/iso_media/parser.ex                # stamp source_offset + source_size during parse
+lib/iso_media/serializer.ex            # + to_iodata/1 (serialize/1 built on it)
 lib/iso_media/layout.ex                # NEW: offset computation
 lib/iso_media/boxes/chunk_offset.ex    # NEW: stco/co64 typed view
 lib/iso_media/offsets.ex               # NEW: fix_chunk_offsets/faststart impl (or keep in iso_media.ex if small)
