@@ -29,8 +29,13 @@ ISOBMFF files are a flat-then-nested sequence of **boxes** (a.k.a. atoms). Each 
 - `ISOMedia.Registry` (`lib/iso_media/registry.ex`) — classifies which box types are containers, plus the `looks_like_boxes?/1` heuristic.
 - `ISOMedia.FullBox` (`lib/iso_media/full_box.ex`) — version/flags prefix helper shared by FullBox typed views.
 - `ISOMedia.Boxes.*` (`lib/iso_media/boxes/`) — typed views layered on known boxes (`ftyp`, `hdlr`, `mvhd`, `tkhd`, `mdhd`) via `decode/1` → struct and `encode/1` → `%Box{}`, without the core depending on them.
+- `ISOMedia.Layout` (`lib/iso_media/layout.ex`) — computes absolute box offsets for the current arrangement (`header_size/1`, `box_size/1`, `top_level_layout/1`); the basis for offset rewriting.
+- `ISOMedia.Offsets` (`lib/iso_media/offsets.ex`) — `fix_chunk_offsets/1` (per-`mdat` delta remap of `stco`/`co64`, with latched `stco`→`co64` promotion via a layout fixpoint) and `faststart/1` (move `moov` before `mdat`, then fix). Exposed as `ISOMedia.fix_chunk_offsets/1` and `ISOMedia.faststart/1`.
+- `ISOMedia.Boxes.ChunkOffset` — typed view for `stco`/`co64`.
 
 The invariant throughout is byte-for-byte round-trip: `ISOMedia.serialize(parse(file)) == file`.
+
+Boxes carry `source_offset`/`source_size` (stamped by the parser) so offset rewriting knows where each `mdat` originally lived; these are metadata and never serialized.
 
 ## Design context
 
