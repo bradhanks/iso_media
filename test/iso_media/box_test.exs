@@ -11,6 +11,12 @@ defmodule ISOMedia.BoxTest do
     assert box.size_mode == :compact
   end
 
+  test "source_offset and source_size default to nil" do
+    box = %Box{type: "moov"}
+    assert box.source_offset == nil
+    assert box.source_size == nil
+  end
+
   test "container?/1 and leaf?/1 distinguish by data" do
     container = %Box{type: "moov", data: nil, children: []}
     leaf = %Box{type: "free", data: <<0, 0>>}

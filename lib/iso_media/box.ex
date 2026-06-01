@@ -8,14 +8,22 @@ defmodule ISOMedia.Box do
     serialization can reproduce exact bytes.
   """
 
-  defstruct type: nil, data: nil, children: [], uuid: nil, size_mode: :compact
+  defstruct type: nil,
+            data: nil,
+            children: [],
+            uuid: nil,
+            size_mode: :compact,
+            source_offset: nil,
+            source_size: nil
 
   @type t :: %__MODULE__{
           type: String.t(),
           data: binary() | nil,
           children: [t()],
           uuid: <<_::128>> | nil,
-          size_mode: :compact | :large | :eof
+          size_mode: :compact | :large | :eof,
+          source_offset: non_neg_integer() | nil,
+          source_size: non_neg_integer() | nil
         }
 
   @doc "True when the box holds child boxes rather than a raw payload."
