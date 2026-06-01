@@ -20,4 +20,36 @@ defmodule ISOMediaTest do
     File.rm(Path.join(System.tmp_dir!(), "iso_media_rt.bin"))
     File.rm(Path.join(System.tmp_dir!(), "iso_media_rt_out.bin"))
   end
+
+  describe "lazy read + streaming write" do
+    setup do
+      ftyp = <<16::32, "ftyp", "isom", 0::32>>
+      big = :binary.copy(<<5>>, 4000)
+      mdat = <<8 + byte_size(big)::32, "mdat", big::binary>>
+      bin = ftyp <> mdat
+      src = Path.join(System.tmp_dir!(), "iso_lw_src_#{System.unique_integer([:positive])}.mp4")
+      File.write!(src, bin)
+      on_exit(fn -> File.rm(src) end)
+      {:ok, src: src, bin: bin}
+    end
+
+    test "read(lazy: true) keeps mdat as a FileSlice", %{src: src} do
+      assert {:ok, boxes} = ISOMedia.read(src, lazy: true, lazy_threshold: 1000)
+      mdat = ISOMedia.Box.find(boxes, ~w(mdat))
+      assert %ISOMedia.FileSlice{} = mdat.data
+    end
+
+    test "write/2 streams a lazy tree byte-identically", %{src: src, bin: bin} do
+      {:ok, boxes} = ISOMedia.read(src, lazy: true, lazy_threshold: 1000)
+      out = Path.join(System.tmp_dir!(), "iso_lw_out_#{System.unique_integer([:positive])}.mp4")
+      on_exit(fn -> File.rm(out) end)
+      assert :ok = ISOMedia.write(out, boxes)
+      assert File.read!(out) == bin
+    end
+
+    test "write/2 refuses to overwrite a FileSlice source", %{src: src} do
+      {:ok, boxes} = ISOMedia.read(src, lazy: true, lazy_threshold: 1000)
+      assert_raise ArgumentError, ~r/FileSlice source/, fn -> ISOMedia.write(src, boxes) end
+    end
+  end
 end

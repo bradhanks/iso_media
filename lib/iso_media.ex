@@ -21,11 +21,72 @@ defmodule ISOMedia do
   @doc "Move `moov` before `mdat` (faststart) and fix chunk offsets. See `ISOMedia.Offsets.faststart/1`."
   def faststart(boxes), do: ISOMedia.Offsets.faststart(boxes)
 
-  @doc "Read a file and parse it."
+  @doc """
+  Read a file and parse it. Pass `lazy: true` to keep large leaf payloads
+  (≥ `:lazy_threshold`, default 1 MB) as `ISOMedia.FileSlice` references instead of
+  loading them, so files larger than memory can be processed.
+  """
   def read(path, opts \\ []) do
-    with {:ok, binary} <- File.read(path), do: parse(binary, opts)
+    if Keyword.get(opts, :lazy, false) do
+      ISOMedia.LazyParser.parse_file(path, opts)
+    else
+      with {:ok, binary} <- File.read(path), do: parse(binary, opts)
+    end
   end
 
-  @doc "Serialize boxes and write them to a file (streams iodata, no full-binary copy)."
-  def write(path, boxes), do: File.write(path, ISOMedia.Serializer.to_iodata(boxes))
+  @doc """
+  Serialize boxes and write them to `path`, streaming any `FileSlice` payloads
+  disk→disk (memory-safe for large files). Raises if `path` is one of the tree's
+  `FileSlice` sources (you cannot stream-overwrite the file you are reading).
+  """
+  def write(path, boxes) do
+    check_overwrite!(path, boxes)
+
+    case File.open(path, [:write, :binary, :raw], fn io ->
+           ISOMedia.Serializer.stream(boxes, io)
+         end) do
+      {:ok, :ok} -> :ok
+      {:error, reason} -> {:error, reason}
+    end
+  end
+
+  defp check_overwrite!(path, boxes) do
+    out_expanded = Path.expand(path)
+    out_id = file_id(path)
+
+    boxes
+    |> collect_slice_paths()
+    |> Enum.uniq()
+    |> Enum.each(fn src ->
+      cond do
+        Path.expand(src) == out_expanded ->
+          raise ArgumentError,
+                "write/2: output #{path} is also a FileSlice source; write to a different file"
+
+        out_id != nil and out_id == file_id(src) ->
+          raise ArgumentError,
+                "write/2: output #{path} resolves to the same file as a FileSlice source (#{src}); write to a different file"
+
+        true ->
+          :ok
+      end
+    end)
+  end
+
+  defp file_id(path) do
+    case File.stat(path) do
+      {:ok, %File.Stat{major_device: maj, minor_device: min, inode: ino}} -> {maj, min, ino}
+      _ -> nil
+    end
+  end
+
+  defp collect_slice_paths(boxes) when is_list(boxes),
+    do: Enum.flat_map(boxes, &collect_slice_paths/1)
+
+  defp collect_slice_paths(%ISOMedia.Box{data: %ISOMedia.FileSlice{path: p}}), do: [p]
+
+  defp collect_slice_paths(%ISOMedia.Box{data: nil, children: children}),
+    do: collect_slice_paths(children)
+
+  defp collect_slice_paths(%ISOMedia.Box{}), do: []
 end
