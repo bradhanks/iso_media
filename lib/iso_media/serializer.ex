@@ -12,7 +12,8 @@ defmodule ISOMedia.Serializer do
   def materialize(%Box{} = box), do: materialize_box(box)
   def materialize(boxes) when is_list(boxes), do: Enum.map(boxes, &materialize_box/1)
 
-  defp materialize_box(%Box{data: %FileSlice{} = slice} = box), do: %{box | data: FileSlice.read(slice)}
+  defp materialize_box(%Box{data: %FileSlice{} = slice} = box),
+    do: %{box | data: FileSlice.read(slice)}
 
   defp materialize_box(%Box{data: nil, children: children} = box),
     do: %{box | children: Enum.map(children, &materialize_box/1)}
@@ -72,7 +73,8 @@ defmodule ISOMedia.Serializer do
   end
 
   defp stream_box(%Box{data: data, children: [_ | _]}, _io, _chunk) when not is_nil(data) do
-    raise ArgumentError, "invalid box: has both data and children (cannot serialize unambiguously)"
+    raise ArgumentError,
+          "invalid box: has both data and children (cannot serialize unambiguously)"
   end
 
   defp stream_box(%Box{} = box, io, chunk_size) do
@@ -84,7 +86,8 @@ defmodule ISOMedia.Serializer do
     stream_payload(box, io, chunk_size)
   end
 
-  defp stream_payload(%Box{data: %FileSlice{} = slice}, io, chunk), do: FileSlice.stream(slice, io, chunk)
+  defp stream_payload(%Box{data: %FileSlice{} = slice}, io, chunk),
+    do: FileSlice.stream(slice, io, chunk)
 
   defp stream_payload(%Box{data: nil, children: children}, io, chunk),
     do: Enum.each(children, &stream_box(&1, io, chunk))

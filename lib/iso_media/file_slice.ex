@@ -39,7 +39,11 @@ defmodule ISOMedia.FileSlice do
   chunks. The source is opened once (callback form, so it closes even if a write
   raises) and read sequentially.
   """
-  def stream(%__MODULE__{path: path, offset: offset, length: length}, io_device, chunk_size \\ 65_536) do
+  def stream(
+        %__MODULE__{path: path, offset: offset, length: length},
+        io_device,
+        chunk_size \\ 65_536
+      ) do
     File.open!(path, [:read, :binary, :raw], fn src ->
       stream_chunks(src, io_device, path, offset, length, chunk_size)
     end)
@@ -53,8 +57,11 @@ defmodule ISOMedia.FileSlice do
     case :file.pread(src, offset, n) do
       {:ok, data} when byte_size(data) == n ->
         case :file.write(dest, data) do
-          :ok -> stream_chunks(src, dest, path, offset + n, remaining - n, chunk)
-          {:error, reason} -> raise "FileSlice.stream: write failed: #{:file.format_error(reason)}"
+          :ok ->
+            stream_chunks(src, dest, path, offset + n, remaining - n, chunk)
+
+          {:error, reason} ->
+            raise "FileSlice.stream: write failed: #{:file.format_error(reason)}"
         end
 
       {:ok, data} ->
