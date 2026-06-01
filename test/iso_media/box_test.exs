@@ -108,4 +108,22 @@ defmodule ISOMedia.BoxTest do
       assert %Box{data: <<7>>, children: []} = Box.replace_data(box, <<7>>)
     end
   end
+
+  describe "read_data/1" do
+    test "returns the binary for an in-memory leaf" do
+      assert Box.read_data(%Box{type: "free", data: <<1, 2, 3>>}) == <<1, 2, 3>>
+    end
+
+    test "returns nil for a container" do
+      assert Box.read_data(%Box{type: "moov", data: nil, children: []}) == nil
+    end
+
+    test "reads the bytes for a FileSlice leaf" do
+      path = Path.join(System.tmp_dir!(), "iso_box_rd_#{System.unique_integer([:positive])}.bin")
+      File.write!(path, <<9, 8, 7, 6, 5>>)
+      on_exit(fn -> File.rm(path) end)
+      box = %Box{type: "mdat", data: %ISOMedia.FileSlice{path: path, offset: 1, length: 3}}
+      assert Box.read_data(box) == <<8, 7, 6>>
+    end
+  end
 end

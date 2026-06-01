@@ -107,4 +107,11 @@ defmodule ISOMedia.Box do
   def replace_data(%__MODULE__{} = box, binary) when is_binary(binary) do
     %{box | data: binary, children: []}
   end
+
+  @doc """
+  Return a leaf box's payload bytes, reading the file if it's a `FileSlice`.
+  Returns `nil` for a container.
+  """
+  def read_data(%__MODULE__{data: %ISOMedia.FileSlice{} = slice}), do: ISOMedia.FileSlice.read(slice)
+  def read_data(%__MODULE__{data: data}), do: data
 end
