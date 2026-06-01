@@ -93,7 +93,8 @@ defmodule ISOMedia.Offsets do
   # --- fixpoint ---
 
   defp converge(_tree, _originals, _threshold, _promoted, iter) when iter > @max_iterations do
-    raise ArgumentError, "fix_chunk_offsets: failed to converge after #{@max_iterations} iterations"
+    raise ArgumentError,
+          "fix_chunk_offsets: failed to converge after #{@max_iterations} iterations"
   end
 
   defp converge(tree, originals, threshold, promoted, iter) do

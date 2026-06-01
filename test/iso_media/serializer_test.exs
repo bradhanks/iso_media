@@ -48,7 +48,11 @@ defmodule ISOMedia.SerializerTest do
   end
 
   test "to_iodata returns iodata equal in bytes to serialize/1" do
-    boxes = [%ISOMedia.Box{type: "free", data: <<1, 2, 3>>}, %ISOMedia.Box{type: "mdat", data: <<9>>}]
+    boxes = [
+      %ISOMedia.Box{type: "free", data: <<1, 2, 3>>},
+      %ISOMedia.Box{type: "mdat", data: <<9>>}
+    ]
+
     iodata = ISOMedia.Serializer.to_iodata(boxes)
     assert IO.iodata_to_binary(iodata) == ISOMedia.Serializer.serialize(boxes)
   end

@@ -79,6 +79,7 @@ defmodule ISOMedia.OffsetsTest do
 
   test "raises when a chunk offset falls outside any mdat" do
     %{boxes: boxes} = build([<<1, 2>>])
+
     bad =
       ISOMedia.Box.update(boxes, ~w(moov stco), fn stco ->
         co = ISOMedia.Boxes.ChunkOffset.decode(stco)
@@ -125,7 +126,9 @@ defmodule ISOMedia.OffsetsTest do
       {:ok, boxes} = ISOMedia.parse(original)
 
       old_offsets =
-        boxes |> ISOMedia.Box.find_all(~w(moov trak mdia minf stbl stco)) |> Enum.flat_map(fn b ->
+        boxes
+        |> ISOMedia.Box.find_all(~w(moov trak mdia minf stbl stco))
+        |> Enum.flat_map(fn b ->
           ISOMedia.Boxes.ChunkOffset.decode(b).offsets
         end)
 
@@ -139,7 +142,9 @@ defmodule ISOMedia.OffsetsTest do
       assert Enum.find_index(types, &(&1 == "moov")) < Enum.find_index(types, &(&1 == "mdat"))
 
       new_offsets =
-        fixed |> ISOMedia.Box.find_all(~w(moov trak mdia minf stbl stco)) |> Enum.flat_map(fn b ->
+        fixed
+        |> ISOMedia.Box.find_all(~w(moov trak mdia minf stbl stco))
+        |> Enum.flat_map(fn b ->
           ISOMedia.Boxes.ChunkOffset.decode(b).offsets
         end)
 

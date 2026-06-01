@@ -7,7 +7,7 @@ defmodule ISOMedia.OffsetsPropertyTest do
 
   # A generated movie: 1..5 chunks of 1..8 random bytes each.
   defp movie do
-    gen all chunks <- list_of(binary(min_length: 1, max_length: 8), min_length: 1, max_length: 5) do
+    gen all(chunks <- list_of(binary(min_length: 1, max_length: 8), min_length: 1, max_length: 5)) do
       MP4Builder.build(chunks)
     end
   end
@@ -37,8 +37,10 @@ defmodule ISOMedia.OffsetsPropertyTest do
   end
 
   property "after any structural edits + fix, every chunk resolves to its original bytes" do
-    check all %{binary: bin, chunks: chunks} <- movie(),
-              edits <- list_of(edit(), max_length: 4) do
+    check all(
+            %{binary: bin, chunks: chunks} <- movie(),
+            edits <- list_of(edit(), max_length: 4)
+          ) do
       {:ok, boxes} = ISOMedia.parse(bin)
 
       # Apply edits in sequence; :faststart already fixes offsets, otherwise fix at the end.
@@ -58,14 +60,14 @@ defmodule ISOMedia.OffsetsPropertyTest do
   end
 
   property "no-op: fixing an unedited tree serializes identically to the input" do
-    check all %{binary: bin} <- movie() do
+    check all(%{binary: bin} <- movie()) do
       {:ok, boxes} = ISOMedia.parse(bin)
       assert ISOMedia.serialize(ISOMedia.fix_chunk_offsets(boxes)) == bin
     end
   end
 
   property "fix_chunk_offsets is idempotent" do
-    check all %{binary: bin} <- movie(), pad <- integer(0..40) do
+    check all(%{binary: bin} <- movie(), pad <- integer(0..40)) do
       {:ok, boxes} = ISOMedia.parse(bin)
       edited = List.insert_at(boxes, 1, %Box{type: "free", data: :binary.copy(<<0>>, pad)})
       once = ISOMedia.fix_chunk_offsets(edited)
@@ -75,7 +77,7 @@ defmodule ISOMedia.OffsetsPropertyTest do
   end
 
   property "round-trip is preserved (source_offset/size never leak into output)" do
-    check all %{binary: bin} <- movie() do
+    check all(%{binary: bin} <- movie()) do
       {:ok, boxes} = ISOMedia.parse(bin)
       assert ISOMedia.serialize(boxes) == bin
     end
