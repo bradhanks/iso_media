@@ -3,6 +3,7 @@ defmodule ISOMedia.Serializer do
 
   alias ISOMedia.Box
   alias ISOMedia.FileSlice
+  alias ISOMedia.Layout
 
   @doc "Serialize a box or list of boxes to a binary (materializes any FileSlice payloads)."
   def serialize(boxes), do: boxes |> materialize() |> to_iodata() |> IO.iodata_to_binary()
@@ -56,5 +57,44 @@ defmodule ISOMedia.Serializer do
   # eof: size field == 0
   defp encode_header(%Box{type: type, size_mode: :eof}, _body_len) do
     <<0::32, type::binary>>
+  end
+
+  @doc """
+  Stream a box or list of boxes to an open raw `io_device`, reading `FileSlice`
+  payloads from disk in `chunk_size`-byte chunks (so a multi-GB payload is never
+  held in memory). Returns `:ok`.
+  """
+  def stream(boxes, io_device, chunk_size \\ 65_536)
+  def stream(%Box{} = box, io_device, chunk_size), do: stream([box], io_device, chunk_size)
+
+  def stream(boxes, io_device, chunk_size) when is_list(boxes) do
+    Enum.each(boxes, &stream_box(&1, io_device, chunk_size))
+  end
+
+  defp stream_box(%Box{data: data, children: [_ | _]}, _io, _chunk) when not is_nil(data) do
+    raise ArgumentError, "invalid box: has both data and children (cannot serialize unambiguously)"
+  end
+
+  defp stream_box(%Box{} = box, io, chunk_size) do
+    uuid = box.uuid || <<>>
+    # body = uuid ++ payload; body length is derivable from Layout without reading.
+    body_len = byte_size(uuid) + (Layout.box_size(box) - Layout.header_size(box))
+    write!(io, encode_header(box, body_len))
+    write!(io, uuid)
+    stream_payload(box, io, chunk_size)
+  end
+
+  defp stream_payload(%Box{data: %FileSlice{} = slice}, io, chunk), do: FileSlice.stream(slice, io, chunk)
+
+  defp stream_payload(%Box{data: nil, children: children}, io, chunk),
+    do: Enum.each(children, &stream_box(&1, io, chunk))
+
+  defp stream_payload(%Box{data: data}, io, _chunk) when is_binary(data), do: write!(io, data)
+
+  defp write!(io, data) do
+    case :file.write(io, data) do
+      :ok -> :ok
+      {:error, reason} -> raise "Serializer.stream: write failed: #{:file.format_error(reason)}"
+    end
   end
 end
