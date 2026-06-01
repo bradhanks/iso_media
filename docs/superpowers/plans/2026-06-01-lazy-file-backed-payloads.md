@@ -1137,4 +1137,3 @@ git commit -m "docs: document lazy payloads and large-file workflow"
 - **Type consistency:** `%FileSlice{path, offset, length}` used identically T1→T3→T5→T6→T7→T8; `Layout.box_size/header_size` reused by `stream/3`; `LazyParser.parse_file/2` ↔ `read/2`; `Serializer.materialize/1`/`stream/3` ↔ `serialize/1`/`write/2`.
 - **Backward compatibility:** default `read/2` (no `:lazy`) and `serialize/1` on in-memory trees are unchanged; `write/2` still returns `:ok` and emits identical bytes for in-memory trees (verified by T6 + the full-suite runs in T5/T8).
 - **Placeholders:** none — every code/test step contains complete content.
-```
