@@ -11,6 +11,19 @@ defmodule ISOMedia.OffsetsTest do
     <<0, 0, 0, 0, length(offsets)::32, entries::binary>>
   end
 
+  defp co64_data(offsets) do
+    entries = for o <- offsets, into: <<>>, do: <<o::64>>
+    <<0, 0, 0, 0, length(offsets)::32, entries::binary>>
+  end
+
+  defp table(:stco, offsets), do: leaf("stco", stco_data(offsets))
+  defp table(:co64, offsets), do: leaf("co64", co64_data(offsets))
+
+  # A full trak with the real stbl path down to its chunk-offset table.
+  defp trak(table_box) do
+    container("trak", container("mdia", container("minf", container("stbl", table_box))))
+  end
+
   # Build ftyp + moov(stco) + mdat where stco points at chunk starts inside mdat.
   # Returns the parsed boxes. The mdat payload is `chunks` concatenated.
   defp build(chunks) do
@@ -148,6 +161,10 @@ defmodule ISOMedia.OffsetsTest do
           ISOMedia.Boxes.ChunkOffset.decode(b).offsets
         end)
 
+      # Same number of entries before and after, so the zip below can't silently
+      # drop a mismatched chunk.
+      assert length(old_offsets) == length(new_offsets)
+
       # Each chunk's bytes at the new offset match the bytes at the old offset in the
       # original file (first 16 bytes is enough to prove the offset points at the
       # same chunk data).
@@ -156,6 +173,92 @@ defmodule ISOMedia.OffsetsTest do
         k = min(16, byte_size(original) - old)
         assert binary_part(out, new, k) == binary_part(original, old, k)
       end)
+    end
+  end
+
+  describe "multiple tables and mdats" do
+    test "faststart on a co64-based file keeps it co64 and resolvable" do
+      ftyp = leaf("ftyp", <<"isom", 0::32, "isom">>)
+      chunks = [<<1, 2>>, <<3, 4, 5>>]
+      payload = IO.iodata_to_binary(chunks)
+
+      # moov size is independent of offset values, so size with zeros then fill in.
+      moov0 = container("moov", trak(table(:co64, [0, 0])))
+      start = byte_size(ftyp) + byte_size(moov0) + 8
+      {offs, _} = Enum.map_reduce(chunks, start, fn c, p -> {p, p + byte_size(c)} end)
+      moov = container("moov", trak(table(:co64, offs)))
+      {:ok, boxes} = ISOMedia.parse(ftyp <> moov <> leaf("mdat", payload))
+
+      fixed = ISOMedia.faststart(boxes)
+      out = ISOMedia.serialize(fixed)
+
+      co_box = ISOMedia.Box.find(fixed, ~w(moov trak mdia minf stbl co64))
+      assert co_box != nil, "table should still be co64"
+      co = ISOMedia.Boxes.ChunkOffset.decode(co_box)
+      assert co.kind == :co64
+
+      chunks
+      |> Enum.zip(co.offsets)
+      |> Enum.each(fn {chunk, off} -> assert binary_part(out, off, byte_size(chunk)) == chunk end)
+    end
+
+    test "faststart remaps every trak's stco when a moov has multiple tracks" do
+      ftyp = leaf("ftyp", <<"isom", 0::32, "isom">>)
+      a = <<1, 2, 3>>
+      b = <<4, 5>>
+      payload = a <> b
+
+      moov0 = container("moov", trak(table(:stco, [0])) <> trak(table(:stco, [0])))
+      start = byte_size(ftyp) + byte_size(moov0) + 8
+      off_a = start
+      off_b = start + byte_size(a)
+      moov = container("moov", trak(table(:stco, [off_a])) <> trak(table(:stco, [off_b])))
+      {:ok, boxes} = ISOMedia.parse(ftyp <> moov <> leaf("mdat", payload))
+
+      fixed = ISOMedia.faststart(boxes)
+      out = ISOMedia.serialize(fixed)
+
+      offsets =
+        fixed
+        |> ISOMedia.Box.find_all(~w(moov trak mdia minf stbl stco))
+        |> Enum.flat_map(&ISOMedia.Boxes.ChunkOffset.decode(&1).offsets)
+
+      assert [new_a, new_b] = offsets
+      assert binary_part(out, new_a, byte_size(a)) == a
+      assert binary_part(out, new_b, byte_size(b)) == b
+    end
+
+    test "a chunk in each of two mdats gets remapped by that mdat's own delta" do
+      ftyp = leaf("ftyp", <<"isom", 0::32, "isom">>)
+      a = <<1, 2, 3>>
+      b = <<4, 5>>
+
+      moov0 = container("moov", trak(table(:stco, [0, 0])))
+      mdat1_start = byte_size(ftyp) + byte_size(moov0)
+      off_a = mdat1_start + 8
+      mdat2_start = mdat1_start + 8 + byte_size(a)
+      off_b = mdat2_start + 8
+      moov = container("moov", trak(table(:stco, [off_a, off_b])))
+      bin = ftyp <> moov <> leaf("mdat", a) <> leaf("mdat", b)
+      {:ok, boxes} = ISOMedia.parse(bin)
+
+      # Insert a free box (total 12 bytes) BETWEEN the two mdats. mdat1 is unmoved
+      # (delta 0); mdat2 shifts down by 12 — so the two chunks get different deltas.
+      free = %Box{type: "free", data: <<0, 0, 0, 0>>}
+      # top-level order is [ftyp, moov, mdat1, mdat2]; insert before mdat2 (index 3)
+      moved = List.insert_at(boxes, 3, free)
+      fixed = ISOMedia.fix_chunk_offsets(moved)
+      out = ISOMedia.serialize(fixed)
+
+      assert [new_a, new_b] =
+               ISOMedia.Box.find(fixed, ~w(moov trak mdia minf stbl stco))
+               |> ISOMedia.Boxes.ChunkOffset.decode()
+               |> Map.fetch!(:offsets)
+
+      assert new_a == off_a
+      assert new_b == off_b + 12
+      assert binary_part(out, new_a, byte_size(a)) == a
+      assert binary_part(out, new_b, byte_size(b)) == b
     end
   end
 end

@@ -180,6 +180,10 @@ defmodule ISOMedia.Offsets do
       |> Enum.filter(&(&1.box.type == "mdat"))
       |> Enum.map(& &1.offset)
 
+    # The trailing `[]` asserts every collected offset was consumed: `new_offsets`
+    # and the top-level mdats are both derived from the same top-level traversal,
+    # so the counts always match. A non-empty remainder would mean that invariant
+    # broke (e.g. a future change introducing nested mdats) and should fail loudly.
     {rebased, []} =
       Enum.map_reduce(tree, new_offsets, fn box, offs ->
         case {box.type, offs} do
