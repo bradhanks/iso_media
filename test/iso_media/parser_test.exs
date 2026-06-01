@@ -89,4 +89,15 @@ defmodule ISOMedia.ParserTest do
     assert inner_free.source_offset == 16
     assert inner_free.source_size == 8
   end
+
+  test "the :offset option stamps absolute source_offsets" do
+    inner = <<8::32, "mvhd", 8::32, "free">>
+    moov = <<8 + byte_size(inner)::32, "moov", inner::binary>>
+
+    assert {:ok, [moov_box]} = Parser.parse(moov, offset: 100)
+    assert moov_box.source_offset == 100
+    [mvhd, free] = moov_box.children
+    assert mvhd.source_offset == 108
+    assert free.source_offset == 116
+  end
 end

@@ -8,6 +8,8 @@ defmodule ISOMedia.Parser do
 
   Options:
     * `:heuristic` (default `false`) — sniff unknown box types for nested boxes.
+    * `:offset` (default `0`) — absolute byte offset the binary begins at; threaded
+      into every box's `source_offset` so they are absolute even when parsing a slice.
   """
   def parse(binary, opts \\ []) when is_binary(binary) do
     {:ok, parse_boxes(binary, opts)}
@@ -15,7 +17,7 @@ defmodule ISOMedia.Parser do
     e -> {:error, Exception.message(e)}
   end
 
-  defp parse_boxes(binary, opts), do: parse_boxes(binary, opts, 0)
+  defp parse_boxes(binary, opts), do: parse_boxes(binary, opts, Keyword.get(opts, :offset, 0))
 
   defp parse_boxes(<<>>, _opts, _offset), do: []
 
