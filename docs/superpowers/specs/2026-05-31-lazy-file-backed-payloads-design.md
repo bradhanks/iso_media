@@ -41,6 +41,17 @@ An inert value plus read helpers.
   chunks and writes each to `io_device`; the source is opened once and read
   sequentially. Used by the streaming writer.
 
+**Open mode & leak safety (applies to all file access here):**
+- Open source files with `[:read, :binary, :raw]` and the output with
+  `[:write, :binary, :raw]`. `:raw` bypasses the Erlang IO-server (less CPU/copying
+  — meaningful for multi-GB streaming), but a `:raw` fd **must** be used with the
+  `:file` module (`:file.pread/3`, `:file.write/2`), **not** `IO.binread`/
+  `IO.binwrite` (those require an IO-server-backed device).
+- Use the **callback form** `File.open(path, modes, fn io -> ... end)`, which closes
+  the handle even if the body raises. This guarantees no descriptor leak if, e.g.,
+  the output disk fills mid-stream and a `:file.write` fails. (Equivalent to a
+  `try/after` close, but built in.)
+
 A **leaf box's `data` is now `binary | %FileSlice{} | nil`** (`nil` ⇒ container,
 unchanged). `Box.container?/leaf?` already classify correctly: a `FileSlice` leaf
 has `data != nil`.
@@ -115,10 +126,11 @@ for slices.
   `LazyParser.parse_file(path, opts)` (honoring `:lazy_threshold`, default
   `1_048_576`, and `:heuristic`); otherwise the current eager path. Returns
   `{:ok, boxes} | {:error, reason}`.
-- `write(path, boxes)` — open `path` for writing (`[:write, :binary, :raw]`),
-  `Serializer.stream(boxes, io)`, close. **Memory-safe for lazy trees.** Identical
-  bytes to before for fully in-memory trees (no `FileSlice`s → the stream walk emits
-  the same bytes `to_iodata` did).
+- `write(path, boxes)` — open `path` with `File.open(path, [:write, :binary, :raw],
+  fn io -> Serializer.stream(boxes, io) end)` (callback form auto-closes even on a
+  mid-stream write failure). **Memory-safe for lazy trees.** Identical bytes to
+  before for fully in-memory trees (no `FileSlice`s → the stream walk emits the same
+  bytes `to_iodata` did). Runs the overwrite guard (below) before opening.
 - `serialize/1` — unchanged signature; now materializes lazy trees (see above).
 
 ### `ISOMedia.Box` — `read_data/1`
