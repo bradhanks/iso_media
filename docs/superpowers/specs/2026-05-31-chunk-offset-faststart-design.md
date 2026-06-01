@@ -106,12 +106,11 @@ this phase). Guards:
   `box_size` differs from its size at parse time, means the data changed or is not
   traceable → **raise `ArgumentError`** with a message pointing at the
   sample-editing limitation. (Consistent with `Box.insert/4` raising on misuse.)
-- A chunk offset that falls within no `mdat`'s original range is left unchanged
-  (rare — e.g. self-contained sample data); the count of such offsets is reported
-  in the raised message only if it would produce an unresolvable file, otherwise
-  left as-is silently is NOT acceptable — instead collect them and raise if any
-  exist, since silently leaving them risks a broken file. (Decision: **raise** on
-  any unmappable chunk offset.)
+- A chunk offset that falls within no `mdat`'s original range (rare — e.g.
+  self-contained sample data referenced from elsewhere) is **unmappable**. Silently
+  leaving it risks emitting a broken file, so the decision is to **raise
+  `ArgumentError`**, with a message stating how many chunk offsets could not be
+  mapped and to which track they belong.
 - `faststart/1` on a tree with no `moov` or no `mdat` → return the tree unchanged
   (nothing to do), since there are no offsets to break.
 
