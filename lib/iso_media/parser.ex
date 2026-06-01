@@ -15,28 +15,42 @@ defmodule ISOMedia.Parser do
     e -> {:error, Exception.message(e)}
   end
 
-  defp parse_boxes(<<>>, _opts), do: []
+  defp parse_boxes(binary, opts), do: parse_boxes(binary, opts, 0)
 
-  defp parse_boxes(binary, opts) do
-    {box, rest} = parse_box(binary, opts)
-    [box | parse_boxes(rest, opts)]
+  defp parse_boxes(<<>>, _opts, _offset), do: []
+
+  defp parse_boxes(binary, opts, offset) do
+    {box, rest} = parse_box(binary, opts, offset)
+    [box | parse_boxes(rest, opts, offset + box.source_size)]
   end
 
-  defp parse_box(<<size::32, type::binary-size(4), after_type::binary>>, opts) do
+  defp parse_box(<<size::32, type::binary-size(4), after_type::binary>> = full, opts, offset) do
     {size_mode, payload, remainder} = take_payload(size, after_type)
     {uuid, payload} = take_uuid(type, payload)
+    box_size = byte_size(full) - byte_size(remainder)
+    payload_offset = offset + (box_size - byte_size(payload))
 
     box =
       if container?(type, payload, opts) do
         %Box{
           type: type,
           data: nil,
-          children: parse_boxes(payload, opts),
+          children: parse_boxes(payload, opts, payload_offset),
           uuid: uuid,
-          size_mode: size_mode
+          size_mode: size_mode,
+          source_offset: offset,
+          source_size: box_size
         }
       else
-        %Box{type: type, data: payload, children: [], uuid: uuid, size_mode: size_mode}
+        %Box{
+          type: type,
+          data: payload,
+          children: [],
+          uuid: uuid,
+          size_mode: size_mode,
+          source_offset: offset,
+          source_size: box_size
+        }
       end
 
     {box, remainder}

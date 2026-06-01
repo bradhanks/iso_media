@@ -69,4 +69,24 @@ defmodule ISOMedia.ParserTest do
     assert box.data == nil
     assert [%{type: "free"}] = box.children
   end
+
+  test "stamps source_offset and source_size on top-level and nested boxes" do
+    # moov (size 24) { mvhd (size 8) ; free (size 8) } then a trailing free (size 8)
+    inner = <<8::32, "mvhd", 8::32, "free">>
+    moov = <<8 + byte_size(inner)::32, "moov", inner::binary>>
+    bin = moov <> <<8::32, "free">>
+
+    assert {:ok, [moov_box, free_box]} = Parser.parse(bin)
+
+    assert moov_box.source_offset == 0
+    assert moov_box.source_size == 24
+    assert free_box.source_offset == 24
+    assert free_box.source_size == 8
+
+    [mvhd, inner_free] = moov_box.children
+    assert mvhd.source_offset == 8
+    assert mvhd.source_size == 8
+    assert inner_free.source_offset == 16
+    assert inner_free.source_size == 8
+  end
 end
