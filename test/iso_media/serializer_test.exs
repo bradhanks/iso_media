@@ -61,4 +61,30 @@ defmodule ISOMedia.SerializerTest do
     box = %ISOMedia.Box{type: "free", data: <<>>}
     assert IO.iodata_to_binary(ISOMedia.Serializer.to_iodata(box)) == <<8::32, "free">>
   end
+
+  describe "FileSlice handling" do
+    setup do
+      path = Path.join(System.tmp_dir!(), "iso_ser_#{System.unique_integer([:positive])}.bin")
+      File.write!(path, <<10, 11, 12, 13>>)
+      on_exit(fn -> File.rm(path) end)
+      {:ok, path: path}
+    end
+
+    test "materialize/1 replaces a FileSlice leaf with its bytes", %{path: path} do
+      box = %ISOMedia.Box{type: "mdat", data: %ISOMedia.FileSlice{path: path, offset: 0, length: 4}}
+      [materialized] = ISOMedia.Serializer.materialize([box])
+      assert materialized.data == <<10, 11, 12, 13>>
+    end
+
+    test "serialize/1 materializes a lazy tree to the right bytes", %{path: path} do
+      box = %ISOMedia.Box{type: "mdat", data: %ISOMedia.FileSlice{path: path, offset: 0, length: 4}}
+      # size 12 (8 header + 4 payload), type mdat, then the 4 bytes
+      assert ISOMedia.Serializer.serialize([box]) == <<12::32, "mdat", 10, 11, 12, 13>>
+    end
+
+    test "to_iodata/1 raises a clear error on an un-materialized FileSlice", %{path: path} do
+      box = %ISOMedia.Box{type: "mdat", data: %ISOMedia.FileSlice{path: path, offset: 0, length: 4}}
+      assert_raise ArgumentError, ~r/FileSlice/, fn -> ISOMedia.Serializer.to_iodata([box]) end
+    end
+  end
 end
