@@ -6,7 +6,7 @@ defmodule ISOMedia.SampleTest do
     s = %Sample{}
 
     assert Map.keys(s) |> Enum.sort() ==
-             [:__struct__, :chunk_index, :dts, :index, :offset, :pts, :size, :sync?]
+             [:__struct__, :chunk_index, :dts, :duration, :index, :offset, :pts, :size, :sync?]
   end
 
   test "holds sample metadata" do

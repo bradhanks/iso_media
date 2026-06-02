@@ -46,6 +46,8 @@ defmodule ISOMedia.SampleTableTest do
              offset: 2000,
              sync?: true
            } = s3
+
+    assert Enum.map(samples, & &1.duration) == [100, 100, 100]
   end
 
   test "stss marks only listed samples as sync" do

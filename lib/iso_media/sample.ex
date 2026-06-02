@@ -8,12 +8,13 @@ defmodule ISOMedia.Sample do
   every sample when the track has no `stss`).
   """
 
-  defstruct [:index, :chunk_index, :dts, :pts, :size, :offset, :sync?]
+  defstruct [:index, :chunk_index, :dts, :duration, :pts, :size, :offset, :sync?]
 
   @type t :: %__MODULE__{
           index: pos_integer(),
           chunk_index: pos_integer(),
           dts: non_neg_integer(),
+          duration: non_neg_integer(),
           pts: integer(),
           size: non_neg_integer(),
           offset: non_neg_integer(),

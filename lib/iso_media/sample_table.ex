@@ -24,11 +24,12 @@ defmodule ISOMedia.SampleTable do
             "stsc/stsz mismatch: chunks describe #{Enum.sum(spc)} samples but stsz has #{sample_count}"
     end
 
-    dts = decode_dts(stbl, sample_count)
+    durations = decode_durations(stbl, sample_count)
+    dts = cumulative(durations)
     ctts = decode_ctts(stbl, sample_count)
     sync = sync_set(stbl)
 
-    assemble(sizes, chunk_offsets, spc, dts, ctts, sync)
+    assemble(sizes, chunk_offsets, spc, durations, dts, ctts, sync)
   end
 
   # --- table decoders ---
@@ -84,7 +85,7 @@ defmodule ISOMedia.SampleTable do
     end)
   end
 
-  defp decode_dts(stbl, sample_count) do
+  defp decode_durations(stbl, sample_count) do
     box = dig(stbl, ["stts"]) || raise ArgumentError, "stbl is missing stts"
     {_v, _f, <<_count::32, rest::binary>>} = FullBox.parse(box.data)
     deltas = for <<n::32, delta::32 <- rest>>, do: {n, delta}
@@ -97,7 +98,11 @@ defmodule ISOMedia.SampleTable do
           "stts describes #{length(per_sample)} samples, expected #{sample_count}"
         )
 
-    {dts, _} = Enum.map_reduce(per_sample, 0, fn d, acc -> {acc, acc + d} end)
+    per_sample
+  end
+
+  defp cumulative(durations) do
+    {dts, _} = Enum.map_reduce(durations, 0, fn d, acc -> {acc, acc + d} end)
     dts
   end
 
@@ -139,23 +144,25 @@ defmodule ISOMedia.SampleTable do
 
   # --- assembly ---
 
-  defp assemble(sizes, chunk_offsets, spc, dts, ctts, sync) do
+  defp assemble(sizes, chunk_offsets, spc, durations, dts, ctts, sync) do
     chunks = Enum.zip([1..length(chunk_offsets)//1, chunk_offsets, spc])
 
     {rev, _state} =
-      Enum.reduce(chunks, {[], {1, sizes, dts, ctts}}, fn {cidx, coff, n},
-                                                          {acc, {sidx, sz, dt, ct}} ->
+      Enum.reduce(chunks, {[], {1, sizes, durations, dts, ctts}}, fn {cidx, coff, n},
+                                                                     {acc, {sidx, sz, du, dt, ct}} ->
         {csz, sz2} = Enum.split(sz, n)
+        {cdu, du2} = Enum.split(du, n)
         {cdt, dt2} = Enum.split(dt, n)
         {cct, ct2} = Enum.split(ct, n)
 
         {chunk_acc, _pos, _i} =
-          Enum.reduce(Enum.zip([csz, cdt, cct]), {acc, coff, sidx}, fn {size, d, c},
-                                                                       {a, pos, i} ->
+          Enum.reduce(Enum.zip([csz, cdu, cdt, cct]), {acc, coff, sidx}, fn {size, dur, d, c},
+                                                                            {a, pos, i} ->
             sample = %Sample{
               index: i,
               chunk_index: cidx,
               dts: d,
+              duration: dur,
               pts: d + c,
               size: size,
               offset: pos,
@@ -165,7 +172,7 @@ defmodule ISOMedia.SampleTable do
             {[sample | a], pos + size, i + 1}
           end)
 
-        {chunk_acc, {sidx + n, sz2, dt2, ct2}}
+        {chunk_acc, {sidx + n, sz2, du2, dt2, ct2}}
       end)
 
     Enum.reverse(rev)
