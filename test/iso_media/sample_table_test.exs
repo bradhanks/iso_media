@@ -23,9 +23,29 @@ defmodule ISOMedia.SampleTableTest do
     samples = SampleTable.build(sample_trak())
 
     assert [s1, s2, s3] = samples
-    assert %Sample{index: 1, chunk_index: 1, dts: 0, pts: 0, size: 10, offset: 1000, sync?: true} = s1
-    assert %Sample{index: 2, chunk_index: 1, dts: 100, pts: 100, size: 20, offset: 1010, sync?: true} = s2
-    assert %Sample{index: 3, chunk_index: 2, dts: 200, pts: 200, size: 30, offset: 2000, sync?: true} = s3
+
+    assert %Sample{index: 1, chunk_index: 1, dts: 0, pts: 0, size: 10, offset: 1000, sync?: true} =
+             s1
+
+    assert %Sample{
+             index: 2,
+             chunk_index: 1,
+             dts: 100,
+             pts: 100,
+             size: 20,
+             offset: 1010,
+             sync?: true
+           } = s2
+
+    assert %Sample{
+             index: 3,
+             chunk_index: 2,
+             dts: 200,
+             pts: 200,
+             size: 30,
+             offset: 2000,
+             sync?: true
+           } = s3
   end
 
   test "stss marks only listed samples as sync" do

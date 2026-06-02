@@ -59,7 +59,10 @@ defmodule ISOMedia.SampleTable do
   end
 
   defp chunk_offsets(stbl) do
-    box = dig(stbl, ["stco"]) || dig(stbl, ["co64"]) || raise ArgumentError, "stbl is missing stco/co64"
+    box =
+      dig(stbl, ["stco"]) || dig(stbl, ["co64"]) ||
+        raise ArgumentError, "stbl is missing stco/co64"
+
     ChunkOffset.decode(box).offsets
   end
 
@@ -88,7 +91,11 @@ defmodule ISOMedia.SampleTable do
     per_sample = Enum.flat_map(deltas, fn {n, d} -> List.duplicate(d, n) end)
 
     if length(per_sample) != sample_count,
-      do: raise(ArgumentError, "stts describes #{length(per_sample)} samples, expected #{sample_count}")
+      do:
+        raise(
+          ArgumentError,
+          "stts describes #{length(per_sample)} samples, expected #{sample_count}"
+        )
 
     {dts, _} = Enum.map_reduce(per_sample, 0, fn d, acc -> {acc, acc + d} end)
     dts
@@ -129,13 +136,15 @@ defmodule ISOMedia.SampleTable do
     chunks = Enum.zip([1..length(chunk_offsets)//1, chunk_offsets, spc])
 
     {rev, _state} =
-      Enum.reduce(chunks, {[], {1, sizes, dts, ctts}}, fn {cidx, coff, n}, {acc, {sidx, sz, dt, ct}} ->
+      Enum.reduce(chunks, {[], {1, sizes, dts, ctts}}, fn {cidx, coff, n},
+                                                          {acc, {sidx, sz, dt, ct}} ->
         {csz, sz2} = Enum.split(sz, n)
         {cdt, dt2} = Enum.split(dt, n)
         {cct, ct2} = Enum.split(ct, n)
 
         {chunk_acc, _pos, _i} =
-          Enum.reduce(Enum.zip([csz, cdt, cct]), {acc, coff, sidx}, fn {size, d, c}, {a, pos, i} ->
+          Enum.reduce(Enum.zip([csz, cdt, cct]), {acc, coff, sidx}, fn {size, d, c},
+                                                                       {a, pos, i} ->
             sample = %Sample{
               index: i,
               chunk_index: cidx,

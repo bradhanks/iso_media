@@ -4,6 +4,7 @@ defmodule ISOMedia.SampleTest do
 
   test "has the expected fields with nil defaults" do
     s = %Sample{}
+
     assert Map.keys(s) |> Enum.sort() ==
              [:__struct__, :chunk_index, :dts, :index, :offset, :pts, :size, :sync?]
   end
