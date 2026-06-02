@@ -18,7 +18,7 @@ defmodule ISOMedia.Box do
 
   @type t :: %__MODULE__{
           type: String.t(),
-          data: binary() | nil,
+          data: binary() | ISOMedia.FileSlice.t() | nil,
           children: [t()],
           uuid: <<_::128>> | nil,
           size_mode: :compact | :large | :eof,
