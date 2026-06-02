@@ -34,27 +34,32 @@ defmodule ISOMedia.TrimTest do
     assert hd(s1).dts == 0
   end
 
-  test "trim preserves A/V interleave (chunks sorted by original offset)" do
-    {_bin, boxes} = build()
+  # The sequence of track ids when every track's chunk offsets are merged and sorted by
+  # offset. For a round-robin-interleaved file this alternates (e.g. [1, 2, 1, 2]); if the
+  # writer collapsed to block-per-track it would group (e.g. [1, 1, 2, 2]).
+  defp interleave_sequence(boxes) do
+    moov = Enum.find(boxes, &(&1.type == "moov"))
+
+    for trak <- Enum.filter(moov.children, &(&1.type == "trak")),
+        id = ISOMedia.Boxes.TrackHeader.decode(ISOMedia.Box.find([trak], ~w(trak tkhd))).track_id,
+        stco = ISOMedia.Box.find([trak], ~w(trak mdia minf stbl stco)),
+        off <- ISOMedia.Boxes.ChunkOffset.decode(stco).offsets do
+      {off, id}
+    end
+    |> Enum.sort()
+    |> Enum.map(&elem(&1, 1))
+  end
+
+  test "trim preserves A/V interleave (output chunk order matches the original)" do
+    {bin, boxes} = build()
+    {:ok, orig} = ISOMedia.parse(bin)
     out = boxes |> ISOMedia.trim(0, 40) |> ISOMedia.serialize()
     {:ok, reparsed} = ISOMedia.parse(out)
 
-    # gather all chunk offsets across both tracks from the OUTPUT; they must be strictly ascending
-    # in the order the runs were written (interleave preserved, not block-per-track).
-    offs =
-      for id <- ISOMedia.track_ids(reparsed),
-          trak =
-            Enum.find(
-              Enum.find(reparsed, &(&1.type == "moov")).children,
-              &(ISOMedia.Boxes.TrackHeader.decode(ISOMedia.Box.find([&1], ~w(trak tkhd))).track_id ==
-                  id)
-            ),
-          stco = ISOMedia.Box.find([trak], ~w(trak mdia minf stbl stco)),
-          o <- ISOMedia.Boxes.ChunkOffset.decode(stco).offsets,
-          do: o
-
-    # both tracks' chunks land in the shared mdat; the full set is all distinct and in-range
-    assert length(offs) == length(Enum.uniq(offs))
+    # The original is round-robin interleaved ([1, 2, 1, 2]); keeping everything must
+    # preserve that order, NOT collapse to block-per-track ([1, 1, 2, 2]).
+    assert interleave_sequence(orig) == [1, 2, 1, 2]
+    assert interleave_sequence(reparsed) == interleave_sequence(orig)
   end
 
   test "every kept sample's bytes are byte-identical to the original" do
@@ -84,5 +89,32 @@ defmodule ISOMedia.TrimTest do
     assert_raise ArgumentError, ~r/selects no samples/, fn ->
       ISOMedia.trim(boxes, 10_000, 10_001)
     end
+  end
+
+  test "start snaps back to the NEAREST preceding keyframe (not the first, not forward)" do
+    # 5 samples, dts 0/10/20/30/40, distinct bytes; sparse keyframes at samples 1 and 3.
+    specs = [
+      %{
+        id: 1,
+        chunks: [[<<1>>, <<2>>, <<3>>, <<4>>, <<5>>]],
+        durations: [10, 10, 10, 10, 10],
+        sync: [1, 3]
+      }
+    ]
+
+    %{binary: bin} = ISOMedia.Support.MP4Builder.build_tracks(specs)
+    {:ok, boxes} = ISOMedia.parse(bin)
+
+    # Window [35, 100) contains only sample 5 (dts 40). The nearest preceding keyframe is
+    # sample 3 (dts 20) — NOT sample 1 (first keyframe) and NOT sample 5 (no snap).
+    out = boxes |> ISOMedia.trim(35, 100) |> ISOMedia.serialize()
+    {:ok, reparsed} = ISOMedia.parse(out)
+
+    s = ISOMedia.samples(reparsed, 1)
+
+    # kept = samples 3, 4, 5 -> bytes <<3>>,<<4>>,<<5>>; first is the snap keyframe, re-based to 0.
+    assert Enum.map(s, &binary_part(out, &1.offset, &1.size)) == [<<3>>, <<4>>, <<5>>]
+    assert hd(s).dts == 0
+    assert hd(s).sync?
   end
 end

@@ -71,7 +71,8 @@ only `mdat` and `stco`/`co64`. The result is already in faststart order
 `fix_chunk_offsets/1` cannot be re-applied to it (they reject synthesized `mdat`s);
 run faststart on the source *before* extracting if you need a custom order.
 Movie/track `mvhd`/`tkhd` durations are left as-is. `stz2` sample sizes are not yet
-supported (raises). Trim and concatenation are future phases.
+supported (raises). (For time-range trimming, see **Trim** below; concatenation is a
+future phase.)
 
 ## Trim
 
