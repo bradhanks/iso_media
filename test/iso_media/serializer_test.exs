@@ -145,4 +145,50 @@ defmodule ISOMedia.SerializerTest do
       assert File.read!(out) == <<12::32, "mdat", 7, 7, 7, 7>>
     end
   end
+
+  describe "segment-list payload" do
+    setup do
+      path = Path.join(System.tmp_dir!(), "iso_seg_#{System.unique_integer([:positive])}.bin")
+      File.write!(path, <<0, 1, 2, 3, 4, 5, 6, 7>>)
+      on_exit(fn -> File.rm(path) end)
+      {:ok, path: path}
+    end
+
+    test "box_size sums binary + FileSlice parts", %{path: path} do
+      parts = [<<9, 9>>, %ISOMedia.FileSlice{path: path, offset: 2, length: 3}]
+      box = %ISOMedia.Box{type: "mdat", data: parts}
+      # header 8 + (2 + 3)
+      assert ISOMedia.Layout.box_size(box) == 13
+    end
+
+    test "serialize materializes a segment list", %{path: path} do
+      parts = [<<9, 9>>, %ISOMedia.FileSlice{path: path, offset: 2, length: 3}]
+      box = %ISOMedia.Box{type: "mdat", data: parts}
+      assert ISOMedia.Serializer.serialize([box]) == <<13::32, "mdat", 9, 9, 2, 3, 4>>
+    end
+
+    test "stream writes each segment in order", %{path: path} do
+      parts = [<<9, 9>>, %ISOMedia.FileSlice{path: path, offset: 2, length: 3}]
+      box = %ISOMedia.Box{type: "mdat", data: parts}
+      out = Path.join(System.tmp_dir!(), "iso_seg_out_#{System.unique_integer([:positive])}.bin")
+      on_exit(fn -> File.rm(out) end)
+
+      File.open!(out, [:write, :binary, :raw], fn io ->
+        ISOMedia.Serializer.stream([box], io, 2)
+      end)
+
+      assert File.read!(out) == <<13::32, "mdat", 9, 9, 2, 3, 4>>
+    end
+
+    test "read_data concatenates the parts", %{path: path} do
+      parts = [<<9, 9>>, %ISOMedia.FileSlice{path: path, offset: 2, length: 3}]
+      assert ISOMedia.Box.read_data(%ISOMedia.Box{type: "mdat", data: parts}) == <<9, 9, 2, 3, 4>>
+    end
+
+    test "to_iodata raises on a raw segment list", %{path: path} do
+      parts = [<<9, 9>>, %ISOMedia.FileSlice{path: path, offset: 2, length: 3}]
+      box = %ISOMedia.Box{type: "mdat", data: parts}
+      assert_raise ArgumentError, ~r/segment list/, fn -> ISOMedia.Serializer.to_iodata([box]) end
+    end
+  end
 end

@@ -18,7 +18,7 @@ defmodule ISOMedia.Box do
 
   @type t :: %__MODULE__{
           type: String.t(),
-          data: binary() | ISOMedia.FileSlice.t() | nil,
+          data: binary() | ISOMedia.FileSlice.t() | [binary() | ISOMedia.FileSlice.t()] | nil,
           children: [t()],
           uuid: <<_::128>> | nil,
           size_mode: :compact | :large | :eof,
@@ -114,6 +114,15 @@ defmodule ISOMedia.Box do
   """
   def read_data(%__MODULE__{data: %ISOMedia.FileSlice{} = slice}),
     do: ISOMedia.FileSlice.read(slice)
+
+  def read_data(%__MODULE__{data: parts}) when is_list(parts) do
+    parts
+    |> Enum.map(fn
+      %ISOMedia.FileSlice{} = s -> ISOMedia.FileSlice.read(s)
+      bin when is_binary(bin) -> bin
+    end)
+    |> IO.iodata_to_binary()
+  end
 
   def read_data(%__MODULE__{data: data}), do: data
 end

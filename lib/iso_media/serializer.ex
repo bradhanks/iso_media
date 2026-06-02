@@ -15,6 +15,18 @@ defmodule ISOMedia.Serializer do
   defp materialize_box(%Box{data: %FileSlice{} = slice} = box),
     do: %{box | data: FileSlice.read(slice)}
 
+  defp materialize_box(%Box{data: parts} = box) when is_list(parts) do
+    bytes =
+      parts
+      |> Enum.map(fn
+        %FileSlice{} = s -> FileSlice.read(s)
+        bin when is_binary(bin) -> bin
+      end)
+      |> IO.iodata_to_binary()
+
+    %{box | data: bytes}
+  end
+
   defp materialize_box(%Box{data: nil, children: children} = box),
     do: %{box | children: Enum.map(children, &materialize_box/1)}
 
@@ -40,6 +52,12 @@ defmodule ISOMedia.Serializer do
   defp encode_payload(%Box{data: %FileSlice{}}) do
     raise ArgumentError,
           "box payload is an unread FileSlice; use ISOMedia.write/2 to stream it, " <>
+            "or ISOMedia.serialize/1 to materialize it into memory"
+  end
+
+  defp encode_payload(%Box{data: parts}) when is_list(parts) do
+    raise ArgumentError,
+          "box payload is a segment list; use ISOMedia.write/2 to stream it, " <>
             "or ISOMedia.serialize/1 to materialize it into memory"
   end
 
@@ -88,6 +106,13 @@ defmodule ISOMedia.Serializer do
 
   defp stream_payload(%Box{data: %FileSlice{} = slice}, io, chunk),
     do: FileSlice.stream(slice, io, chunk)
+
+  defp stream_payload(%Box{data: parts}, io, chunk) when is_list(parts) do
+    Enum.each(parts, fn
+      %FileSlice{} = s -> FileSlice.stream(s, io, chunk)
+      bin when is_binary(bin) -> write!(io, bin)
+    end)
+  end
 
   defp stream_payload(%Box{data: nil, children: children}, io, chunk),
     do: Enum.each(children, &stream_box(&1, io, chunk))

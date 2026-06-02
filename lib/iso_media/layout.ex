@@ -23,6 +23,16 @@ defmodule ISOMedia.Layout do
   @doc "Total serialized byte length of a box (header + uuid + payload/children)."
   def box_size(%Box{data: %FileSlice{length: len}} = box), do: header_size(box) + len
 
+  def box_size(%Box{data: parts} = box) when is_list(parts) do
+    header_size(box) +
+      Enum.sum(
+        Enum.map(parts, fn
+          %FileSlice{length: len} -> len
+          bin when is_binary(bin) -> byte_size(bin)
+        end)
+      )
+  end
+
   def box_size(%Box{data: nil, children: children} = box) do
     header_size(box) + Enum.sum(Enum.map(children, &box_size/1))
   end
