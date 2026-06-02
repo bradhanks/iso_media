@@ -77,4 +77,12 @@ defmodule ISOMedia.TrimTest do
     {_bin, boxes} = build()
     assert_raise ArgumentError, fn -> ISOMedia.trim(boxes, 30, 10) end
   end
+
+  test "raises when the range is past the content (no samples in the window)" do
+    {_bin, boxes} = build()
+    # content ends at dts 30; a window at 10_000 contains no sample
+    assert_raise ArgumentError, ~r/selects no samples/, fn ->
+      ISOMedia.trim(boxes, 10_000, 10_001)
+    end
+  end
 end

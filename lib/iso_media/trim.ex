@@ -96,6 +96,12 @@ defmodule ISOMedia.Trim do
 
     samples = SampleTable.build(trak)
 
+    # The requested window must actually contain a sample. (Checked before snapping —
+    # otherwise snap-back could resurrect a trailing keyframe for an out-of-range
+    # window and silently produce a bogus one-sample clip.)
+    if not Enum.any?(samples, fn s -> s.dts >= start_ts and s.dts < end_ts end),
+      do: raise(ArgumentError, "trim range selects no samples for track #{track_id(trak)}")
+
     start_index =
       case Enum.filter(samples, fn s -> s.sync? and s.dts <= start_ts end) do
         [] -> 1
@@ -103,9 +109,6 @@ defmodule ISOMedia.Trim do
       end
 
     kept = Enum.filter(samples, fn s -> s.index >= start_index and s.dts < end_ts end)
-
-    if kept == [],
-      do: raise(ArgumentError, "trim range selects no samples for track #{track_id(trak)}")
 
     %{trak: trak, ts: ts, kept: kept, runs: Enum.chunk_by(kept, & &1.chunk_index)}
   end
