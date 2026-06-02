@@ -86,8 +86,11 @@ ISOMedia.write("clip.mp4", ISOMedia.trim(boxes, 10.0, 25.0))   # keep 10s..25s
 ```
 
 `trim/3` rebuilds each track's sample tables and `mdat` and updates the duration
-headers. Frame-accurate start (an `elst` to hide the leading frames before the
-requested point) and concatenation are future phases.
+headers. Like `extract_track/2`, the result has a freshly synthesized `mdat`, so
+`trim`/`extract_track`/`faststart` cannot be re-applied to it (they reject synthesized
+`mdat`s) — trim/extract/faststart the original first if you need to combine them.
+Frame-accurate start (an `elst` to hide the leading frames before the requested
+point) and concatenation are future phases.
 
 ## Status
 
