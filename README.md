@@ -34,11 +34,28 @@ ISOMedia.write("movie.faststart.mp4", ISOMedia.faststart(boxes))
 you like, then call it to repair `stco`/`co64` (it auto-promotes `stco`→`co64` when
 an offset exceeds 32 bits).
 
+## Large files (lazy payloads)
+
+Process files bigger than RAM: parse keeps big leaf payloads (`mdat`) as on-disk
+references, and `write/2` streams them disk→disk.
+
+```elixir
+{:ok, boxes} = ISOMedia.read("huge.mp4", lazy: true)   # mdat stays on disk
+ISOMedia.write("huge.faststart.mp4", ISOMedia.faststart(boxes))  # streamed out
+```
+
+Peak memory is roughly the metadata (`moov`) plus one stream chunk, independent of
+file size. `serialize/1` instead reads slices into memory (use it only for small
+trees). You must not `write/2` to a file you're reading from (it raises). The source
+file must stay put until the write completes.
+
+`write/2` returns `:ok` on success or `{:error, reason}` if the output file cannot be
+opened; it may raise on a mid-stream I/O error (e.g. disk full).
+
 ## Status
 
 Phase 1: lossless tree surgery. Phase 2: `stco`/`co64` chunk-offset rewriting and
-faststart. Offset fixing assumes `mdat` payloads are unchanged (box relocation, not
-sample editing) and raises otherwise. **Large files:** the whole file is held in
-memory, so faststart requires the file to fit in RAM; lazy/file-backed payloads are
-a future phase. Fragmented MP4 and HEIF `iloc` offsets are out of scope.
-See `docs/superpowers/specs/` for the designs.
+faststart. Phase 3: lazy file-backed payloads for files larger than memory. Offset
+fixing assumes `mdat` payloads are unchanged (box relocation, not sample editing).
+Fragmented MP4 and HEIF `iloc` offsets remain out of scope. See
+`docs/superpowers/specs/` for the designs.
