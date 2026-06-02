@@ -66,9 +66,12 @@ ISOMedia.write("track1.mp4", ISOMedia.extract_track(boxes, 1))
 ```
 
 Extraction preserves the track's existing sample tables and chunking; it rebuilds
-only `mdat` and `stco`/`co64`. Movie/track `mvhd`/`tkhd` durations are left as-is.
-`stz2` sample sizes are not yet supported (raises). Trim and concatenation are
-future phases.
+only `mdat` and `stco`/`co64`. The result is already in faststart order
+(`ftyp`/`moov`/`mdat`) with a freshly synthesized `mdat`, so `faststart/1` and
+`fix_chunk_offsets/1` cannot be re-applied to it (they reject synthesized `mdat`s);
+run faststart on the source *before* extracting if you need a custom order.
+Movie/track `mvhd`/`tkhd` durations are left as-is. `stz2` sample sizes are not yet
+supported (raises). Trim and concatenation are future phases.
 
 ## Status
 

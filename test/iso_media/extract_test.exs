@@ -56,4 +56,24 @@ defmodule ISOMedia.ExtractTest do
     {:ok, boxes} = ISOMedia.parse(bin)
     assert_raise ArgumentError, fn -> ISOMedia.extract_track(boxes, 999) end
   end
+
+  test "write/2 refuses to overwrite the source when only the rebuilt mdat is FileSlice-backed" do
+    # Big samples so mdat exceeds the lazy threshold while ftyp/moov stay inline:
+    # the extracted tree's *only* FileSlices live inside the mdat segment list.
+    big = :binary.copy(<<7>>, 4000)
+    specs = [%{id: 1, chunks: [[big], [big]]}]
+    {_bin, path} = parsed(specs)
+
+    {:ok, lazy} = ISOMedia.read(path, lazy: true, lazy_threshold: 2000)
+    tree = ISOMedia.extract_track(lazy, 1)
+
+    # Only the mdat carries FileSlices (everything else is inline binary).
+    mdat = ISOMedia.Box.find(tree, ~w(mdat))
+    assert is_list(mdat.data)
+    assert Enum.all?(mdat.data, &match?(%ISOMedia.FileSlice{}, &1))
+    refute match?(%ISOMedia.FileSlice{}, ISOMedia.Box.find(tree, ~w(ftyp)).data)
+
+    # The overwrite guard must still fire via the segment-list path.
+    assert_raise ArgumentError, ~r/FileSlice source/, fn -> ISOMedia.write(path, tree) end
+  end
 end
