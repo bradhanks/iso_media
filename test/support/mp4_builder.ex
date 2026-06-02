@@ -58,4 +58,84 @@ defmodule ISOMedia.Support.MP4Builder do
 
     %{binary: binary, offsets: offsets, chunks: chunks, mdat_payload_start: mdat_payload_start}
   end
+
+  @doc """
+  Build a multi-track file from specs `%{id: track_id, chunks: [[sample_binary]]}`.
+  Chunks are interleaved round-robin across tracks in the mdat (so a track's chunks
+  are scattered, exercising real extraction). Returns
+  `%{binary: binary, specs: specs}`.
+  """
+  def build_tracks(specs) when is_list(specs) and specs != [] do
+    ftyp = leaf("ftyp", <<"isom", 0::32, "isom">>)
+
+    # mdat layout: round-robin chunk i of each track, in spec order.
+    interleave = interleave_chunks(specs)
+    chunk_lengths = Enum.map(interleave, fn {_id, bytes} -> byte_size(bytes) end)
+
+    # Two-pass: size moov with zero offsets, then place real ones. Table sizes are
+    # independent of offset *values*, so moov's byte size is stable.
+    zero = Map.new(specs, fn s -> {s.id, List.duplicate(0, length(s.chunks))} end)
+    mdat_payload_start = byte_size(ftyp) + byte_size(moov(specs, zero)) + 8
+
+    {abs_offsets, _} =
+      Enum.map_reduce(chunk_lengths, mdat_payload_start, fn len, pos -> {pos, pos + len} end)
+
+    per_track = group_offsets(interleave, abs_offsets)
+    mdat_payload = IO.iodata_to_binary(Enum.map(interleave, fn {_id, b} -> b end))
+    binary = ftyp <> moov(specs, per_track) <> leaf("mdat", mdat_payload)
+
+    %{binary: binary, specs: specs}
+  end
+
+  defp interleave_chunks(specs) do
+    per_track = Enum.map(specs, fn s -> {s.id, Enum.map(s.chunks, &IO.iodata_to_binary/1)} end)
+    max_len = per_track |> Enum.map(fn {_id, cs} -> length(cs) end) |> Enum.max()
+
+    for i <- 0..(max_len - 1)//1,
+        {id, cs} <- per_track,
+        i < length(cs),
+        do: {id, Enum.at(cs, i)}
+  end
+
+  defp group_offsets(interleave, offsets) do
+    interleave
+    |> Enum.zip(offsets)
+    |> Enum.reduce(%{}, fn {{id, _b}, off}, acc -> Map.update(acc, id, [off], &(&1 ++ [off])) end)
+  end
+
+  defp moov(specs, offsets_map) do
+    traks = Enum.map(specs, fn s -> trak(s, Map.fetch!(offsets_map, s.id)) end)
+    container("moov", IO.iodata_to_binary(traks))
+  end
+
+  defp trak(spec, chunk_offsets) do
+    sample_sizes = spec.chunks |> List.flatten() |> Enum.map(&byte_size/1)
+    spc = Enum.map(spec.chunks, &length/1)
+    n = length(sample_sizes)
+
+    stsd = leaf("stsd", <<0, 0, 0, 0, 0::32>>)
+    stts = leaf("stts", <<0, 0, 0, 0, 1::32, n::32, 1::32>>)
+    stsc = stsc_box(spc)
+    stsz = leaf("stsz", <<0, 0, 0, 0, 0::32, n::32, sizes_bin(sample_sizes)::binary>>)
+
+    stco =
+      leaf("stco", <<0, 0, 0, 0, length(chunk_offsets)::32, offsets_bin(chunk_offsets)::binary>>)
+
+    stbl = container("stbl", stsd <> stts <> stsc <> stsz <> stco)
+    tkhd = leaf("tkhd", <<0, 0, 0, 0, 0::32, 0::32, spec.id::32, 0::32, 0::32>>)
+    container("trak", tkhd <> container("mdia", container("minf", stbl)))
+  end
+
+  defp stsc_box(spc) do
+    entries =
+      spc
+      |> Enum.with_index(1)
+      |> Enum.map(fn {n, i} -> <<i::32, n::32, 1::32>> end)
+      |> IO.iodata_to_binary()
+
+    leaf("stsc", <<0, 0, 0, 0, length(spc)::32, entries::binary>>)
+  end
+
+  defp sizes_bin(sizes), do: for(s <- sizes, into: <<>>, do: <<s::32>>)
+  defp offsets_bin(offsets), do: for(o <- offsets, into: <<>>, do: <<o::32>>)
 end
