@@ -26,6 +26,9 @@ defmodule ISOMedia do
     end
   end
 
+  @doc "Extract a single track into a new box tree (then `write/2` or `serialize/1`)."
+  def extract_track(boxes, track_id), do: ISOMedia.Extract.extract_track(boxes, track_id)
+
   @doc "Recompute stco/co64 chunk offsets for the current box arrangement. See `ISOMedia.Offsets.fix_chunk_offsets/1`."
   def fix_chunk_offsets(boxes), do: ISOMedia.Offsets.fix_chunk_offsets(boxes)
 
