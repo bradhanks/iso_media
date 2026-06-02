@@ -32,6 +32,63 @@ defmodule ISOMedia.SampleTable do
     assemble(sizes, chunk_offsets, spc, durations, dts, ctts, sync)
   end
 
+  @doc "Encode a `stts` box from a per-sample duration list (run-length encoded)."
+  def build_stts(durations) do
+    entries = rle(durations)
+    body = for {n, d} <- entries, into: <<>>, do: <<n::32, d::32>>
+    leaf("stts", <<0, 0, 0, 0, length(entries)::32, body::binary>>)
+  end
+
+  @doc "Encode a `stsz` box from explicit per-sample sizes."
+  def build_stsz(sizes) do
+    body = for s <- sizes, into: <<>>, do: <<s::32>>
+    leaf("stsz", <<0, 0, 0, 0, 0::32, length(sizes)::32, body::binary>>)
+  end
+
+  @doc "Encode a `ctts` box from per-sample composition offsets, or `nil` if all zero."
+  def build_ctts(offsets) do
+    cond do
+      Enum.all?(offsets, &(&1 == 0)) ->
+        nil
+
+      Enum.any?(offsets, &(&1 < 0)) ->
+        entries = rle(offsets)
+        body = for {n, off} <- entries, into: <<>>, do: <<n::32, off::signed-32>>
+        leaf("ctts", <<1::8, 0::24, length(entries)::32, body::binary>>)
+
+      true ->
+        entries = rle(offsets)
+        body = for {n, off} <- entries, into: <<>>, do: <<n::32, off::32>>
+        leaf("ctts", <<0, 0, 0, 0, length(entries)::32, body::binary>>)
+    end
+  end
+
+  @doc "Encode a `stss` box from 1-based sync sample positions."
+  def build_stss(positions) do
+    body = for n <- positions, into: <<>>, do: <<n::32>>
+    leaf("stss", <<0, 0, 0, 0, length(positions)::32, body::binary>>)
+  end
+
+  @doc "Encode a `stsc` box from per-chunk sample counts (chunk order, 1-based chunks)."
+  def build_stsc(per_chunk_counts) do
+    entries =
+      per_chunk_counts
+      |> Enum.with_index(1)
+      |> Enum.chunk_by(fn {count, _chunk} -> count end)
+      |> Enum.map(fn [{count, first_chunk} | _] = _run -> {first_chunk, count} end)
+
+    body =
+      for {first_chunk, count} <- entries, into: <<>>, do: <<first_chunk::32, count::32, 1::32>>
+
+    leaf("stsc", <<0, 0, 0, 0, length(entries)::32, body::binary>>)
+  end
+
+  defp rle(values) do
+    values |> Enum.chunk_by(& &1) |> Enum.map(fn run -> {length(run), hd(run)} end)
+  end
+
+  defp leaf(type, data), do: %ISOMedia.Box{type: type, data: data}
+
   # --- table decoders ---
 
   defp sample_sizes(stbl) do
