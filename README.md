@@ -89,8 +89,9 @@ ISOMedia.write("clip.mp4", ISOMedia.trim(boxes, 10.0, 25.0))   # keep 10s..25s
 headers. Like `extract_track/2`, the result has a freshly synthesized `mdat`, so
 `trim`/`extract_track`/`faststart` cannot be re-applied to it (they reject synthesized
 `mdat`s) — trim/extract/faststart the original first if you need to combine them.
-Frame-accurate start (an `elst` to hide the leading frames before the requested
-point) and concatenation are future phases.
+The result is **frame-accurate**: each track gets an edit list (`elst`) so playback
+presents exactly from the requested start, even though the decoded media begins at
+the preceding keyframe. Concatenation is a future phase.
 
 ## Status
 

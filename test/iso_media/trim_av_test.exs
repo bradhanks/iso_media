@@ -44,4 +44,47 @@ defmodule ISOMedia.TrimAvTest do
     assert :ok = ISOMedia.write(out, ISOMedia.trim(lazy, 0.2, 0.8))
     assert File.read!(out) == eager_out
   end
+
+  test "trim adds a correct edit list to the real video track" do
+    {:ok, boxes} = ISOMedia.read(@fixture)
+    [vid | _] = ISOMedia.track_ids(boxes)
+
+    # Compute the expected lead for the video track at start 0.5s, from the originals.
+    moov = Enum.find(boxes, &(&1.type == "moov"))
+
+    trak =
+      Enum.find(moov.children, fn t ->
+        t.type == "trak" and
+          ISOMedia.Boxes.TrackHeader.decode(ISOMedia.Box.find([t], ~w(trak tkhd))).track_id == vid
+      end)
+
+    ts =
+      ISOMedia.Boxes.MediaHeader.decode(ISOMedia.Box.find([trak], ~w(trak mdia mdhd))).timescale
+
+    start_ts = round(0.5 * ts)
+    samples = ISOMedia.samples(boxes, vid)
+
+    snap_dts =
+      samples
+      |> Enum.filter(&(&1.sync? and &1.dts <= start_ts))
+      |> List.last()
+      |> Map.get(:dts, 0)
+
+    expected_lead = max(0, start_ts - snap_dts)
+
+    out = boxes |> ISOMedia.trim(0.5, 0.9) |> ISOMedia.serialize()
+    {:ok, reparsed} = ISOMedia.parse(out)
+
+    out_trak =
+      Enum.find(Enum.find(reparsed, &(&1.type == "moov")).children, fn t ->
+        t.type == "trak" and
+          ISOMedia.Boxes.TrackHeader.decode(ISOMedia.Box.find([t], ~w(trak tkhd))).track_id == vid
+      end)
+
+    elst = ISOMedia.Box.find([out_trak], ~w(trak edts elst))
+    assert elst != nil, "video track should have an edit list"
+    [entry] = ISOMedia.Boxes.EditList.decode(elst).entries
+    assert entry.media_time == expected_lead
+    assert entry.rate_integer == 1
+  end
 end
