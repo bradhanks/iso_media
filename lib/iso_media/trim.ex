@@ -10,7 +10,7 @@ defmodule ISOMedia.Trim do
   """
 
   alias ISOMedia.{Box, Layout, MdatSource, SampleTable}
-  alias ISOMedia.Boxes.{ChunkOffset, MediaHeader, MovieHeader, TrackHeader}
+  alias ISOMedia.Boxes.{ChunkOffset, EditList, MediaHeader, MovieHeader, TrackHeader}
 
   @uint32_max 0xFFFFFFFF
 
@@ -110,7 +110,18 @@ defmodule ISOMedia.Trim do
 
     kept = Enum.filter(samples, fn s -> s.index >= start_index and s.dts < end_ts end)
 
-    %{trak: trak, ts: ts, kept: kept, runs: Enum.chunk_by(kept, & &1.chunk_index)}
+    snap_dts = hd(kept).dts
+    lead = max(0, start_ts - snap_dts)
+    visible = Enum.sum(Enum.map(kept, & &1.duration)) - lead
+
+    %{
+      trak: trak,
+      ts: ts,
+      kept: kept,
+      runs: Enum.chunk_by(kept, & &1.chunk_index),
+      lead: lead,
+      visible: visible
+    }
   end
 
   # --- moov / trak rebuild ---
@@ -166,6 +177,46 @@ defmodule ISOMedia.Trim do
     |> put_stbl(stbl_children)
     |> update_descendant(~w(mdia mdhd), &set_mdhd_duration(&1, track_dur))
     |> update_descendant(["tkhd"], &set_tkhd_duration(&1, scale(track_dur, sel.ts, movie_ts)))
+    |> put_edts(edts_for(sel, movie_ts))
+  end
+
+  # An `edts` box (containing one `elst`) for the track, or nil when there is no lead
+  # to hide.
+  defp edts_for(%{lead: lead} = sel, movie_ts) when lead > 0 do
+    elst =
+      EditList.encode(%EditList{
+        version: 0,
+        entries: [
+          %{
+            segment_duration: scale(sel.visible, sel.ts, movie_ts),
+            media_time: lead,
+            rate_integer: 1,
+            rate_fraction: 0
+          }
+        ]
+      })
+
+    %Box{type: "edts", data: nil, children: [elst]}
+  end
+
+  defp edts_for(_sel, _movie_ts), do: nil
+
+  # Drop any inherited `edts` (the timeline is re-based), then insert the fresh one
+  # (if any) immediately after `tkhd`.
+  defp put_edts(trak, edts) do
+    children = Enum.reject(trak.children, &(&1.type == "edts"))
+
+    children =
+      if edts do
+        idx = Enum.find_index(children, &(&1.type == "tkhd"))
+        at = if idx, do: idx + 1, else: 0
+        {pre, post} = Enum.split(children, at)
+        pre ++ [edts] ++ post
+      else
+        children
+      end
+
+    %{trak | children: children}
   end
 
   # stss only when not every kept sample is sync.

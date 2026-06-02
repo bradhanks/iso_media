@@ -117,4 +117,31 @@ defmodule ISOMedia.TrimTest do
     assert hd(s).dts == 0
     assert hd(s).sync?
   end
+
+  test "trim adds a frame-accurate edit list (media_time = snap lead)" do
+    # track 1 keyframes at samples 1 & 3 (dts 0 & 20), durations 10 → dts 0,10,20,30.
+    {_bin, boxes} = build()
+    # start 25 snaps back to keyframe sample 3 (dts 20): lead = 25 - 20 = 5.
+    out = boxes |> ISOMedia.trim(25, 35) |> ISOMedia.serialize()
+    {:ok, reparsed} = ISOMedia.parse(out)
+
+    elst = ISOMedia.Box.find(reparsed, ~w(moov trak edts elst))
+    el = ISOMedia.Boxes.EditList.decode(elst)
+    # kept = samples 3,4 (durations 10 each) → visible = 20 - 5 = 15; timescales = 1.
+    assert el.entries == [
+             %{segment_duration: 15, media_time: 5, rate_integer: 1, rate_fraction: 0}
+           ]
+
+    # samples are unchanged by the edit list
+    s = ISOMedia.samples(reparsed, 1)
+    assert Enum.map(s, &binary_part(out, &1.offset, &1.size)) == [<<3, 3>>, <<4, 4>>]
+  end
+
+  test "trim emits no edts when the start lands exactly on a keyframe" do
+    {_bin, boxes} = build()
+    # start 20 == keyframe sample 3's dts → lead 0 → no edit list.
+    out = boxes |> ISOMedia.trim(20, 35) |> ISOMedia.serialize()
+    {:ok, reparsed} = ISOMedia.parse(out)
+    assert ISOMedia.Box.find(reparsed, ~w(moov trak edts)) == nil
+  end
 end
