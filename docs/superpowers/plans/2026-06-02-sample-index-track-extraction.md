@@ -1234,4 +1234,3 @@ git commit -m "test: extraction property suite; docs for sample-level access"
 - **Type consistency:** `%Sample{index, chunk_index, dts, pts, size, offset, sync?}` consistent T1→T2→T6; `%ChunkOffset{kind, version, flags, offsets}` reused in SampleTable + Extract; segment list `[binary | FileSlice]` handled identically in `box_size`/`materialize`/`stream`/`read_data`; `Extract.find_trak/2`/`track_ids/1`/`extract_track/2` ↔ `ISOMedia.*` delegations.
 - **Offset math:** `extract_track` decides `co_kind` and `mdat_mode` before sizing `moov` (resolves the chicken-and-egg); chunk count is preserved so the offset-table size is stable; `new_mdat_payload_start = box_size(ftyp) + byte_size(moov) + mdat_header`.
 - **Placeholders:** none — every code/test step contains complete, clean content (the T6 offset helpers and T8 generators are final as written).
-```
