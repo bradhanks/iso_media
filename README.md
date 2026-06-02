@@ -73,6 +73,21 @@ run faststart on the source *before* extracting if you need a custom order.
 Movie/track `mvhd`/`tkhd` durations are left as-is. `stz2` sample sizes are not yet
 supported (raises). Trim and concatenation are future phases.
 
+## Trim
+
+Losslessly trim every track to a time range (no re-encode). The video start snaps
+back to the nearest keyframe so the result decodes; the timeline re-bases to 0 and
+A/V interleave is preserved:
+
+```elixir
+{:ok, boxes} = ISOMedia.read("movie.mp4")
+ISOMedia.write("clip.mp4", ISOMedia.trim(boxes, 10.0, 25.0))   # keep 10s..25s
+```
+
+`trim/3` rebuilds each track's sample tables and `mdat` and updates the duration
+headers. Frame-accurate start (an `elst` to hide the leading frames before the
+requested point) and concatenation are future phases.
+
 ## Status
 
 Phase 1: lossless tree surgery. Phase 2: `stco`/`co64` chunk-offset rewriting and

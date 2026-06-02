@@ -34,9 +34,11 @@ ISOBMFF files are a flat-then-nested sequence of **boxes** (a.k.a. atoms). Each 
 - `ISOMedia.Boxes.ChunkOffset` — typed view for `stco`/`co64`.
 - `ISOMedia.FileSlice` (`lib/iso_media/file_slice.ex`) — an inert `{path, offset, length}` reference; a leaf's `data` may be a `FileSlice` instead of a binary so bulk payloads stay on disk. `read/1` and `stream/3` (raw `:file` I/O, leak-safe callback opens).
 - `ISOMedia.LazyParser` (`lib/iso_media/lazy_parser.ex`) — `parse_file/2`: seeks the top-level boxes, re-parsing each in-memory box through `Parser` with `offset:` (absolute offsets), emitting a `FileSlice` for any leaf ≥ `:lazy_threshold`. Reached via `ISOMedia.read(path, lazy: true)`.
-- `ISOMedia.Sample` (`lib/iso_media/sample.ex`) — one decoded sample (`index`, `chunk_index`, `dts`, `pts`, `size`, `offset`, `sync?`).
-- `ISOMedia.SampleTable` (`lib/iso_media/sample_table.ex`) — `build/1` cross-references a track's `stbl` tables into `[%Sample{}]`. Reached via `ISOMedia.samples/2`.
+- `ISOMedia.Sample` (`lib/iso_media/sample.ex`) — one decoded sample (`index`, `chunk_index`, `dts`, `duration`, `pts`, `size`, `offset`, `sync?`).
+- `ISOMedia.SampleTable` (`lib/iso_media/sample_table.ex`) — `build/1` cross-references a track's `stbl` tables into `[%Sample{}]` (with per-sample `duration` from `stts`); also *encodes* tables from a kept-sample set (`build_stts/build_stsz/build_ctts/build_stss/build_stsc`). Reached via `ISOMedia.samples/2`.
 - `ISOMedia.Extract` (`lib/iso_media/extract.ex`) — `track_ids/1`, `find_trak/2`, and `extract_track/2` (rebuilds `mdat` as a segment list + recomputes chunk offsets). Exposed as `ISOMedia.track_ids/1`, `ISOMedia.samples/2`, `ISOMedia.extract_track/2`.
+- `ISOMedia.MdatSource` (`lib/iso_media/mdat_source.ex`) — resolves an absolute byte range to a payload segment (FileSlice/binary) via the containing `mdat`; shared by `Extract` and `Trim`.
+- `ISOMedia.Trim` (`lib/iso_media/trim.ex`) — `trim/3`: time-based lossless trim of all tracks (dts selection + snap-to-keyframe, table rebuild, interleave-preserving segment-list `mdat`, duration updates). Exposed as `ISOMedia.trim/3`.
 
 The invariant throughout is byte-for-byte round-trip: `ISOMedia.serialize(parse(file)) == file`.
 
