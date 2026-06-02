@@ -6,7 +6,7 @@ defmodule ISOMedia.Extract do
   `extract_track/2` (added later) produces a new single-track tree.
   """
 
-  alias ISOMedia.{Box, FileSlice, Layout, SampleTable}
+  alias ISOMedia.{Box, Layout, MdatSource, SampleTable}
   alias ISOMedia.Boxes.{ChunkOffset, TrackHeader}
 
   @uint32_max 0xFFFFFFFF
@@ -55,7 +55,7 @@ defmodule ISOMedia.Extract do
         {hd(chunk_samples).offset, Enum.sum(Enum.map(chunk_samples, & &1.size))}
       end)
 
-    segments = Enum.map(runs, fn {off, len} -> segment_for(mdats, off, len) end)
+    segments = Enum.map(runs, fn {off, len} -> MdatSource.segment(mdats, off, len) end)
     run_lengths = Enum.map(runs, fn {_o, l} -> l end)
     total = Enum.sum(run_lengths)
     chunk_count = length(runs)
@@ -88,26 +88,6 @@ defmodule ISOMedia.Extract do
 
   defp offset_box(kind, offsets) do
     ChunkOffset.encode(%ChunkOffset{kind: kind, version: 0, flags: <<0, 0, 0>>, offsets: offsets})
-  end
-
-  defp segment_for(mdats, offset, length) do
-    mdat =
-      Enum.find(mdats, fn m ->
-        not is_nil(m.source_offset) and offset >= m.source_offset and
-          offset < m.source_offset + m.source_size
-      end) || raise ArgumentError, "sample chunk at offset #{offset} falls outside every mdat"
-
-    case mdat.data do
-      %FileSlice{path: path} ->
-        %FileSlice{path: path, offset: offset, length: length}
-
-      bin when is_binary(bin) ->
-        payload_start = mdat.source_offset + Layout.header_size(mdat)
-        binary_part(bin, offset - payload_start, length)
-
-      _ ->
-        raise ArgumentError, "cannot extract from an mdat whose payload is already a segment list"
-    end
   end
 
   defp rebuild_moov(boxes, trak, new_offset_box) do
