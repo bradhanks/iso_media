@@ -126,7 +126,9 @@ defmodule ISOMedia.Support.MP4Builder do
     stss = if sync, do: stss_box(sync), else: <<>>
     stbl = container("stbl", stsd <> stts <> stsc <> stsz <> stco <> stss)
     tkhd = leaf("tkhd", <<0, 0, 0, 0, 0::32, 0::32, spec.id::32, 0::32, 0::32>>)
-    container("trak", tkhd <> container("mdia", container("minf", stbl)))
+    mdhd = leaf("mdhd", <<0, 0, 0, 0, 0::32, 0::32, 1::32, 0::32, 0::16, 0::16>>)
+    mdia = container("mdia", mdhd <> container("minf", stbl))
+    container("trak", tkhd <> mdia)
   end
 
   defp stts_box(durations) do
