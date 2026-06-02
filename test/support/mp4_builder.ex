@@ -112,18 +112,37 @@ defmodule ISOMedia.Support.MP4Builder do
     sample_sizes = spec.chunks |> List.flatten() |> Enum.map(&byte_size/1)
     spc = Enum.map(spec.chunks, &length/1)
     n = length(sample_sizes)
+    durations = Map.get(spec, :durations, List.duplicate(1, n))
+    sync = Map.get(spec, :sync, nil)
 
     stsd = leaf("stsd", <<0, 0, 0, 0, 0::32>>)
-    stts = leaf("stts", <<0, 0, 0, 0, 1::32, n::32, 1::32>>)
+    stts = stts_box(durations)
     stsc = stsc_box(spc)
     stsz = leaf("stsz", <<0, 0, 0, 0, 0::32, n::32, sizes_bin(sample_sizes)::binary>>)
 
     stco =
       leaf("stco", <<0, 0, 0, 0, length(chunk_offsets)::32, offsets_bin(chunk_offsets)::binary>>)
 
-    stbl = container("stbl", stsd <> stts <> stsc <> stsz <> stco)
+    stss = if sync, do: stss_box(sync), else: <<>>
+    stbl = container("stbl", stsd <> stts <> stsc <> stsz <> stco <> stss)
     tkhd = leaf("tkhd", <<0, 0, 0, 0, 0::32, 0::32, spec.id::32, 0::32, 0::32>>)
     container("trak", tkhd <> container("mdia", container("minf", stbl)))
+  end
+
+  defp stts_box(durations) do
+    entries =
+      durations
+      |> Enum.chunk_by(& &1)
+      |> Enum.map(fn run -> <<length(run)::32, hd(run)::32>> end)
+      |> IO.iodata_to_binary()
+
+    count = durations |> Enum.chunk_by(& &1) |> length()
+    leaf("stts", <<0, 0, 0, 0, count::32, entries::binary>>)
+  end
+
+  defp stss_box(sync) do
+    entries = for n <- sync, into: <<>>, do: <<n::32>>
+    leaf("stss", <<0, 0, 0, 0, length(sync)::32, entries::binary>>)
   end
 
   defp stsc_box(spc) do

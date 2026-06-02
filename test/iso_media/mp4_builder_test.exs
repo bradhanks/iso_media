@@ -36,4 +36,33 @@ defmodule ISOMedia.MP4BuilderTest do
     s8 = ISOMedia.samples(boxes, 8)
     assert Enum.map(s8, &binary_part(bin, &1.offset, &1.size)) == [<<4, 4, 4, 4>>, <<5>>]
   end
+
+  test "build_tracks honors per-sample duration and sync flags" do
+    # Track 1: one chunk of 3 samples; durations 100/100/40; samples 1 & 3 sync.
+    specs = [
+      %{
+        id: 1,
+        chunks: [[<<1>>, <<2, 2>>, <<3>>]],
+        durations: [100, 100, 40],
+        sync: [1, 3]
+      }
+    ]
+
+    %{binary: bin} = ISOMedia.Support.MP4Builder.build_tracks(specs)
+    {:ok, boxes} = ISOMedia.parse(bin)
+    samples = ISOMedia.samples(boxes, 1)
+
+    assert Enum.map(samples, & &1.duration) == [100, 100, 40]
+    assert Enum.map(samples, & &1.sync?) == [true, false, true]
+  end
+
+  test "build_tracks defaults: duration 1, all sync (back-compat)" do
+    %{binary: bin} =
+      ISOMedia.Support.MP4Builder.build_tracks([%{id: 1, chunks: [[<<1>>, <<2>>]]}])
+
+    {:ok, boxes} = ISOMedia.parse(bin)
+    samples = ISOMedia.samples(boxes, 1)
+    assert Enum.map(samples, & &1.duration) == [1, 1]
+    assert Enum.all?(samples, & &1.sync?)
+  end
 end
