@@ -52,6 +52,24 @@ file must stay put until the write completes.
 `write/2` returns `:ok` on success or `{:error, reason}` if the output file cannot be
 opened; it may raise on a mid-stream I/O error (e.g. disk full).
 
+## Sample-level access
+
+Read a track's samples, or demux a single track into its own file:
+
+```elixir
+{:ok, boxes} = ISOMedia.read("movie.mp4")
+ISOMedia.track_ids(boxes)            # => [1, 2]
+ISOMedia.samples(boxes, 1)           # => [%ISOMedia.Sample{dts:, pts:, size:, offset:, sync?:, ...}, ...]
+
+# Extract just track 1 (rebuilds mdat + chunk offsets; streams the media disk→disk under lazy:)
+ISOMedia.write("track1.mp4", ISOMedia.extract_track(boxes, 1))
+```
+
+Extraction preserves the track's existing sample tables and chunking; it rebuilds
+only `mdat` and `stco`/`co64`. Movie/track `mvhd`/`tkhd` durations are left as-is.
+`stz2` sample sizes are not yet supported (raises). Trim and concatenation are
+future phases.
+
 ## Status
 
 Phase 1: lossless tree surgery. Phase 2: `stco`/`co64` chunk-offset rewriting and
