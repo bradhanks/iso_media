@@ -115,7 +115,14 @@ defmodule ISOMedia.SampleTable do
             _ -> for <<n::32, off::32 <- rest>>, do: {n, off}
           end
 
-        Enum.flat_map(entries, fn {n, off} -> List.duplicate(off, n) end)
+        offsets = Enum.flat_map(entries, fn {n, off} -> List.duplicate(off, n) end)
+
+        if length(offsets) != sample_count do
+          raise ArgumentError,
+                "ctts describes #{length(offsets)} samples, expected #{sample_count}"
+        end
+
+        offsets
     end
   end
 
