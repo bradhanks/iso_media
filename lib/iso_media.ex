@@ -15,6 +15,17 @@ defmodule ISOMedia do
   @doc "Serialize a box or list of boxes back to a binary."
   def serialize(boxes), do: Serializer.serialize(boxes)
 
+  @doc "List the `track_id`s present in the movie."
+  def track_ids(boxes), do: ISOMedia.Extract.track_ids(boxes)
+
+  @doc "Decode a track's sample tables into `[%ISOMedia.Sample{}]`."
+  def samples(boxes, track_id) do
+    case ISOMedia.Extract.find_trak(boxes, track_id) do
+      nil -> raise ArgumentError, "no track with track_id #{track_id}"
+      trak -> ISOMedia.SampleTable.build(trak)
+    end
+  end
+
   @doc "Recompute stco/co64 chunk offsets for the current box arrangement. See `ISOMedia.Offsets.fix_chunk_offsets/1`."
   def fix_chunk_offsets(boxes), do: ISOMedia.Offsets.fix_chunk_offsets(boxes)
 

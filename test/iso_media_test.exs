@@ -52,4 +52,30 @@ defmodule ISOMediaTest do
       assert_raise ArgumentError, ~r/FileSlice source/, fn -> ISOMedia.write(src, boxes) end
     end
   end
+
+  describe "track discovery + samples" do
+    test "track_ids and samples on the real fixture" do
+      {:ok, boxes} = ISOMedia.read(Path.join([__DIR__, "fixtures", "sample.mp4"]))
+      original = File.read!(Path.join([__DIR__, "fixtures", "sample.mp4"]))
+
+      ids = ISOMedia.track_ids(boxes)
+      assert ids != []
+      tid = hd(ids)
+
+      samples = ISOMedia.samples(boxes, tid)
+      assert samples != []
+      # dts monotonic non-decreasing
+      dts = Enum.map(samples, & &1.dts)
+      assert dts == Enum.sort(dts)
+      # every sample lies within the file
+      assert Enum.all?(samples, &(&1.offset + &1.size <= byte_size(original)))
+      # at least one sync sample
+      assert Enum.any?(samples, & &1.sync?)
+    end
+
+    test "samples/2 raises for an unknown track id" do
+      {:ok, boxes} = ISOMedia.read(Path.join([__DIR__, "fixtures", "sample.mp4"]))
+      assert_raise ArgumentError, fn -> ISOMedia.samples(boxes, 9999) end
+    end
+  end
 end
