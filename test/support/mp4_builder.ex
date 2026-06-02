@@ -25,21 +25,36 @@ defmodule ISOMedia.Support.MP4Builder do
 
   @doc """
   Build `%{binary: binary, offsets: [int], chunks: [binary], mdat_payload_start: int}`.
+
+  Options:
+    * `:moov_position` — `:first` (default, layout `ftyp, moov, mdat`) or `:last`
+      (layout `ftyp, mdat, moov`). Use `:last` to make `faststart/1` a real
+      relocation rather than a no-op.
   """
-  def build(chunks) when is_list(chunks) and chunks != [] do
+  def build(chunks, opts \\ []) when is_list(chunks) and chunks != [] do
+    position = Keyword.get(opts, :moov_position, :first)
     ftyp = leaf("ftyp", <<"isom", 0::32, "isom">>)
     mdat_payload = IO.iodata_to_binary(chunks)
 
-    # moov byte length is independent of the offset *values* (fixed 32-bit entries),
-    # so size it once with zeros, then place real offsets.
-    zeros = List.duplicate(0, length(chunks))
-    mdat_payload_start = byte_size(ftyp) + byte_size(moov(zeros)) + 8
+    # When moov comes first, the chunks sit after ftyp + moov; moov's byte length is
+    # independent of the offset *values* (fixed-width entries), so size it with zeros.
+    # When moov comes last, the chunks sit immediately after ftyp.
+    mdat_payload_start =
+      case position do
+        :first -> byte_size(ftyp) + byte_size(moov(List.duplicate(0, length(chunks)))) + 8
+        :last -> byte_size(ftyp) + 8
+      end
 
     {offsets, _} =
       Enum.map_reduce(chunks, mdat_payload_start, fn c, pos -> {pos, pos + byte_size(c)} end)
 
     mdat = leaf("mdat", mdat_payload)
-    binary = ftyp <> moov(offsets) <> mdat
+
+    binary =
+      case position do
+        :first -> ftyp <> moov(offsets) <> mdat
+        :last -> ftyp <> mdat <> moov(offsets)
+      end
 
     %{binary: binary, offsets: offsets, chunks: chunks, mdat_payload_start: mdat_payload_start}
   end
