@@ -2,28 +2,24 @@ defmodule ISOMedia.MdatSourceTest do
   use ExUnit.Case
   alias ISOMedia.{Box, FileSlice, MdatSource}
 
-  test "segment/3 returns binary_part for an eager mdat" do
-    # mdat at source_offset 100, 8-byte header, payload <<0..15>>
-    payload = for(i <- 0..15, into: <<>>, do: <<i>>)
-    mdat = %Box{type: "mdat", data: payload, source_offset: 100, source_size: 8 + 16}
-    # absolute offset 108 = payload start; read 4 bytes
-    assert MdatSource.segment([mdat], 108, 4) == <<0, 1, 2, 3>>
-    assert MdatSource.segment([mdat], 110, 2) == <<2, 3>>
-  end
+  describe "collect/1" do
+    test "captures payload_start/payload_size from the layout walk" do
+      ftyp = %Box{type: "ftyp", size_mode: :compact, data: <<0, 0, 0, 0>>}
+      mdat = %Box{type: "mdat", size_mode: :compact, data: <<0, 1, 2, 3, 4, 5, 6, 7>>}
 
-  test "segment/3 returns a FileSlice for a lazy mdat" do
-    mdat = %Box{
-      type: "mdat",
-      data: %FileSlice{path: "x", offset: 0, length: 16},
-      source_offset: 100,
-      source_size: 24
-    }
+      # ftyp: 8 header + 4 payload = 12. mdat starts at 12, payload at 12+8 = 20.
+      assert [%{box: ^mdat, payload_start: 20, payload_size: 8}] =
+               MdatSource.collect([ftyp, mdat])
+    end
 
-    assert MdatSource.segment([mdat], 110, 3) == %FileSlice{path: "x", offset: 110, length: 3}
-  end
+    test "captures multiple mdats in order" do
+      a = %Box{type: "mdat", size_mode: :compact, data: <<0, 0, 0, 0>>}
+      free = %Box{type: "free", size_mode: :compact, data: <<0, 0>>}
+      b = %Box{type: "mdat", size_mode: :compact, data: <<9, 9, 9>>}
 
-  test "segment/3 raises when offset is outside every mdat" do
-    mdat = %Box{type: "mdat", data: <<0, 1, 2, 3>>, source_offset: 100, source_size: 12}
-    assert_raise ArgumentError, fn -> MdatSource.segment([mdat], 9999, 2) end
+      # a: 12 bytes (payload at 8). free: 10 bytes (starts at 12). b: starts at 22, payload at 30.
+      assert [%{payload_start: 8, payload_size: 4}, %{payload_start: 30, payload_size: 3}] =
+               MdatSource.collect([a, free, b])
+    end
   end
 end
