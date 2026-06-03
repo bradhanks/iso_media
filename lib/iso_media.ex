@@ -32,6 +32,9 @@ defmodule ISOMedia do
   @doc "Losslessly trim every track to the time range `[start_sec, end_sec)`."
   def trim(boxes, start_sec, end_sec), do: ISOMedia.Trim.trim(boxes, start_sec, end_sec)
 
+  @doc "Losslessly concatenate compatible clips end-to-end. See `ISOMedia.Concat.concat/1`."
+  def concat(inputs) when is_list(inputs), do: ISOMedia.Concat.concat(inputs)
+
   @doc "Recompute stco/co64 chunk offsets for the current box arrangement. See `ISOMedia.Offsets.fix_chunk_offsets/1`."
   def fix_chunk_offsets(boxes), do: ISOMedia.Offsets.fix_chunk_offsets(boxes)
 
