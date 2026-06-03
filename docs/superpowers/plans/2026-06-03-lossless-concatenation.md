@@ -91,6 +91,51 @@ defmodule ISOMedia.ConcatTest do
 
     assert_raise ArgumentError, ~r/stsd/, fn -> ISOMedia.concat([a, bad_b]) end
   end
+
+  # A single-track clip with TWO chunks (1 sample each) laid out physically out of
+  # logical order: sample 2's bytes precede sample 1's in the mdat, so the stco
+  # offsets are non-monotonic (chunk 1 offset > chunk 2 offset). This is the only way
+  # to exercise the physical-vs-logical stco/stsc alignment — MP4Builder always emits
+  # physically-monotonic per-track chunks.
+  defp nonmono_clip(s1, s2) do
+    leaf = fn type, data -> <<8 + byte_size(data)::32, type::binary, data::binary>> end
+    container = fn type, inner -> <<8 + byte_size(inner)::32, type::binary, inner::binary>> end
+
+    stsd = leaf.("stsd", <<0, 0, 0, 0, 0::32>>)
+    stts = leaf.("stts", <<0, 0, 0, 0, 1::32, 2::32, 10::32>>)
+    # one entry: every chunk holds 1 sample
+    stsc = leaf.("stsc", <<0, 0, 0, 0, 1::32, 1::32, 1::32, 1::32>>)
+    stsz = leaf.("stsz", <<0, 0, 0, 0, 0::32, 2::32, byte_size(s1)::32, byte_size(s2)::32>>)
+    mdhd = leaf.("mdhd", <<0, 0, 0, 0, 0::32, 0::32, 1::32, 0::32, 0::16, 0::16>>)
+    tkhd = leaf.("tkhd", <<0, 0, 0, 0, 0::32, 0::32, 1::32, 0::32, 0::32>>)
+    ftyp = leaf.("ftyp", <<"isom", 0::32, "isom">>)
+
+    moov_with = fn off1, off2 ->
+      stco = leaf.("stco", <<0, 0, 0, 0, 2::32, off1::32, off2::32>>)
+      stbl = container.("stbl", stsd <> stts <> stsc <> stsz <> stco)
+      container.("moov", container.("trak", tkhd <> container.("mdia", mdhd <> container.("minf", stbl))))
+    end
+
+    payload_start = byte_size(ftyp) + byte_size(moov_with.(0, 0)) + 8
+    # mdat physical layout: s2 first, then s1 → chunk1 (sample1=s1) offset is the larger.
+    off2 = payload_start
+    off1 = payload_start + byte_size(s2)
+    bin = ftyp <> moov_with.(off1, off2) <> leaf.("mdat", s2 <> s1)
+    {:ok, boxes} = ISOMedia.parse(bin)
+    boxes
+  end
+
+  test "concat keeps logical sample order when source chunks are physically out of order" do
+    a = nonmono_clip(<<1>>, <<2>>)
+    b = nonmono_clip(<<3>>, <<4>>)
+
+    out = [a, b] |> ISOMedia.concat() |> ISOMedia.serialize()
+    {:ok, reparsed} = ISOMedia.parse(out)
+
+    s = ISOMedia.samples(reparsed, 1)
+    # logical decode order across both clips, NOT physical/byte order
+    assert Enum.map(s, &binary_part(out, &1.offset, &1.size)) == [<<1>>, <<2>>, <<3>>, <<4>>]
+  end
 end
 ```
 
@@ -141,16 +186,29 @@ defmodule ISOMedia.Concat do
       end)
 
     # All chunk-runs across all inputs, in input order, each input's runs sorted by
-    # original offset (preserving that input's interleave).
+    # original offset (preserving that input's interleave for the mdat byte layout).
+    # Each run is tagged with its LOGICAL identity (input_i, chunk_i) so per-track stco
+    # can be restored to logical order later — physical offset order may differ from
+    # logical chunk order for a track whose chunks aren't physically monotonic.
     tagged =
-      Enum.flat_map(inputs_data, fn d ->
+      inputs_data
+      |> Enum.with_index()
+      |> Enum.flat_map(fn {d, input_i} ->
         d.samples
         |> Enum.with_index()
         |> Enum.flat_map(fn {samples, ti} ->
           samples
           |> Enum.chunk_by(& &1.chunk_index)
-          |> Enum.map(fn run ->
-            %{track_i: ti, mdats: d.mdats, offset: hd(run).offset, length: Enum.sum(Enum.map(run, & &1.size))}
+          |> Enum.with_index()
+          |> Enum.map(fn {run, chunk_i} ->
+            %{
+              input_i: input_i,
+              track_i: ti,
+              chunk_i: chunk_i,
+              mdats: d.mdats,
+              offset: hd(run).offset,
+              length: Enum.sum(Enum.map(run, & &1.size))
+            }
           end)
         end)
         |> Enum.sort_by(& &1.offset)
@@ -179,9 +237,17 @@ defmodule ISOMedia.Concat do
         {Map.put(run, :new_offset, pos), pos + run.length}
       end)
 
+    # Per-track stco must be in LOGICAL chunk order (to align with stsc's run_lengths,
+    # which are built in {input, chunk} order) — NOT the physical-offset order of `placed`.
     offsets_by_track =
       Map.new(0..(track_count - 1)//1, fn ti ->
-        {ti, placed |> Enum.filter(&(&1.track_i == ti)) |> Enum.map(& &1.new_offset)}
+        offs =
+          placed
+          |> Enum.filter(&(&1.track_i == ti))
+          |> Enum.sort_by(&{&1.input_i, &1.chunk_i})
+          |> Enum.map(& &1.new_offset)
+
+        {ti, offs}
       end)
 
     moov_final = assemble_moov(first_moov, inputs_data, track_count, offsets_by_track, co_kind, movie_ts)
@@ -296,7 +362,9 @@ defmodule ISOMedia.Concat do
     end
   end
 
-  defp scale(value, from_ts, to_ts), do: round(value * to_ts / from_ts)
+  # Integer round-half-up (stays in arbitrary-precision integers — no float precision
+  # loss when value*to_ts exceeds 2^53 for long media).
+  defp scale(value, from_ts, to_ts), do: div(value * to_ts + div(from_ts, 2), from_ts)
   defp opt(nil), do: []
   defp opt(box), do: [box]
 
@@ -449,17 +517,22 @@ defmodule ISOMedia.ConcatPropertyTest do
 
   # Compatible clips: each has exactly 2 tracks; per clip the chunk shapes vary but
   # stsd (stub) and timescale are identical across all clips, so they concat losslessly.
+  # Multiple chunks per track (a list of lists), so concat exercises run_lengths
+  # concatenation across chunk boundaries, not just a single trivial chunk.
   defp clip_gen do
     gen all(
-          t1 <- list_of(binary(min_length: 1, max_length: 5), min_length: 1, max_length: 3),
-          t2 <- list_of(binary(min_length: 1, max_length: 5), min_length: 1, max_length: 3)
+          t1 <- list_of(list_of(binary(min_length: 1, max_length: 5), min_length: 1, max_length: 3), min_length: 1, max_length: 3),
+          t2 <- list_of(list_of(binary(min_length: 1, max_length: 5), min_length: 1, max_length: 3), min_length: 1, max_length: 3)
         ) do
+      t1_samples = List.flatten(t1)
+      t2_samples = List.flatten(t2)
+
       specs = [
-        %{id: 1, chunks: [t1], durations: List.duplicate(10, length(t1))},
-        %{id: 2, chunks: [t2], durations: List.duplicate(10, length(t2))}
+        %{id: 1, chunks: t1, durations: List.duplicate(10, length(t1_samples))},
+        %{id: 2, chunks: t2, durations: List.duplicate(10, length(t2_samples))}
       ]
 
-      %{t1: t1, t2: t2, binary: MP4Builder.build_tracks(specs).binary}
+      %{t1: t1_samples, t2: t2_samples, binary: MP4Builder.build_tracks(specs).binary}
     end
   end
 
@@ -508,8 +581,12 @@ Clips must be compatible: same track count, and per track a byte-identical `stsd
 (same codec/resolution/settings) and the same media timescale — otherwise it raises
 (lossless concat can't reconcile different encodings). Source edit lists are ignored,
 so concatenating clips that were previously **trimmed** will make their hidden
-keyframe lead-in frames visible at each splice. Inputs must be freshly read files; to
-concat the output of `trim`/`extract`/`concat`, write it to disk and read it back.
+keyframe lead-in frames visible at each splice. Because each track's timeline is the
+sum of its own sample durations, tracks whose raw media durations differ slightly
+(e.g. audio a little longer than video) can accumulate **minor A/V drift across many
+splices** — expected for a lossless sample-level join without edit-list reconciliation.
+Inputs must be freshly read files; to concat the output of `trim`/`extract`/`concat`,
+write it to disk and read it back.
 ```
 
 - [ ] **Step 6: Update CLAUDE.md**
@@ -532,9 +609,264 @@ git commit -m "test: concat real-fixture + property suites; docs for concat"
 
 ---
 
+### Task 3: Fix the same physical-vs-logical `stco` ordering in `Trim`
+
+`Trim` has the identical latent bug: it sorts chunk-runs by physical offset (for
+interleave) and then builds each track's `stco` from that physical order, while
+`stsc`'s `run_lengths` come from logical (`chunk_by`) order. On a source track whose
+chunks are physically non-monotonic, the two misalign. Fix it the same way and add a
+regression test. (`Extract` is unaffected — it never sorts by offset.)
+
+**Files:**
+- Modify: `lib/iso_media/trim.ex`
+- Test: `test/iso_media/trim_test.exs`
+
+- [ ] **Step 1: Write the failing regression test**
+
+Add to `test/iso_media/trim_test.exs`:
+
+```elixir
+  # A single-track clip with two chunks (1 sample each) physically out of logical
+  # order (sample 2's bytes precede sample 1's) → non-monotonic stco. Exercises the
+  # physical-vs-logical stco/stsc alignment that MP4Builder can't (it emits monotonic).
+  defp nonmono_clip(s1, s2) do
+    leaf = fn type, data -> <<8 + byte_size(data)::32, type::binary, data::binary>> end
+    container = fn type, inner -> <<8 + byte_size(inner)::32, type::binary, inner::binary>> end
+
+    stsd = leaf.("stsd", <<0, 0, 0, 0, 0::32>>)
+    stts = leaf.("stts", <<0, 0, 0, 0, 1::32, 2::32, 10::32>>)
+    stsc = leaf.("stsc", <<0, 0, 0, 0, 1::32, 1::32, 1::32, 1::32>>)
+    stsz = leaf.("stsz", <<0, 0, 0, 0, 0::32, 2::32, byte_size(s1)::32, byte_size(s2)::32>>)
+    mdhd = leaf.("mdhd", <<0, 0, 0, 0, 0::32, 0::32, 1::32, 0::32, 0::16, 0::16>>)
+    tkhd = leaf.("tkhd", <<0, 0, 0, 0, 0::32, 0::32, 1::32, 0::32, 0::32>>)
+    ftyp = leaf.("ftyp", <<"isom", 0::32, "isom">>)
+
+    moov_with = fn off1, off2 ->
+      stco = leaf.("stco", <<0, 0, 0, 0, 2::32, off1::32, off2::32>>)
+      stbl = container.("stbl", stsd <> stts <> stsc <> stsz <> stco)
+      container.("moov", container.("trak", tkhd <> container.("mdia", mdhd <> container.("minf", stbl))))
+    end
+
+    payload_start = byte_size(ftyp) + byte_size(moov_with.(0, 0)) + 8
+    off2 = payload_start
+    off1 = payload_start + byte_size(s2)
+    {:ok, boxes} = ISOMedia.parse(ftyp <> moov_with.(off1, off2) <> leaf.("mdat", s2 <> s1))
+    boxes
+  end
+
+  test "trim keeps logical sample order when source chunks are physically out of order" do
+    boxes = nonmono_clip(<<1>>, <<2>>)
+    # keep everything (dts 0 and 10, durations 10) — both samples survive.
+    out = boxes |> ISOMedia.trim(0, 1000) |> ISOMedia.serialize()
+    {:ok, reparsed} = ISOMedia.parse(out)
+
+    s = ISOMedia.samples(reparsed, 1)
+    assert Enum.map(s, &binary_part(out, &1.offset, &1.size)) == [<<1>>, <<2>>]
+  end
+```
+
+- [ ] **Step 2: Run it to confirm it fails**
+
+Run: `mix test test/iso_media/trim_test.exs`
+Expected: FAIL — the kept samples resolve to `[<<2>>, <<1>>]` (physical order leaked into `stco`).
+
+- [ ] **Step 3: Fix `Trim`'s run tagging + offset extraction**
+
+In `lib/iso_media/trim.ex`, in `trim/3`, change the `tagged` construction to record each
+run's logical `chunk_i` (its index within its track's `chunk_by` list):
+
+```elixir
+    tagged =
+      selections
+      |> Enum.with_index()
+      |> Enum.flat_map(fn {sel, ti} ->
+        sel.runs
+        |> Enum.with_index()
+        |> Enum.map(fn {run, chunk_i} ->
+          %{
+            track_i: ti,
+            chunk_i: chunk_i,
+            offset: hd(run).offset,
+            length: Enum.sum(Enum.map(run, & &1.size))
+          }
+        end)
+      end)
+      |> Enum.sort_by(& &1.offset)
+```
+
+(If the existing `tagged` map carried a `:samples` key, it is unused downstream — the
+segments are resolved from `offset`/`length` via `MdatSource` — so dropping it is fine;
+if you prefer to keep it, add `samples: run` to the map above too.)
+
+And change `offsets_by_track` to restore logical order before extracting offsets:
+
+```elixir
+    offsets_by_track =
+      Map.new(0..(length(selections) - 1)//1, fn ti ->
+        offs =
+          placed
+          |> Enum.filter(&(&1.track_i == ti))
+          |> Enum.sort_by(& &1.chunk_i)
+          |> Enum.map(& &1.new_offset)
+
+        {ti, offs}
+      end)
+```
+
+(Single input here, so sorting by `chunk_i` alone is the logical order; `run_lengths`
+in `build_trimmed_trak` already come from `sel.runs` in that same order.)
+
+Also upgrade `Trim`'s `scale/3` to integer round-half-up (avoids float-precision loss
+on long media, and keeps it identical to `Concat`'s) — replace:
+
+```elixir
+  defp scale(value, from_ts, to_ts), do: round(value * to_ts / from_ts)
+```
+
+with:
+
+```elixir
+  defp scale(value, from_ts, to_ts), do: div(value * to_ts + div(from_ts, 2), from_ts)
+```
+
+(The existing trim tests use small values where this equals the float result, so they
+stay green.)
+
+- [ ] **Step 4: Run tests to verify they pass**
+
+Run: `mix test test/iso_media/trim_test.exs`
+Expected: PASS — the new regression test plus all existing trim tests (the existing
+tests use monotonic MP4Builder chunks, so physical order == logical order there and
+they're unaffected by the fix).
+
+- [ ] **Step 5: Full suite + format + commit**
+
+Run: `mix test && mix format && mix format --check-formatted && mix compile --warnings-as-errors`
+Expected: green, clean, no warnings.
+
+```bash
+git add lib/iso_media/trim.ex test/iso_media/trim_test.exs
+git commit -m "fix: trim stco uses logical chunk order (not physical) to match stsc"
+```
+
+---
+
+### Task 4: Extract shared `ISOMedia.BoxPath` (kill the 3rd duplication)
+
+`dig/2` (navigate a single box by child-type path) and `update_descendant/3` (apply a
+function to a descendant by path) are now copied in `Extract`, `Trim`, and `Concat`.
+Factor them into one module and rewire all three — behavior-preserving (the existing
+extract/trim/concat suites are the regression guard). (`scale/3` and `opt/1` are
+trivial one-liners tied to duration logic; leave them in place.)
+
+**Files:**
+- Create: `lib/iso_media/box_path.ex`
+- Modify: `lib/iso_media/extract.ex`, `lib/iso_media/trim.ex`, `lib/iso_media/concat.ex`
+- Test: `test/iso_media/box_path_test.exs`
+
+- [ ] **Step 1: Write the failing test**
+
+Create `test/iso_media/box_path_test.exs`:
+
+```elixir
+defmodule ISOMedia.BoxPathTest do
+  use ExUnit.Case
+  alias ISOMedia.{Box, BoxPath}
+
+  defp tree do
+    %Box{
+      type: "moov",
+      children: [
+        %Box{type: "trak", children: [%Box{type: "tkhd", data: <<1>>}]},
+        %Box{type: "udta", children: []}
+      ]
+    }
+  end
+
+  test "dig/2 navigates a single box by child-type path" do
+    assert %Box{type: "tkhd", data: <<1>>} = BoxPath.dig(tree(), ~w(trak tkhd))
+    assert BoxPath.dig(tree(), ~w(trak nope)) == nil
+  end
+
+  test "update_descendant/3 applies fun to the box at the path" do
+    updated = BoxPath.update_descendant(tree(), ~w(trak tkhd), fn b -> %{b | data: <<9>>} end)
+    assert BoxPath.dig(updated, ~w(trak tkhd)).data == <<9>>
+  end
+
+  test "update_descendant/3 with [] applies fun to the box itself" do
+    assert BoxPath.update_descendant(%Box{type: "x"}, [], fn b -> %{b | type: "y"} end).type == "y"
+  end
+end
+```
+
+- [ ] **Step 2: Run test to verify it fails**
+
+Run: `mix test test/iso_media/box_path_test.exs`
+Expected: FAIL — `ISOMedia.BoxPath.dig/2 is undefined`.
+
+- [ ] **Step 3: Create the module**
+
+Create `lib/iso_media/box_path.ex`:
+
+```elixir
+defmodule ISOMedia.BoxPath do
+  @moduledoc """
+  Navigate and update a single box by a child-type path. Shared by `Extract`, `Trim`,
+  and `Concat` (which all walk `trak`/`mdia`/`minf`/`stbl` subtrees).
+  """
+
+  alias ISOMedia.Box
+
+  @doc "The descendant of `box` reached by following the child-type `path`, or nil."
+  def dig(%Box{type: type} = box, path), do: Box.find([box], [type | path])
+
+  @doc "Apply `fun` to the descendant(s) of `box` at `path`; returns the updated box."
+  def update_descendant(box, [], fun), do: fun.(box)
+
+  def update_descendant(%Box{children: children} = box, [type | rest], fun) do
+    new_children =
+      Enum.map(children, fn
+        %Box{type: ^type} = c -> update_descendant(c, rest, fun)
+        other -> other
+      end)
+
+    %{box | children: new_children}
+  end
+end
+```
+
+- [ ] **Step 4: Run test to verify it passes**
+
+Run: `mix test test/iso_media/box_path_test.exs`
+Expected: PASS (3 tests).
+
+- [ ] **Step 5: Rewire `Extract`, `Trim`, `Concat`**
+
+In each of `lib/iso_media/extract.ex`, `lib/iso_media/trim.ex`, `lib/iso_media/concat.ex`:
+delete the private `dig/2` and `update_descendant/2`/`update_descendant/3` definitions,
+add `alias ISOMedia.BoxPath`, and replace `dig(` calls with `BoxPath.dig(` and
+`update_descendant(` calls with `BoxPath.update_descendant(`. (Leave each module's own
+`scale/3`, `opt/1`, and the box-builder helpers as they are.)
+
+- [ ] **Step 6: Run the full suite (no behavior change)**
+
+Run: `mix test && mix compile --warnings-as-errors && mix format && mix format --check-formatted`
+Expected: green, clean, no warnings — all extract/trim/concat tests still pass, proving
+the extraction was behavior-preserving.
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add lib/iso_media/box_path.ex lib/iso_media/extract.ex lib/iso_media/trim.ex lib/iso_media/concat.ex test/iso_media/box_path_test.exs
+git commit -m "refactor: shared ISOMedia.BoxPath (dig/update_descendant) used by Extract/Trim/Concat"
+```
+
+---
+
 ## Self-Review Notes
 
 - **Spec coverage:** compatibility (track count + per-track `stsd` byte-identity + timescale) (T1 `check_compatibility!`); N inputs, single-passthrough, empty-raise (T1); per-track sample append + table rebuild via encoders (T1 `build_joined_trak`); multi-source segment-list `mdat` with per-input interleave preserved (T1 `tagged`/`MdatSource`); up-front co64/header + moov sizing + offset assignment + durations (T1, mirrors Trim); real-fixture concat-with-itself + lazy==eager (T2); property over N compatible clips (T2); docs incl. the trimmed-lead-in and chaining caveats (T2). Out-of-scope (stsd reconcile, elst merge, chaining without round-trip) excluded.
 - **Type consistency:** reuses `SampleTable.build` + `build_stts/stsz/ctts/stss/stsc`, `MdatSource.collect/segment`, `ChunkOffset`/`MovieHeader`/`TrackHeader`/`MediaHeader` `decode`/`encode`, `Layout.box_size`. `sync_positions/1` computed from the concatenated sample list (the concatenation IS the per-input shift). `run_lengths` computed per-input then concatenated (NOT `chunk_by` on the merged list — that would wrongly merge a trailing chunk of one input with a leading chunk of the next when chunk indices coincide).
-- **DRY note:** `dig`/`update_descendant`/`scale`/`opt`/`put_stbl`/the duration setters are duplicated from `Trim` (3rd copy of the descendant helpers across Extract/Trim/Concat). Acceptable for this isolated phase; a follow-up could factor them into a shared `ISOMedia.BoxPath`. (Flagged, not done.)
+- **Physical vs. logical chunk order (correctness):** runs are sorted by physical offset for the `mdat` byte layout, but each track's `stco` is restored to logical `{input_i, chunk_i}` order before extraction, so it stays aligned with `stsc`'s logical `run_lengths`. Verified by a hand-built non-monotonic-`stco` test (T1) since `MP4Builder` only emits monotonic chunks. Task 3 applies the same fix to `Trim` (same root cause; `Extract` is unaffected — it never sorts).
+- **DRY:** Task 4 extracts the genuinely-duplicated `dig/2` + `update_descendant/3` into a shared `ISOMedia.BoxPath` used by Extract/Trim/Concat (behavior-preserving). `scale/3`/`opt/1`/the duration setters stay per-module (trivial, duration-specific).
 - **Placeholders:** none — every code/test step is complete and final as written.
