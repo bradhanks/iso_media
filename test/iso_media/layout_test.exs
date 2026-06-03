@@ -1,6 +1,6 @@
 defmodule ISOMedia.LayoutTest do
   use ExUnit.Case
-  alias ISOMedia.{Box, Layout}
+  alias ISOMedia.{Box, FileSlice, Layout}
 
   test "header_size accounts for size_mode and uuid" do
     assert Layout.header_size(%Box{size_mode: :compact}) == 8
@@ -36,5 +36,22 @@ defmodule ISOMedia.LayoutTest do
     box = %Box{type: "mdat", data: slice}
     # compact header (8) + slice length (5000)
     assert Layout.box_size(box) == 5008
+  end
+
+  test "box_size sums a nested segment list recursively" do
+    # data is [binary, [binary, FileSlice]] — a 1-level-nested segment list
+    box = %Box{
+      type: "mdat",
+      size_mode: :compact,
+      data: [<<1, 2, 3>>, [<<4, 5>>, %FileSlice{path: "x", offset: 0, length: 10}]]
+    }
+
+    # header 8 + (3 + (2 + 10)) = 8 + 15 = 23
+    assert Layout.box_size(box) == 23
+  end
+
+  test "segments_size/1 sums binary, FileSlice and nested-list parts" do
+    parts = [<<0, 0>>, %FileSlice{path: "x", offset: 0, length: 4}, [<<0>>, <<0, 0, 0>>]]
+    assert Layout.segments_size(parts) == 2 + 4 + 4
   end
 end

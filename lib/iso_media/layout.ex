@@ -24,13 +24,7 @@ defmodule ISOMedia.Layout do
   def box_size(%Box{data: %FileSlice{length: len}} = box), do: header_size(box) + len
 
   def box_size(%Box{data: parts} = box) when is_list(parts) do
-    header_size(box) +
-      Enum.sum(
-        Enum.map(parts, fn
-          %FileSlice{length: len} -> len
-          bin when is_binary(bin) -> byte_size(bin)
-        end)
-      )
+    header_size(box) + segments_size(parts)
   end
 
   def box_size(%Box{data: nil, children: children} = box) do
@@ -40,6 +34,14 @@ defmodule ISOMedia.Layout do
   def box_size(%Box{data: data} = box) do
     header_size(box) + byte_size(data)
   end
+
+  @doc "Total byte length of a (possibly nested) segment list's parts."
+  def segments_size(parts) when is_list(parts), do: Enum.sum(Enum.map(parts, &segment_size/1))
+
+  @doc "Byte length of one segment part: a binary, a FileSlice, or a nested segment list."
+  def segment_size(%FileSlice{length: len}), do: len
+  def segment_size(bin) when is_binary(bin), do: byte_size(bin)
+  def segment_size(parts) when is_list(parts), do: segments_size(parts)
 
   @doc """
   Absolute layout of the top-level boxes: a list of
