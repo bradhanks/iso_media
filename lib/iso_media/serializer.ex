@@ -16,15 +16,17 @@ defmodule ISOMedia.Serializer do
     do: %{box | data: FileSlice.read(slice)}
 
   defp materialize_box(%Box{data: parts} = box) when is_list(parts) do
-    bytes =
-      parts
-      |> Enum.map(fn
-        %FileSlice{} = s -> FileSlice.read(s)
-        bin when is_binary(bin) -> bin
-      end)
-      |> IO.iodata_to_binary()
+    %{box | data: flatten_segments(parts)}
+  end
 
-    %{box | data: bytes}
+  defp flatten_segments(parts) do
+    parts
+    |> Enum.map(fn
+      %FileSlice{} = s -> FileSlice.read(s)
+      bin when is_binary(bin) -> bin
+      nested when is_list(nested) -> flatten_segments(nested)
+    end)
+    |> IO.iodata_to_binary()
   end
 
   defp materialize_box(%Box{data: nil, children: children} = box),
@@ -108,9 +110,14 @@ defmodule ISOMedia.Serializer do
     do: FileSlice.stream(slice, io, chunk)
 
   defp stream_payload(%Box{data: parts}, io, chunk) when is_list(parts) do
+    stream_segments(parts, io, chunk)
+  end
+
+  defp stream_segments(parts, io, chunk) do
     Enum.each(parts, fn
       %FileSlice{} = s -> FileSlice.stream(s, io, chunk)
       bin when is_binary(bin) -> write!(io, bin)
+      nested when is_list(nested) -> stream_segments(nested, io, chunk)
     end)
   end
 

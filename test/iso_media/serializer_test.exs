@@ -190,5 +190,34 @@ defmodule ISOMedia.SerializerTest do
       box = %ISOMedia.Box{type: "mdat", data: parts}
       assert_raise ArgumentError, ~r/segment list/, fn -> ISOMedia.Serializer.to_iodata([box]) end
     end
+
+    test "serialize materializes a nested segment list in order", %{path: path} do
+      # data is [binary, [binary, FileSlice]] — one level of nesting.
+      box = %ISOMedia.Box{
+        type: "mdat",
+        data: [<<0, 1>>, [<<2, 3>>, %ISOMedia.FileSlice{path: path, offset: 1, length: 2}]]
+      }
+
+      # payload = <<0,1>> ++ <<2,3>> ++ path[1..2]=<<1,2>>  -> 6 bytes; size 14
+      assert ISOMedia.Serializer.serialize([box]) == <<14::32, "mdat", 0, 1, 2, 3, 1, 2>>
+    end
+
+    test "stream writes a nested segment list identically to serialize", %{path: path} do
+      box = %ISOMedia.Box{
+        type: "mdat",
+        data: [<<0, 1>>, [<<2, 3>>, %ISOMedia.FileSlice{path: path, offset: 1, length: 2}]]
+      }
+
+      out =
+        Path.join(System.tmp_dir!(), "iso_seg_nested_#{System.unique_integer([:positive])}.bin")
+
+      on_exit(fn -> File.rm(out) end)
+
+      File.open!(out, [:write, :binary, :raw], fn io ->
+        ISOMedia.Serializer.stream([box], io, 2)
+      end)
+
+      assert File.read!(out) == ISOMedia.Serializer.serialize([box])
+    end
   end
 end
