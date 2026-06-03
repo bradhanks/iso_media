@@ -1,0 +1,67 @@
+defmodule ISOMedia.Boxes.TrackRun do
+  @moduledoc "Typed view of the `trun` Track Run box (per-sample list)."
+  import Bitwise
+  alias ISOMedia.{Box, FullBox}
+
+  defstruct [:version, :sample_count, :data_offset, :first_sample_flags, :samples]
+
+  @data_offset 0x000001
+  @first_sample_flags 0x000004
+  @sample_duration 0x000100
+  @sample_size 0x000200
+  @sample_flags 0x000400
+  @sample_comp_offset 0x000800
+
+  @doc "Decode a `trun` box."
+  def decode(%Box{type: "trun", data: data}) do
+    {version, <<flags::24>>, <<sample_count::32, rest::binary>>} = FullBox.parse(data)
+    {data_offset, rest} = take(rest, flags, @data_offset, :signed)
+    {first_sample_flags, rest} = take(rest, flags, @first_sample_flags, :unsigned)
+    samples = decode_samples(rest, sample_count, version, flags, [])
+
+    %__MODULE__{
+      version: version,
+      sample_count: sample_count,
+      data_offset: data_offset,
+      first_sample_flags: first_sample_flags,
+      samples: samples
+    }
+  end
+
+  defp decode_samples(_bin, 0, _v, _flags, acc), do: Enum.reverse(acc)
+
+  defp decode_samples(bin, n, version, flags, acc) do
+    {duration, bin} = take(bin, flags, @sample_duration, :unsigned)
+    {size, bin} = take(bin, flags, @sample_size, :unsigned)
+    {sflags, bin} = take(bin, flags, @sample_flags, :unsigned)
+    {coff, bin} = take_comp(bin, flags, version)
+    sample = %{duration: duration, size: size, flags: sflags, composition_offset: coff}
+    decode_samples(bin, n - 1, version, flags, [sample | acc])
+  end
+
+  defp take(bin, flags, mask, :unsigned) do
+    if (flags &&& mask) != 0 do
+      <<v::32, rest::binary>> = bin
+      {v, rest}
+    else
+      {nil, bin}
+    end
+  end
+
+  defp take(bin, flags, mask, :signed) do
+    if (flags &&& mask) != 0 do
+      <<v::signed-32, rest::binary>> = bin
+      {v, rest}
+    else
+      {nil, bin}
+    end
+  end
+
+  defp take_comp(bin, flags, version) do
+    cond do
+      (flags &&& @sample_comp_offset) == 0 -> {nil, bin}
+      version == 1 -> (fn <<v::signed-32, r::binary>> -> {v, r} end).(bin)
+      true -> (fn <<v::32, r::binary>> -> {v, r} end).(bin)
+    end
+  end
+end
