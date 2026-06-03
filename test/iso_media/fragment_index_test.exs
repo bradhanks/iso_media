@@ -137,4 +137,63 @@ defmodule ISOMedia.FragmentIndexTest do
       end
     end
   end
+
+  describe "real multi-fragment fixture" do
+    @frag "test/fixtures/sample_frag.mp4"
+
+    test "the fixture really is multi-fragment fMP4" do
+      {:ok, boxes} = ISOMedia.read(@frag)
+      assert FragmentIndex.fragmented?(boxes)
+      assert Enum.count(boxes, &(&1.type == "moof")) >= 2
+    end
+
+    test "indexes every track with monotonic dts and contiguous-per-run offsets" do
+      {:ok, boxes} = ISOMedia.read(@frag)
+      tids = ISOMedia.track_ids(boxes)
+      assert length(tids) == 2
+
+      for tid <- tids do
+        samples = ISOMedia.samples(boxes, tid)
+        assert length(samples) > 0
+        dts = Enum.map(samples, & &1.dts)
+        assert dts == Enum.sort(dts)
+        assert Enum.all?(samples, &(&1.size > 0))
+        assert Enum.map(samples, & &1.index) == Enum.to_list(1..length(samples))
+        # samples span more than one chunk (per-trun => multiple fragments)
+        assert Enum.max(Enum.map(samples, & &1.chunk_index)) >= 2
+      end
+    end
+
+    test "lazy and eager indexing are identical" do
+      {:ok, eager} = ISOMedia.read(@frag)
+      {:ok, lazy} = ISOMedia.read(@frag, lazy: true)
+      [tid | _] = ISOMedia.track_ids(eager)
+      assert ISOMedia.samples(eager, tid) == ISOMedia.samples(lazy, tid)
+    end
+
+    test "raises on an encrypted fragment" do
+      {:ok, boxes} = ISOMedia.read(@frag)
+      [tid | _] = ISOMedia.track_ids(boxes)
+
+      boxes2 =
+        Enum.map(boxes, fn
+          %Box{type: "moof"} = m ->
+            children =
+              Enum.map(m.children, fn
+                %Box{type: "traf"} = traf ->
+                  %{traf | children: traf.children ++ [%Box{type: "senc", data: <<>>}]}
+
+                other ->
+                  other
+              end)
+
+            %{m | children: children}
+
+          other ->
+            other
+        end)
+
+      assert_raise ArgumentError, ~r/encrypted/, fn -> ISOMedia.samples(boxes2, tid) end
+    end
+  end
 end
