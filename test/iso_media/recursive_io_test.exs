@@ -16,9 +16,11 @@ defmodule ISOMedia.RecursiveIOTest do
       }
     ]
 
-    assert_raise ArgumentError, ~r/same file as a FileSlice source|is also a FileSlice source/, fn ->
-      ISOMedia.write(src, tree)
-    end
+    assert_raise ArgumentError,
+                 ~r/same file as a FileSlice source|is also a FileSlice source/,
+                 fn ->
+                   ISOMedia.write(src, tree)
+                 end
   end
 
   @fixture Path.expand("../fixtures/sample_av.mp4", __DIR__)
