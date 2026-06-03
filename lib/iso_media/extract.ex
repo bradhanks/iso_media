@@ -6,7 +6,7 @@ defmodule ISOMedia.Extract do
   `extract_track/2` (added later) produces a new single-track tree.
   """
 
-  alias ISOMedia.{Box, Layout, MdatSource, SampleTable}
+  alias ISOMedia.{Box, BoxPath, Layout, MdatSource, SampleTable}
   alias ISOMedia.Boxes.{ChunkOffset, TrackHeader}
 
   @uint32_max 0xFFFFFFFF
@@ -105,7 +105,7 @@ defmodule ISOMedia.Extract do
   end
 
   defp replace_offset_box(trak, new_box) do
-    update_descendant(trak, ~w(mdia minf stbl), fn stbl ->
+    BoxPath.update_descendant(trak, ~w(mdia minf stbl), fn stbl ->
       children =
         Enum.map(stbl.children, fn
           %Box{type: t} when t in ["stco", "co64"] -> new_box
@@ -114,17 +114,5 @@ defmodule ISOMedia.Extract do
 
       %{stbl | children: children}
     end)
-  end
-
-  defp update_descendant(box, [], fun), do: fun.(box)
-
-  defp update_descendant(%Box{children: children} = box, [type | rest], fun) do
-    new_children =
-      Enum.map(children, fn
-        %Box{type: ^type} = c -> update_descendant(c, rest, fun)
-        other -> other
-      end)
-
-    %{box | children: new_children}
   end
 end

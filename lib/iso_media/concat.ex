@@ -10,7 +10,7 @@ defmodule ISOMedia.Concat do
   from each input's own source via `MdatSource`. Source edit lists are ignored.
   """
 
-  alias ISOMedia.{Box, Layout, MdatSource, SampleTable}
+  alias ISOMedia.{Box, BoxPath, Layout, MdatSource, SampleTable}
   alias ISOMedia.Boxes.{ChunkOffset, MediaHeader, MovieHeader, TrackHeader}
 
   @uint32_max 0xFFFFFFFF
@@ -200,7 +200,7 @@ defmodule ISOMedia.Concat do
   defp build_joined_trak(base, samples, run_lengths, stco_offsets, co_kind, track_ts, movie_ts) do
     track_dur = Enum.sum(Enum.map(samples, & &1.duration))
 
-    stsd = dig(base, ~w(mdia minf stbl stsd)) || raise ArgumentError, "track missing stsd"
+    stsd = BoxPath.dig(base, ~w(mdia minf stbl stsd)) || raise ArgumentError, "track missing stsd"
     stts = SampleTable.build_stts(Enum.map(samples, & &1.duration))
     ctts = SampleTable.build_ctts(Enum.map(samples, &(&1.pts - &1.dts)))
     stsz = SampleTable.build_stsz(Enum.map(samples, & &1.size))
@@ -224,8 +224,11 @@ defmodule ISOMedia.Concat do
     base
     |> put_stbl(stbl_children)
     |> drop_edts()
-    |> update_descendant(~w(mdia mdhd), &set_mdhd_duration(&1, track_dur))
-    |> update_descendant(["tkhd"], &set_tkhd_duration(&1, scale(track_dur, track_ts, movie_ts)))
+    |> BoxPath.update_descendant(~w(mdia mdhd), &set_mdhd_duration(&1, track_dur))
+    |> BoxPath.update_descendant(
+      ["tkhd"],
+      &set_tkhd_duration(&1, scale(track_dur, track_ts, movie_ts))
+    )
   end
 
   defp sync_positions(samples) do
@@ -243,12 +246,14 @@ defmodule ISOMedia.Concat do
   defp traks(moov), do: Enum.filter(moov.children, &(&1.type == "trak"))
 
   defp stsd_data(trak),
-    do: (dig(trak, ~w(mdia minf stbl stsd)) || raise(ArgumentError, "track missing stsd")).data
+    do:
+      (BoxPath.dig(trak, ~w(mdia minf stbl stsd)) ||
+         raise(ArgumentError, "track missing stsd")).data
 
-  defp track_timescale(trak), do: MediaHeader.decode(dig(trak, ~w(mdia mdhd))).timescale
+  defp track_timescale(trak), do: MediaHeader.decode(BoxPath.dig(trak, ~w(mdia mdhd))).timescale
 
   defp movie_timescale(moov) do
-    case dig(moov, ["mvhd"]) do
+    case BoxPath.dig(moov, ["mvhd"]) do
       %Box{} = mvhd -> MovieHeader.decode(mvhd).timescale
       nil -> 1
     end
@@ -263,7 +268,9 @@ defmodule ISOMedia.Concat do
   defp drop_edts(trak), do: %{trak | children: Enum.reject(trak.children, &(&1.type == "edts"))}
 
   defp put_stbl(trak, stbl_children) do
-    update_descendant(trak, ~w(mdia minf stbl), fn stbl -> %{stbl | children: stbl_children} end)
+    BoxPath.update_descendant(trak, ~w(mdia minf stbl), fn stbl ->
+      %{stbl | children: stbl_children}
+    end)
   end
 
   defp set_mdhd_duration(mdhd, dur) do
@@ -286,19 +293,5 @@ defmodule ISOMedia.Concat do
     at = if idx, do: idx + 1, else: 0
     {pre, post} = Enum.split(children, at)
     pre ++ traks ++ post
-  end
-
-  defp dig(%Box{type: type} = box, path), do: Box.find([box], [type | path])
-
-  defp update_descendant(box, [], fun), do: fun.(box)
-
-  defp update_descendant(%Box{children: children} = box, [type | rest], fun) do
-    new_children =
-      Enum.map(children, fn
-        %Box{type: ^type} = c -> update_descendant(c, rest, fun)
-        other -> other
-      end)
-
-    %{box | children: new_children}
   end
 end

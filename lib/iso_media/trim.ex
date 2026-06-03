@@ -9,7 +9,7 @@ defmodule ISOMedia.Trim do
   Memory-safe: the new `mdat` is a segment list.
   """
 
-  alias ISOMedia.{Box, Layout, MdatSource, SampleTable}
+  alias ISOMedia.{Box, BoxPath, Layout, MdatSource, SampleTable}
   alias ISOMedia.Boxes.{ChunkOffset, EditList, MediaHeader, MovieHeader, TrackHeader}
 
   @uint32_max 0xFFFFFFFF
@@ -23,7 +23,7 @@ defmodule ISOMedia.Trim do
     mdats = MdatSource.collect(boxes)
 
     movie_ts =
-      case dig(moov, ["mvhd"]) do
+      case BoxPath.dig(moov, ["mvhd"]) do
         %Box{} = mvhd -> MovieHeader.decode(mvhd).timescale
         nil -> 1
       end
@@ -97,7 +97,7 @@ defmodule ISOMedia.Trim do
   # --- per-track selection ---
 
   defp select_track(trak, start_sec, end_sec) do
-    ts = MediaHeader.decode(dig(trak, ~w(mdia mdhd))).timescale
+    ts = MediaHeader.decode(BoxPath.dig(trak, ~w(mdia mdhd))).timescale
     start_ts = round(start_sec * ts)
     end_ts = round(end_sec * ts)
 
@@ -161,7 +161,9 @@ defmodule ISOMedia.Trim do
     kept = sel.kept
     track_dur = sum_durations(kept)
 
-    stsd = dig(sel.trak, ~w(mdia minf stbl stsd)) || raise ArgumentError, "trak missing stsd"
+    stsd =
+      BoxPath.dig(sel.trak, ~w(mdia minf stbl stsd)) || raise ArgumentError, "trak missing stsd"
+
     stts = SampleTable.build_stts(Enum.map(kept, & &1.duration))
     ctts = SampleTable.build_ctts(Enum.map(kept, &(&1.pts - &1.dts)))
     stsz = SampleTable.build_stsz(Enum.map(kept, & &1.size))
@@ -182,8 +184,11 @@ defmodule ISOMedia.Trim do
 
     sel.trak
     |> put_stbl(stbl_children)
-    |> update_descendant(~w(mdia mdhd), &set_mdhd_duration(&1, track_dur))
-    |> update_descendant(["tkhd"], &set_tkhd_duration(&1, scale(track_dur, sel.ts, movie_ts)))
+    |> BoxPath.update_descendant(~w(mdia mdhd), &set_mdhd_duration(&1, track_dur))
+    |> BoxPath.update_descendant(
+      ["tkhd"],
+      &set_tkhd_duration(&1, scale(track_dur, sel.ts, movie_ts))
+    )
     |> put_edts(edts_for(sel, movie_ts))
   end
 
@@ -242,7 +247,9 @@ defmodule ISOMedia.Trim do
   end
 
   defp put_stbl(trak, stbl_children) do
-    update_descendant(trak, ~w(mdia minf stbl), fn stbl -> %{stbl | children: stbl_children} end)
+    BoxPath.update_descendant(trak, ~w(mdia minf stbl), fn stbl ->
+      %{stbl | children: stbl_children}
+    end)
   end
 
   defp set_mdhd_duration(mdhd, dur) do
@@ -277,19 +284,5 @@ defmodule ISOMedia.Trim do
     pre ++ traks ++ post
   end
 
-  defp track_id(trak), do: TrackHeader.decode(dig(trak, ["tkhd"])).track_id
-
-  defp dig(%Box{type: type} = box, path), do: Box.find([box], [type | path])
-
-  defp update_descendant(box, [], fun), do: fun.(box)
-
-  defp update_descendant(%Box{children: children} = box, [type | rest], fun) do
-    new_children =
-      Enum.map(children, fn
-        %Box{type: ^type} = c -> update_descendant(c, rest, fun)
-        other -> other
-      end)
-
-    %{box | children: new_children}
-  end
+  defp track_id(trak), do: TrackHeader.decode(BoxPath.dig(trak, ["tkhd"])).track_id
 end
