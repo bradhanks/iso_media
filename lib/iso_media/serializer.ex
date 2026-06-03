@@ -19,6 +19,11 @@ defmodule ISOMedia.Serializer do
     %{box | data: flatten_segments(parts)}
   end
 
+  defp materialize_box(%Box{data: nil, children: children} = box),
+    do: %{box | children: Enum.map(children, &materialize_box/1)}
+
+  defp materialize_box(%Box{} = box), do: box
+
   defp flatten_segments(parts) do
     parts
     |> Enum.map(fn
@@ -28,11 +33,6 @@ defmodule ISOMedia.Serializer do
     end)
     |> IO.iodata_to_binary()
   end
-
-  defp materialize_box(%Box{data: nil, children: children} = box),
-    do: %{box | children: Enum.map(children, &materialize_box/1)}
-
-  defp materialize_box(%Box{} = box), do: box
 
   @doc "Serialize a box or list of boxes to iodata (no full-binary materialization)."
   def to_iodata(%Box{} = box), do: to_iodata([box])
@@ -113,6 +113,11 @@ defmodule ISOMedia.Serializer do
     stream_segments(parts, io, chunk)
   end
 
+  defp stream_payload(%Box{data: nil, children: children}, io, chunk),
+    do: Enum.each(children, &stream_box(&1, io, chunk))
+
+  defp stream_payload(%Box{data: data}, io, _chunk) when is_binary(data), do: write!(io, data)
+
   defp stream_segments(parts, io, chunk) do
     Enum.each(parts, fn
       %FileSlice{} = s -> FileSlice.stream(s, io, chunk)
@@ -120,11 +125,6 @@ defmodule ISOMedia.Serializer do
       nested when is_list(nested) -> stream_segments(nested, io, chunk)
     end)
   end
-
-  defp stream_payload(%Box{data: nil, children: children}, io, chunk),
-    do: Enum.each(children, &stream_box(&1, io, chunk))
-
-  defp stream_payload(%Box{data: data}, io, _chunk) when is_binary(data), do: write!(io, data)
 
   defp write!(io, data) do
     case :file.write(io, data) do
