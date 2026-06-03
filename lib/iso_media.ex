@@ -105,10 +105,14 @@ defmodule ISOMedia do
 
   defp collect_slice_paths(%ISOMedia.Box{data: %ISOMedia.FileSlice{path: p}}), do: [p]
 
-  defp collect_slice_paths(%ISOMedia.Box{data: parts}) when is_list(parts) do
+  defp collect_slice_paths(%ISOMedia.Box{data: parts}) when is_list(parts),
+    do: slice_paths_in(parts)
+
+  defp slice_paths_in(parts) do
     Enum.flat_map(parts, fn
       %ISOMedia.FileSlice{path: p} -> [p]
       bin when is_binary(bin) -> []
+      nested when is_list(nested) -> slice_paths_in(nested)
     end)
   end
 
