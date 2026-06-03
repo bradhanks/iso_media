@@ -91,7 +91,27 @@ headers. Like `extract_track/2`, the result has a freshly synthesized `mdat`, so
 `mdat`s) — trim/extract/faststart the original first if you need to combine them.
 The result is **frame-accurate**: each track gets an edit list (`elst`) so playback
 presents exactly from the requested start, even though the decoded media begins at
-the preceding keyframe. Concatenation is a future phase.
+the preceding keyframe.
+
+## Concatenate
+
+Join compatible clips end-to-end, losslessly:
+
+```elixir
+clips = Enum.map(["a.mp4", "b.mp4", "c.mp4"], fn p -> {:ok, b} = ISOMedia.read(p); b end)
+ISOMedia.write("joined.mp4", ISOMedia.concat(clips))
+```
+
+Clips must be compatible: same track count, and per track a byte-identical `stsd`
+(same codec/resolution/settings) and the same media timescale — otherwise it raises
+(lossless concat can't reconcile different encodings). Source edit lists are ignored,
+so concatenating clips that were previously **trimmed** will make their hidden
+keyframe lead-in frames visible at each splice. Because each track's timeline is the
+sum of its own sample durations, tracks whose raw media durations differ slightly
+(e.g. audio a little longer than video) can accumulate **minor A/V drift across many
+splices** — expected for a lossless sample-level join without edit-list reconciliation.
+Inputs must be freshly read files; to concat the output of `trim`/`extract`/`concat`,
+write it to disk and read it back.
 
 ## Status
 

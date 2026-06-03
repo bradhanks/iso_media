@@ -40,6 +40,7 @@ ISOBMFF files are a flat-then-nested sequence of **boxes** (a.k.a. atoms). Each 
 - `ISOMedia.Extract` (`lib/iso_media/extract.ex`) — `track_ids/1`, `find_trak/2`, and `extract_track/2` (rebuilds `mdat` as a segment list + recomputes chunk offsets). Exposed as `ISOMedia.track_ids/1`, `ISOMedia.samples/2`, `ISOMedia.extract_track/2`.
 - `ISOMedia.MdatSource` (`lib/iso_media/mdat_source.ex`) — resolves an absolute byte range to a payload segment (FileSlice/binary) via the containing `mdat`; shared by `Extract` and `Trim`.
 - `ISOMedia.Trim` (`lib/iso_media/trim.ex`) — `trim/3`: time-based lossless trim of all tracks (dts selection + snap-to-keyframe, table rebuild, interleave-preserving segment-list `mdat`, duration updates). Emits a per-track `edts`/`elst` (dropping any inherited `edts`) when the snap-to-keyframe introduces a lead, so presentation is frame-accurate from the requested start. Exposed as `ISOMedia.trim/3`.
+- `ISOMedia.Concat` (`lib/iso_media/concat.ex`) — `concat/1`: lossless end-to-end join of N compatible clips (byte-identical `stsd` + matching timescale required); appends each track's samples + tables, builds a multi-source segment-list `mdat`. Exposed as `ISOMedia.concat/1`.
 
 The invariant throughout is byte-for-byte round-trip: `ISOMedia.serialize(parse(file)) == file`.
 
