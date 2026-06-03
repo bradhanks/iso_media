@@ -6,7 +6,11 @@ defmodule ISOMedia.FragmentIndexTest do
   defp leaf(type, data), do: %Box{type: type, data: data}
 
   test "fragmented?/1 is true only with both mvex and moof" do
-    mvex = %Box{type: "mvex", children: [leaf("trex", <<0::32, 1::32, 1::32, 0::32, 0::32, 0::32>>)]}
+    mvex = %Box{
+      type: "mvex",
+      children: [leaf("trex", <<0::32, 1::32, 1::32, 0::32, 0::32, 0::32>>)]
+    }
+
     moof = %Box{type: "moof", children: []}
 
     assert FragmentIndex.fragmented?([moov([mvex]), moof]) == true
@@ -130,7 +134,13 @@ defmodule ISOMedia.FragmentIndexTest do
       moof = %Box{type: "moof", children: [traf]}
       trex = full_box("trex", 0, 0, <<1::32, 1::32, 0::32, 0::32, 0::32>>)
       moov = %Box{type: "moov", children: [%Box{type: "mvex", children: [trex]}]}
-      tree = [%Box{type: "ftyp", data: <<0::32>>}, moov, moof, %Box{type: "mdat", data: <<0::80>>}]
+
+      tree = [
+        %Box{type: "ftyp", data: <<0::32>>},
+        moov,
+        moof,
+        %Box{type: "mdat", data: <<0::80>>}
+      ]
 
       assert_raise ArgumentError, ~r/default-base-is-moof/, fn ->
         FragmentIndex.samples(tree, 1)

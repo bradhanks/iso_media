@@ -82,7 +82,9 @@ defmodule ISOMedia.ProgressiveBuild do
     moov_final =
       assemble_moov(base_moov, inputs_data, track_count, offsets_by_track, co_kind, movie_ts)
 
-    segments = Enum.map(placed, fn run -> MdatSource.segment(run.mdats, run.offset, run.length) end)
+    segments =
+      Enum.map(placed, fn run -> MdatSource.segment(run.mdats, run.offset, run.length) end)
+
     mdat = %Box{type: "mdat", data: segments, size_mode: mdat_mode}
 
     [ftyp, moov_final, mdat]

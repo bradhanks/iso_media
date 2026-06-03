@@ -16,7 +16,10 @@ defmodule ISOMedia.Boxes.FragmentBoxesTest do
   test "tfdt v0 and v1 decode base_media_decode_time" do
     v0 = TrackFragmentDecodeTime.decode(%Box{type: "tfdt", data: <<0, 0, 0, 0, 5120::32>>})
     assert v0.version == 0 and v0.base_media_decode_time == 5120
-    v1 = TrackFragmentDecodeTime.decode(%Box{type: "tfdt", data: <<1, 0, 0, 0, 9_000_000_000::64>>})
+
+    v1 =
+      TrackFragmentDecodeTime.decode(%Box{type: "tfdt", data: <<1, 0, 0, 0, 9_000_000_000::64>>})
+
     assert v1.version == 1 and v1.base_media_decode_time == 9_000_000_000
   end
 

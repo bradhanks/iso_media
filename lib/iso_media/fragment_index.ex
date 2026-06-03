@@ -138,7 +138,9 @@ defmodule ISOMedia.FragmentIndex do
   end
 
   defp child(%Box{children: children}, type), do: Enum.find(children, &(&1.type == type))
-  defp child!(box, type), do: child(box, type) || raise(ArgumentError, "fMP4: traf missing #{type}")
+
+  defp child!(box, type),
+    do: child(box, type) || raise(ArgumentError, "fMP4: traf missing #{type}")
 
   @doc """
   Resolve one `trun`'s per-sample fields against merged `defaults`
