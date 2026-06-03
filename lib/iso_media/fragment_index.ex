@@ -6,7 +6,8 @@ defmodule ISOMedia.FragmentIndex do
   resolves per-sample duration/size/flags. `chunk_index` is a per-`trun` counter.
   """
   import Bitwise
-  alias ISOMedia.Boxes.TrackRun
+  alias ISOMedia.{Box, Layout, Sample}
+  alias ISOMedia.Boxes.{TrackExtends, TrackFragmentDecodeTime, TrackFragmentHeader, TrackRun}
 
   @non_sync 0x00010000
 
@@ -19,9 +20,125 @@ defmodule ISOMedia.FragmentIndex do
   end
 
   @doc "Index the fragmented track `track_id` into `[%ISOMedia.Sample{}]`."
-  def samples(_boxes, _track_id) do
-    raise ArgumentError, "FragmentIndex.samples/2 not yet implemented"
+  def samples(boxes, track_id) do
+    trex = trex_for!(boxes, track_id)
+
+    {rev, _sidx, _cidx} =
+      boxes
+      |> moof_layout()
+      |> Enum.reduce({[], 0, 0}, fn %{moof: moof, offset: moof_off}, acc ->
+        case traf_for(moof, track_id) do
+          nil -> acc
+          traf -> index_traf(traf, moof_off, trex, acc)
+        end
+      end)
+
+    Enum.reverse(rev)
   end
+
+  # One %{moof, offset} per moof, offset stamped by the tree-local Layout walk.
+  defp moof_layout(boxes) do
+    {recs, _end} =
+      Enum.flat_map_reduce(boxes, 0, fn box, off ->
+        rec = if box.type == "moof", do: [%{moof: box, offset: off}], else: []
+        {rec, off + Layout.box_size(box)}
+      end)
+
+    recs
+  end
+
+  defp index_traf(traf, moof_off, trex, {acc, sidx, cidx}) do
+    tfhd = TrackFragmentHeader.decode(child!(traf, "tfhd"))
+
+    unless tfhd.default_base_is_moof? do
+      raise ArgumentError,
+            "fMP4: track #{tfhd.track_id} fragment does not set default-base-is-moof " <>
+              "(unsupported addressing)"
+    end
+
+    check_unencrypted!(traf)
+
+    base_dts =
+      case child(traf, "tfdt") do
+        nil -> 0
+        box -> TrackFragmentDecodeTime.decode(box).base_media_decode_time
+      end
+
+    defaults = defaults(tfhd, trex)
+    truns = Enum.filter(traf.children, &(&1.type == "trun"))
+
+    {acc, sidx, cidx, _dts} =
+      Enum.reduce(truns, {acc, sidx, cidx, base_dts}, fn trun_box, {acc, si, ci, dts} ->
+        trun = TrackRun.decode(trun_box)
+        ci = ci + 1
+        run_start = moof_off + (trun.data_offset || 0)
+
+        {acc, si, _off, dts} =
+          trun
+          |> resolve_run(defaults)
+          |> Enum.reduce({acc, si, run_start, dts}, fn r, {acc, si, off, dts} ->
+            si = si + 1
+
+            sample = %Sample{
+              index: si,
+              chunk_index: ci,
+              dts: dts,
+              duration: r.duration,
+              pts: dts + r.composition_offset,
+              size: r.size,
+              offset: off,
+              sync?: r.sync?
+            }
+
+            {[sample | acc], si, off + r.size, dts + r.duration}
+          end)
+
+        {acc, si, ci, dts}
+      end)
+
+    {acc, sidx, cidx}
+  end
+
+  defp defaults(tfhd, trex) do
+    %{
+      duration: tfhd.default_sample_duration || trex.default_sample_duration,
+      size: tfhd.default_sample_size || trex.default_sample_size,
+      flags: tfhd.default_sample_flags || trex.default_sample_flags
+    }
+  end
+
+  defp trex_for!(boxes, track_id) do
+    moov = Enum.find(boxes, &(&1.type == "moov")) || raise ArgumentError, "fMP4: no moov"
+    mvex = Enum.find(moov.children, &(&1.type == "mvex")) || raise ArgumentError, "fMP4: no mvex"
+
+    box =
+      Enum.find(mvex.children, fn b ->
+        b.type == "trex" and TrackExtends.decode(b).track_id == track_id
+      end)
+
+    if box,
+      do: TrackExtends.decode(box),
+      else: raise(ArgumentError, "fMP4: no trex for track #{track_id}")
+  end
+
+  defp traf_for(moof, track_id) do
+    Enum.find(moof.children, fn b ->
+      b.type == "traf" and
+        case child(b, "tfhd") do
+          nil -> false
+          tfhd -> TrackFragmentHeader.decode(tfhd).track_id == track_id
+        end
+    end)
+  end
+
+  defp check_unencrypted!(traf) do
+    if Enum.any?(traf.children, &(&1.type in ~w(senc saiz saio))) do
+      raise ArgumentError, "fMP4: encrypted fragments (senc/saiz/saio) are not supported"
+    end
+  end
+
+  defp child(%Box{children: children}, type), do: Enum.find(children, &(&1.type == type))
+  defp child!(box, type), do: child(box, type) || raise(ArgumentError, "fMP4: traf missing #{type}")
 
   @doc """
   Resolve one `trun`'s per-sample fields against merged `defaults`

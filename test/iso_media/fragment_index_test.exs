@@ -68,4 +68,73 @@ defmodule ISOMedia.FragmentIndexTest do
                FragmentIndex.resolve_run(trun, %{duration: nil, size: nil, flags: 0x00010000})
     end
   end
+
+  describe "samples/2 assembly" do
+    defp full_box(type, version, flags_int, payload) do
+      %Box{type: type, data: <<version::8, flags_int::24, payload::binary>>}
+    end
+
+    defp box_offset(boxes, target) do
+      {_, off} =
+        Enum.reduce_while(boxes, {0, nil}, fn b, {acc, _} ->
+          if b == target,
+            do: {:halt, {acc, acc}},
+            else: {:cont, {acc + ISOMedia.Layout.box_size(b), nil}}
+        end)
+
+      off
+    end
+
+    defp tiny_frag_tree do
+      trex = full_box("trex", 0, 0, <<1::32, 1::32, 0::32, 0::32, 0::32>>)
+      moov = %Box{type: "moov", children: [%Box{type: "mvex", children: [trex]}]}
+
+      # tfhd: default-base-is-moof (0x020000) + default duration (0x8) + default size (0x10)
+      tfhd = full_box("tfhd", 0, 0x020018, <<1::32, 100::32, 10::32>>)
+      tfdt = full_box("tfdt", 0, 0, <<0::32>>)
+      ftyp = %Box{type: "ftyp", data: <<"isom", 0::32>>}
+      # mdat holds 20 bytes (2 samples x 10)
+      mdat = %Box{type: "mdat", data: <<0::160>>}
+
+      # First pass with placeholder data_offset to learn the tree-local layout.
+      placeholder = full_box("trun", 0, 0x000001, <<2::32, 0::signed-32>>)
+      traf0 = %Box{type: "traf", children: [tfhd, tfdt, placeholder]}
+      moof0 = %Box{type: "moof", children: [traf0]}
+      tree0 = [ftyp, moov, moof0, mdat]
+
+      # data_offset such that sample 1 lands exactly on mdat's payload start.
+      data_offset = box_offset(tree0, mdat) + 8 - box_offset(tree0, moof0)
+      trun = full_box("trun", 0, 0x000001, <<2::32, data_offset::signed-32>>)
+      traf = %Box{type: "traf", children: [tfhd, tfdt, trun]}
+      moof = %Box{type: "moof", children: [traf]}
+      [ftyp, moov, moof, mdat]
+    end
+
+    test "computes offsets, dts/pts, sizes, and per-trun chunk_index" do
+      samples = FragmentIndex.samples(tiny_frag_tree(), 1)
+      assert length(samples) == 2
+      [s1, s2] = samples
+      assert s1.index == 1 and s2.index == 2
+      assert s1.chunk_index == 1 and s2.chunk_index == 1
+      assert s1.size == 10 and s2.size == 10
+      assert s1.duration == 100
+      assert s1.dts == 0 and s2.dts == 100
+      assert s1.pts == 0 and s2.pts == 100
+      assert s2.offset == s1.offset + 10
+    end
+
+    test "raises when a fragment does not use default-base-is-moof" do
+      tfhd = full_box("tfhd", 0, 0x000008, <<1::32, 100::32>>)
+      trun = full_box("trun", 0, 0x000001, <<1::32, 0::signed-32>>)
+      traf = %Box{type: "traf", children: [tfhd, trun]}
+      moof = %Box{type: "moof", children: [traf]}
+      trex = full_box("trex", 0, 0, <<1::32, 1::32, 0::32, 0::32, 0::32>>)
+      moov = %Box{type: "moov", children: [%Box{type: "mvex", children: [trex]}]}
+      tree = [%Box{type: "ftyp", data: <<0::32>>}, moov, moof, %Box{type: "mdat", data: <<0::80>>}]
+
+      assert_raise ArgumentError, ~r/default-base-is-moof/, fn ->
+        FragmentIndex.samples(tree, 1)
+      end
+    end
+  end
 end
