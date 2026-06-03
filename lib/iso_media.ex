@@ -18,11 +18,15 @@ defmodule ISOMedia do
   @doc "List the `track_id`s present in the movie."
   def track_ids(boxes), do: ISOMedia.Extract.track_ids(boxes)
 
-  @doc "Decode a track's sample tables into `[%ISOMedia.Sample{}]`."
+  @doc "Decode a track's sample tables into `[%ISOMedia.Sample{}]` (progressive or fragmented)."
   def samples(boxes, track_id) do
-    case ISOMedia.Extract.find_trak(boxes, track_id) do
-      nil -> raise ArgumentError, "no track with track_id #{track_id}"
-      trak -> ISOMedia.SampleTable.build(trak)
+    if ISOMedia.FragmentIndex.fragmented?(boxes) do
+      ISOMedia.FragmentIndex.samples(boxes, track_id)
+    else
+      case ISOMedia.Extract.find_trak(boxes, track_id) do
+        nil -> raise ArgumentError, "no track with track_id #{track_id}"
+        trak -> ISOMedia.SampleTable.build(trak)
+      end
     end
   end
 
