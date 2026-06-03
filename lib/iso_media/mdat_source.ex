@@ -56,7 +56,44 @@ defmodule ISOMedia.MdatSource do
     binary_part(bin, relative, length)
   end
 
-  defp resolve(parts, _relative, _length) when is_list(parts) do
-    raise ArgumentError, "segment-list resolution not yet implemented"
+  defp resolve(parts, relative, length) when is_list(parts) do
+    resolve_in_segments(parts, relative, length)
+  end
+
+  # Walk parts accumulating their byte lengths; slice each part overlapping
+  # [lo, lo+len). One overlapping part -> return its slice bare; several -> a list.
+  defp resolve_in_segments(parts, lo, len) do
+    hi = lo + len
+
+    {slices, _pos} =
+      Enum.flat_map_reduce(parts, 0, fn part, pos ->
+        part_len = Layout.segment_size(part)
+        part_hi = pos + part_len
+
+        if part_hi <= lo or pos >= hi do
+          {[], part_hi}
+        else
+          start = max(lo, pos) - pos
+          take = min(hi, part_hi) - max(lo, pos)
+          {[slice_part(part, start, take)], part_hi}
+        end
+      end)
+
+    case slices do
+      [one] -> one
+      many -> many
+    end
+  end
+
+  defp slice_part(%FileSlice{path: p, offset: o}, start, take) do
+    %FileSlice{path: p, offset: o + start, length: take}
+  end
+
+  defp slice_part(bin, start, take) when is_binary(bin) do
+    binary_part(bin, start, take)
+  end
+
+  defp slice_part(parts, start, take) when is_list(parts) do
+    resolve_in_segments(parts, start, take)
   end
 end

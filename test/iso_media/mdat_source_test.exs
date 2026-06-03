@@ -51,4 +51,38 @@ defmodule ISOMedia.MdatSourceTest do
       assert_raise ArgumentError, fn -> MdatSource.segment(recs, 9999, 2) end
     end
   end
+
+  describe "segment/3 segment lists" do
+    defp seglist_mdat(parts) do
+      mdat = %Box{type: "mdat", size_mode: :compact, data: parts}
+      MdatSource.collect([mdat])
+    end
+
+    test "range within a single part returns that part's slice (bare, not wrapped)" do
+      recs = seglist_mdat([<<0, 1, 2, 3>>, <<4, 5, 6, 7>>])
+      # payload_start 8. Absolute 9 -> relative 1, within part 0.
+      assert MdatSource.segment(recs, 9, 2) == <<1, 2>>
+    end
+
+    test "range spanning two parts returns a list of the two slices" do
+      recs = seglist_mdat([<<0, 1, 2, 3>>, <<4, 5, 6, 7>>])
+      # relative 2..6 -> [<<2,3>>, <<4,5>>]
+      assert MdatSource.segment(recs, 10, 4) == [<<2, 3>>, <<4, 5>>]
+    end
+
+    test "slices a FileSlice part by adding the in-part start to fs.offset" do
+      recs = seglist_mdat([<<0, 1>>, %FileSlice{path: "x", offset: 500, length: 6}])
+      # relative 3 -> part 1, in-part start 1 -> fs.offset 500+1, length 4
+      assert MdatSource.segment(recs, 11, 4) == %FileSlice{path: "x", offset: 501, length: 4}
+    end
+
+    test "recurses through a nested segment list, preserving nesting in the result" do
+      # parts: [<<0,1>>, [<<2,3>>, %FileSlice{...len 4}]] — total payload 8 bytes
+      nested = [<<2, 3>>, %FileSlice{path: "y", offset: 0, length: 4}]
+      recs = seglist_mdat([<<0, 1>>, nested])
+      # relative 1..8 (7 bytes) -> part0 tail <<1>>, then into nested: <<2,3>> + fs[0,4]
+      assert MdatSource.segment(recs, 9, 7) ==
+               [<<1>>, [<<2, 3>>, %FileSlice{path: "y", offset: 0, length: 4}]]
+    end
+  end
 end
