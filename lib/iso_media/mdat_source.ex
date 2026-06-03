@@ -5,7 +5,7 @@ defmodule ISOMedia.MdatSource do
   is lazy, or a `binary` slice when it is in memory. Shared by `Extract` and `Trim`.
   """
 
-  alias ISOMedia.{Box, FileSlice, Layout}
+  alias ISOMedia.{FileSlice, Layout}
 
   @doc """
   Capture each top-level `mdat`'s absolute payload range from a single `Layout` walk:
@@ -32,24 +32,31 @@ defmodule ISOMedia.MdatSource do
     records
   end
 
-  @doc "A segment (FileSlice or binary) for the absolute `offset`..`offset+length` range."
-  def segment(mdats, offset, length) do
-    mdat =
-      Enum.find(mdats, fn m ->
-        not is_nil(m.source_offset) and offset >= m.source_offset and
-          offset < m.source_offset + m.source_size
+  @doc """
+  Resolve the absolute `offset`..`offset+length` range to a payload segment, given the
+  records from `collect/1`. Returns a `binary`, a `%FileSlice{}`, or (for a segment-list
+  mdat) a nested segment list. Uses `relative = offset - payload_start`, so a physical
+  `FileSlice` acts as a local byte provider (`fs.offset + relative`) independent of the
+  absolute target.
+  """
+  def segment(records, offset, length) do
+    rec =
+      Enum.find(records, fn r ->
+        offset >= r.payload_start and offset < r.payload_start + r.payload_size
       end) || raise ArgumentError, "byte range at offset #{offset} falls outside every mdat"
 
-    case mdat.data do
-      %FileSlice{path: path} ->
-        %FileSlice{path: path, offset: offset, length: length}
+    resolve(rec.box.data, offset - rec.payload_start, length)
+  end
 
-      bin when is_binary(bin) ->
-        %Box{} = mdat
-        binary_part(bin, offset - (mdat.source_offset + Layout.header_size(mdat)), length)
+  defp resolve(%FileSlice{path: path, offset: base}, relative, length) do
+    %FileSlice{path: path, offset: base + relative, length: length}
+  end
 
-      _ ->
-        raise ArgumentError, "cannot read from an mdat whose payload is already a segment list"
-    end
+  defp resolve(bin, relative, length) when is_binary(bin) do
+    binary_part(bin, relative, length)
+  end
+
+  defp resolve(parts, _relative, _length) when is_list(parts) do
+    raise ArgumentError, "segment-list resolution not yet implemented"
   end
 end
