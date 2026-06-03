@@ -144,4 +144,46 @@ defmodule ISOMedia.TrimTest do
     {:ok, reparsed} = ISOMedia.parse(out)
     assert ISOMedia.Box.find(reparsed, ~w(moov trak edts)) == nil
   end
+
+  # A single-track clip with two chunks (1 sample each) physically out of logical
+  # order (sample 2's bytes precede sample 1's) → non-monotonic stco. Exercises the
+  # physical-vs-logical stco/stsc alignment that MP4Builder can't (it emits monotonic).
+  defp nonmono_clip(s1, s2) do
+    leaf = fn type, data -> <<8 + byte_size(data)::32, type::binary, data::binary>> end
+    container = fn type, inner -> <<8 + byte_size(inner)::32, type::binary, inner::binary>> end
+
+    stsd = leaf.("stsd", <<0, 0, 0, 0, 0::32>>)
+    stts = leaf.("stts", <<0, 0, 0, 0, 1::32, 2::32, 10::32>>)
+    stsc = leaf.("stsc", <<0, 0, 0, 0, 1::32, 1::32, 1::32, 1::32>>)
+    stsz = leaf.("stsz", <<0, 0, 0, 0, 0::32, 2::32, byte_size(s1)::32, byte_size(s2)::32>>)
+    mdhd = leaf.("mdhd", <<0, 0, 0, 0, 0::32, 0::32, 1::32, 0::32, 0::16, 0::16>>)
+    tkhd = leaf.("tkhd", <<0, 0, 0, 0, 0::32, 0::32, 1::32, 0::32, 0::32>>)
+    ftyp = leaf.("ftyp", <<"isom", 0::32, "isom">>)
+
+    moov_with = fn off1, off2 ->
+      stco = leaf.("stco", <<0, 0, 0, 0, 2::32, off1::32, off2::32>>)
+      stbl = container.("stbl", stsd <> stts <> stsc <> stsz <> stco)
+
+      container.(
+        "moov",
+        container.("trak", tkhd <> container.("mdia", mdhd <> container.("minf", stbl)))
+      )
+    end
+
+    payload_start = byte_size(ftyp) + byte_size(moov_with.(0, 0)) + 8
+    off2 = payload_start
+    off1 = payload_start + byte_size(s2)
+    {:ok, boxes} = ISOMedia.parse(ftyp <> moov_with.(off1, off2) <> leaf.("mdat", s2 <> s1))
+    boxes
+  end
+
+  test "trim keeps logical sample order when source chunks are physically out of order" do
+    boxes = nonmono_clip(<<1>>, <<2>>)
+    # keep everything (dts 0 and 10, durations 10) — both samples survive.
+    out = boxes |> ISOMedia.trim(0, 1000) |> ISOMedia.serialize()
+    {:ok, reparsed} = ISOMedia.parse(out)
+
+    s = ISOMedia.samples(reparsed, 1)
+    assert Enum.map(s, &binary_part(out, &1.offset, &1.size)) == [<<1>>, <<2>>]
+  end
 end

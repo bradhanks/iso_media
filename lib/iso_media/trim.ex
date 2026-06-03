@@ -39,12 +39,14 @@ defmodule ISOMedia.Trim do
       selections
       |> Enum.with_index()
       |> Enum.flat_map(fn {sel, ti} ->
-        Enum.map(sel.runs, fn run ->
+        sel.runs
+        |> Enum.with_index()
+        |> Enum.map(fn {run, chunk_i} ->
           %{
             track_i: ti,
+            chunk_i: chunk_i,
             offset: hd(run).offset,
-            length: Enum.sum(Enum.map(run, & &1.size)),
-            samples: run
+            length: Enum.sum(Enum.map(run, & &1.size))
           }
         end)
       end)
@@ -76,7 +78,12 @@ defmodule ISOMedia.Trim do
 
     offsets_by_track =
       Map.new(0..(length(selections) - 1)//1, fn ti ->
-        offs = placed |> Enum.filter(&(&1.track_i == ti)) |> Enum.map(& &1.new_offset)
+        offs =
+          placed
+          |> Enum.filter(&(&1.track_i == ti))
+          |> Enum.sort_by(& &1.chunk_i)
+          |> Enum.map(& &1.new_offset)
+
         {ti, offs}
       end)
 
@@ -256,7 +263,7 @@ defmodule ISOMedia.Trim do
   # --- small helpers ---
 
   defp sum_durations(samples), do: Enum.sum(Enum.map(samples, & &1.duration))
-  defp scale(value, from_ts, to_ts), do: round(value * to_ts / from_ts)
+  defp scale(value, from_ts, to_ts), do: div(value * to_ts + div(from_ts, 2), from_ts)
   defp opt(nil), do: []
   defp opt(box), do: [box]
 
