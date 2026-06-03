@@ -45,7 +45,7 @@ defmodule ISOMedia.Extract do
   def extract_track(boxes, track_id) do
     trak = find_trak(boxes, track_id) || raise ArgumentError, "no track with track_id #{track_id}"
     ftyp = Enum.find(boxes, &(&1.type == "ftyp")) || raise ArgumentError, "file has no ftyp"
-    mdats = Enum.filter(boxes, &(&1.type == "mdat"))
+    mdats = MdatSource.collect(boxes)
 
     runs =
       trak
