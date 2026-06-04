@@ -22,4 +22,13 @@ defmodule ISOMedia.Boxes.TrackExtends do
       default_sample_flags: flags
     }
   end
+
+  @doc "Encode a `%TrackExtends{}` back into a `trex` box."
+  def encode(%__MODULE__{} = t) do
+    body =
+      <<t.track_id::32, t.default_sample_description_index::32, t.default_sample_duration::32,
+        t.default_sample_size::32, t.default_sample_flags::32>>
+
+    %Box{type: "trex", data: IO.iodata_to_binary(FullBox.encode(0, <<0, 0, 0>>, body))}
+  end
 end

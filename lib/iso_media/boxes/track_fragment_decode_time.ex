@@ -12,4 +12,13 @@ defmodule ISOMedia.Boxes.TrackFragmentDecodeTime do
 
   defp decode_time(0, <<t::32, _::binary>>), do: t
   defp decode_time(1, <<t::64, _::binary>>), do: t
+
+  @doc "Encode a `%TrackFragmentDecodeTime{}` back into a `tfdt` box."
+  def encode(%__MODULE__{version: version, base_media_decode_time: t}) do
+    body = encode_time(version, t)
+    %Box{type: "tfdt", data: IO.iodata_to_binary(FullBox.encode(version, <<0, 0, 0>>, body))}
+  end
+
+  defp encode_time(0, t), do: <<t::32>>
+  defp encode_time(1, t), do: <<t::64>>
 end

@@ -48,4 +48,14 @@ defmodule ISOMedia.Boxes.TrackFragmentHeader do
       {nil, bin}
     end
   end
+
+  @doc "Encode a `%TrackFragmentHeader{}` (track_id + default-base-is-moof) into a `tfhd` box."
+  def encode(%__MODULE__{track_id: track_id, default_base_is_moof?: true}) do
+    body = <<track_id::32>>
+
+    %Box{
+      type: "tfhd",
+      data: IO.iodata_to_binary(FullBox.encode(0, <<@default_base_is_moof::24>>, body))
+    }
+  end
 end

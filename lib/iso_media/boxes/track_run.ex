@@ -64,4 +64,30 @@ defmodule ISOMedia.Boxes.TrackRun do
       true -> (fn <<v::32, r::binary>> -> {v, r} end).(bin)
     end
   end
+
+  @doc """
+  Encode a `%TrackRun{}` into a `trun` box. Always writes data-offset + per-sample
+  duration/size/flags; writes composition offsets (v1, signed) iff any sample has a
+  nonzero offset.
+  """
+  def encode(%__MODULE__{} = t) do
+    has_comp = Enum.any?(t.samples, &((&1.composition_offset || 0) != 0))
+    version = if has_comp, do: 1, else: 0
+
+    flags =
+      @data_offset ||| @sample_duration ||| @sample_size ||| @sample_flags |||
+        if has_comp, do: @sample_comp_offset, else: 0
+
+    samples =
+      for s <- t.samples, into: <<>> do
+        base = <<s.duration::32, s.size::32, s.flags::32>>
+
+        if has_comp,
+          do: base <> <<s.composition_offset || 0::signed-32>>,
+          else: base
+      end
+
+    body = <<length(t.samples)::32, t.data_offset::signed-32, samples::binary>>
+    %Box{type: "trun", data: IO.iodata_to_binary(FullBox.encode(version, <<flags::24>>, body))}
+  end
 end
