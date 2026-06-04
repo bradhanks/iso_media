@@ -74,6 +74,10 @@ defmodule ISOMedia do
   @spec fragment(tree(), keyword()) :: tree()
   def fragment(boxes, opts \\ []), do: ISOMedia.Fragment.fragment(boxes, opts)
 
+  @doc "Split a fragmented tree into a CMAF init segment + media segments. See `ISOMedia.Segment.split/1`."
+  @spec split_segments(tree()) :: %{init: tree(), segments: [tree()]}
+  def split_segments(boxes), do: ISOMedia.Segment.split(boxes)
+
   @doc "Recompute stco/co64 chunk offsets for the current box arrangement. See `ISOMedia.Offsets.fix_chunk_offsets/1`."
   @spec fix_chunk_offsets(tree()) :: tree()
   def fix_chunk_offsets(boxes), do: ISOMedia.Offsets.fix_chunk_offsets(boxes)
