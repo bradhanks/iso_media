@@ -18,3 +18,9 @@ Tiny ISOBMFF files used for round-trip tests. Regenerate with:
       -f lavfi -i sine=frequency=440:duration=2 \
       -pix_fmt yuv420p -c:a aac -shortest \
       -movflags frag_keyframe+empty_moov+default_base_moof -frag_duration 500000 sample_frag.mp4
+
+    # Frequent-keyframe progressive fixture for Phase 10 fragmenting (GOP 10 -> a
+    # keyframe every 1s, so target_duration < 1s yields multiple fragments):
+    ffmpeg -y -f lavfi -i testsrc=duration=2:size=128x96:rate=10 \
+      -f lavfi -i sine=frequency=440:duration=2 \
+      -pix_fmt yuv420p -c:a aac -g 10 -shortest sample_keyint.mp4

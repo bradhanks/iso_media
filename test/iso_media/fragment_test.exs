@@ -138,4 +138,99 @@ defmodule ISOMedia.FragmentTest do
       assert IO.iodata_to_binary(bytes) == payload
     end
   end
+
+  describe "round trip (the proof)" do
+    @keyint "test/fixtures/sample_keyint.mp4"
+
+    defp sample_bytes(boxes, samples) do
+      recs = ISOMedia.MdatSource.collect(boxes)
+
+      samples
+      |> Enum.map(fn smp ->
+        seg = ISOMedia.MdatSource.segment(recs, smp.offset, smp.size)
+        ISOMedia.Box.read_data(%ISOMedia.Box{type: "x", data: List.wrap(seg)})
+      end)
+      |> IO.iodata_to_binary()
+    end
+
+    test "the keyint fixture yields >= 2 fragments and every fragment starts on a keyframe" do
+      {:ok, boxes} = ISOMedia.read(@keyint)
+      out = ISOMedia.fragment(boxes, target_duration: 0.3)
+      assert Enum.count(out, &(&1.type == "moof")) >= 2
+
+      [vid | _] =
+        Enum.filter(ISOMedia.track_ids(boxes), fn tid ->
+          s = ISOMedia.samples(boxes, tid)
+          Enum.count(s, & &1.sync?) < length(s)
+        end)
+
+      frag = ISOMedia.samples(out, vid)
+      firsts = frag |> Enum.group_by(& &1.chunk_index) |> Map.values() |> Enum.map(&hd/1)
+      assert Enum.all?(firsts, & &1.sync?)
+    end
+
+    test "defragment(fragment(x)) reproduces per-sample timing and bytes" do
+      {:ok, boxes} = ISOMedia.read(@keyint)
+      round = boxes |> ISOMedia.fragment(target_duration: 0.3) |> ISOMedia.defragment()
+
+      for tid <- ISOMedia.track_ids(boxes) do
+        orig = ISOMedia.samples(boxes, tid)
+        rt = ISOMedia.samples(round, tid)
+        assert Enum.map(rt, & &1.dts) == Enum.map(orig, & &1.dts)
+        assert Enum.map(rt, & &1.pts) == Enum.map(orig, & &1.pts)
+        assert Enum.map(rt, & &1.size) == Enum.map(orig, & &1.size)
+        assert Enum.map(rt, & &1.sync?) == Enum.map(orig, & &1.sync?)
+        assert sample_bytes(round, rt) == sample_bytes(boxes, orig)
+      end
+    end
+
+    test "audio-only fragments and round-trips" do
+      {:ok, boxes} = ISOMedia.read("test/fixtures/sample.m4a")
+      out = ISOMedia.fragment(boxes, target_duration: 0.3)
+      assert ISOMedia.FragmentIndex.fragmented?(out)
+      round = ISOMedia.defragment(out)
+      [tid] = ISOMedia.track_ids(boxes)
+
+      assert Enum.map(ISOMedia.samples(round, tid), & &1.size) ==
+               Enum.map(ISOMedia.samples(boxes, tid), & &1.size)
+    end
+
+    test "lazy and eager fragmenting produce identical bytes" do
+      {:ok, eager} = ISOMedia.read(@keyint)
+      {:ok, lazy} = ISOMedia.read(@keyint, lazy: true)
+
+      assert ISOMedia.serialize(ISOMedia.fragment(eager)) ==
+               ISOMedia.serialize(ISOMedia.fragment(lazy))
+    end
+
+    test "fragmenting a trimmed input strips edts from the init moov" do
+      {:ok, boxes} = ISOMedia.read("test/fixtures/sample_av.mp4")
+      trimmed = ISOMedia.trim(boxes, 0.2, 0.8)
+      out = ISOMedia.fragment(trimmed, target_duration: 0.3)
+      moov = Enum.find(out, &(&1.type == "moov"))
+
+      for trak <- Enum.filter(moov.children, &(&1.type == "trak")) do
+        refute Enum.any?(trak.children, &(&1.type == "edts"))
+      end
+    end
+
+    test "trailing sidx/mfra are opaque leaves and ignored by indexing" do
+      {:ok, boxes} = ISOMedia.read(@keyint)
+      out = ISOMedia.fragment(boxes, target_duration: 0.3)
+
+      with_trailers =
+        out ++
+          [
+            %ISOMedia.Box{type: "sidx", data: <<0::96>>},
+            %ISOMedia.Box{type: "mfra", data: <<0::64>>}
+          ]
+
+      assert [%ISOMedia.Box{type: "sidx", data: d}] =
+               Enum.filter(with_trailers, &(&1.type == "sidx"))
+
+      assert is_binary(d)
+      [tid | _] = ISOMedia.track_ids(with_trailers)
+      assert is_list(ISOMedia.samples(with_trailers, tid))
+    end
+  end
 end
