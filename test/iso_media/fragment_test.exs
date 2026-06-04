@@ -49,6 +49,16 @@ defmodule ISOMedia.FragmentTest do
       windows = Fragment.windows(samples, [0, 20, 40])
       assert Enum.map(windows, &length/1) == [1, 0, 1]
     end
+
+    test "the first window keeps samples before the first boundary (lossless)" do
+      # leading non-sync samples (dts 0, 10) before the first keyframe at dts 20
+      samples = [s(0, false), s(10, false), s(20, true), s(30, false), s(40, true)]
+      windows = Fragment.windows(samples, [20, 40])
+      # nothing dropped; the leading samples land in the first window
+      assert windows |> List.flatten() |> length() == 5
+
+      assert Enum.map(windows, fn run -> Enum.map(run, & &1.dts) end) == [[0, 10, 20, 30], [40]]
+    end
   end
 
   describe "fragment/2 structure" do

@@ -130,13 +130,22 @@ defmodule ISOMedia.Fragment do
   Partition `samples` into one run per boundary: run `i` is the samples whose dts is in
   `[boundaries[i], boundaries[i+1])` (the last run is open-ended). `boundaries` must be in
   the same timescale as the samples, ascending.
+
+  The **first window is open-ended on the low end**: it includes every sample before
+  `boundaries[1]`, regardless of whether its dts is less than `boundaries[0]`. This
+  preserves any leading non-sync samples (frames before the first keyframe) so that
+  fragmenting remains lossless.
   """
   def windows(samples, boundaries) do
     boundaries
     |> Enum.with_index()
     |> Enum.map(fn {b, i} ->
       next = Enum.at(boundaries, i + 1)
-      Enum.filter(samples, fn s -> s.dts >= b and (next == nil or s.dts < next) end)
+      # The first window is open-ended on the low end: any samples before the first
+      # boundary (e.g. leading non-sync frames) must be kept so fragmenting is lossless.
+      Enum.filter(samples, fn s ->
+        (i == 0 or s.dts >= b) and (next == nil or s.dts < next)
+      end)
     end)
   end
 
