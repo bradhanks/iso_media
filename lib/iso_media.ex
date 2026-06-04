@@ -78,6 +78,11 @@ defmodule ISOMedia do
   @spec split_segments(tree()) :: %{init: tree(), segments: [tree()]}
   def split_segments(boxes), do: ISOMedia.Segment.split(boxes)
 
+  @doc "Write a fragmented tree's init + media segment files into `dir`. See `ISOMedia.Segment.write_segments/3`."
+  @spec write_segments(Path.t(), tree(), keyword()) :: {:ok, [Path.t()]} | {:error, term()}
+  def write_segments(dir, boxes, opts \\ []),
+    do: ISOMedia.Segment.write_segments(dir, boxes, opts)
+
   @doc "Recompute stco/co64 chunk offsets for the current box arrangement. See `ISOMedia.Offsets.fix_chunk_offsets/1`."
   @spec fix_chunk_offsets(tree()) :: tree()
   def fix_chunk_offsets(boxes), do: ISOMedia.Offsets.fix_chunk_offsets(boxes)

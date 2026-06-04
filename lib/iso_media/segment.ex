@@ -42,6 +42,40 @@ defmodule ISOMedia.Segment do
     raise ArgumentError, "split_segments: expected moof/mdat fragments, got #{t}"
   end
 
+  @doc """
+  Split `boxes` and write the init + media segments into `dir` (created if absent):
+  `init.mp4` and `seg-1.m4s, seg-2.m4s, …`. `opts[:init_name]` overrides the init filename;
+  `opts[:segment_pattern]` is a `fn index -> filename end` (default `fn i -> "seg-\#{i}.m4s" end`).
+  Returns `{:ok, paths}` (init first, then segments in order) or the first `write/2`
+  `{:error, reason}`. Each segment streams disk→disk; the file handle is closed per segment.
+  """
+  @spec write_segments(Path.t(), [Box.t()], keyword()) ::
+          {:ok, [Path.t()]} | {:error, term()}
+  def write_segments(dir, boxes, opts \\ []) do
+    %{init: init, segments: segments} = split(boxes)
+    File.mkdir_p!(dir)
+
+    init_name = Keyword.get(opts, :init_name, "init.mp4")
+    pattern = Keyword.get(opts, :segment_pattern, fn i -> "seg-#{i}.m4s" end)
+    init_path = Path.join(dir, init_name)
+
+    case ISOMedia.write(init_path, init) do
+      :ok -> write_each(segments, dir, pattern, 1, [init_path])
+      {:error, reason} -> {:error, reason}
+    end
+  end
+
+  defp write_each([], _dir, _pattern, _i, acc), do: {:ok, Enum.reverse(acc)}
+
+  defp write_each([seg | rest], dir, pattern, i, acc) do
+    path = Path.join(dir, pattern.(i))
+
+    case ISOMedia.write(path, seg) do
+      :ok -> write_each(rest, dir, pattern, i + 1, [path | acc])
+      {:error, reason} -> {:error, reason}
+    end
+  end
+
   defp styp(%Box{} = ftyp) do
     %Box{ftyp | type: "styp", source_offset: nil, source_size: nil}
   end

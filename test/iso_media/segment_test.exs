@@ -99,4 +99,63 @@ defmodule ISOMedia.SegmentTest do
       assert_raise ArgumentError, fn -> ISOMedia.split_segments(trailing) end
     end
   end
+
+  describe "write_segments/3" do
+    setup do
+      dir = Path.join(System.tmp_dir!(), "iso_seg_#{System.unique_integer([:positive])}")
+      on_exit(fn -> File.rm_rf(dir) end)
+      {:ok, dir: dir}
+    end
+
+    test "writes init.mp4 + seg-N.m4s; reassembling them equals the original", %{dir: dir} do
+      frag = fragged()
+      n = Enum.count(frag, &(&1.type == "moof"))
+
+      assert {:ok, paths} = ISOMedia.write_segments(dir, frag)
+      assert hd(paths) == Path.join(dir, "init.mp4")
+      assert length(paths) == n + 1
+      assert Enum.all?(paths, &File.exists?/1)
+
+      {:ok, init} = ISOMedia.read(Path.join(dir, "init.mp4"))
+
+      seg_boxes =
+        for i <- 1..n do
+          {:ok, [_styp, moof, mdat]} = ISOMedia.read(Path.join(dir, "seg-#{i}.m4s"))
+          [moof, mdat]
+        end
+
+      reassembled = init ++ List.flatten(seg_boxes)
+      assert ISOMedia.serialize(reassembled) == ISOMedia.serialize(frag)
+    end
+
+    test "creates the directory if absent and honors a custom segment_pattern", %{dir: dir} do
+      frag = fragged()
+      sub = Path.join(dir, "nested/segs")
+      pattern = fn i -> "chunk_#{i}.m4s" end
+
+      assert {:ok, paths} = ISOMedia.write_segments(sub, frag, segment_pattern: pattern)
+      assert File.dir?(sub)
+      assert Enum.at(paths, 1) == Path.join(sub, "chunk_1.m4s")
+      assert File.exists?(Path.join(sub, "chunk_1.m4s"))
+    end
+
+    test "lazy and eager produce byte-identical segment files", %{dir: dir} do
+      {:ok, prog_eager} = ISOMedia.read(@keyint)
+      frag_eager = ISOMedia.fragment(prog_eager, target_duration: 0.3)
+
+      {:ok, prog_lazy} = ISOMedia.read(@keyint, lazy: true)
+      frag_lazy = ISOMedia.fragment(prog_lazy, target_duration: 0.3)
+
+      eager_dir = Path.join(dir, "eager")
+      lazy_dir = Path.join(dir, "lazy")
+      {:ok, _} = ISOMedia.write_segments(eager_dir, frag_eager)
+      {:ok, _} = ISOMedia.write_segments(lazy_dir, frag_lazy)
+
+      assert File.read!(Path.join(eager_dir, "seg-1.m4s")) ==
+               File.read!(Path.join(lazy_dir, "seg-1.m4s"))
+
+      assert File.read!(Path.join(eager_dir, "init.mp4")) ==
+               File.read!(Path.join(lazy_dir, "init.mp4"))
+    end
+  end
 end
