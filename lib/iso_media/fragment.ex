@@ -6,7 +6,7 @@ defmodule ISOMedia.Fragment do
   segment-list `mdat`), memory-safe. The inverse of `ISOMedia.Defragment`.
   """
 
-  alias ISOMedia.{Box, BoxPath, Layout, MdatSource, SampleTable}
+  alias ISOMedia.{Box, BoxPath, Layout, MdatSource, SampleTable, Timescale}
 
   alias ISOMedia.Boxes.{
     ChunkOffset,
@@ -43,22 +43,29 @@ defmodule ISOMedia.Fragment do
         }
       end)
 
+    if metas == [], do: raise(ArgumentError, "fragment: moov has no trak children")
     driver = Enum.find(metas, &(&1.handler == "vide")) || hd(metas)
     target_ts = round(target_sec * driver.timescale)
     bounds = boundaries(driver.samples, target_ts)
 
+    if bounds == [] and driver.samples != [] do
+      raise ArgumentError,
+            "fragment: driver track #{driver.track_id} has samples but no sync samples; " <>
+              "cannot determine keyframe-aligned fragment boundaries"
+    end
+
     windows_per_track =
       Enum.map(metas, fn m ->
-        bts = Enum.map(bounds, fn b -> scale(b, driver.timescale, m.timescale) end)
+        bts = Enum.map(bounds, fn b -> Timescale.scale(b, driver.timescale, m.timescale) end)
         windows(m.samples, bts)
       end)
 
     moof_mdats =
-      bounds
-      |> Enum.with_index()
-      |> Enum.flat_map(fn {_b, i} ->
-        runs_per_track = Enum.map(windows_per_track, &Enum.at(&1, i))
-        {moof, mdat} = build_fragment(i + 1, runs_per_track, metas, mdats)
+      windows_per_track
+      |> Enum.zip_with(& &1)
+      |> Enum.with_index(1)
+      |> Enum.flat_map(fn {runs_per_track, seq} ->
+        {moof, mdat} = build_fragment(seq, runs_per_track, metas, mdats)
         [moof, mdat]
       end)
 
@@ -81,8 +88,8 @@ defmodule ISOMedia.Fragment do
 
     mvex = %Box{type: "mvex", children: trex_boxes}
     init_traks = Enum.map(metas, fn m -> build_init_trak(m.trak) end)
-    others = Enum.reject(moov.children, &(&1.type in ~w(trak mvhd)))
-    children = Enum.reject([mvhd, mvex] ++ init_traks ++ others, &is_nil/1)
+    others = Enum.reject(moov.children, &(&1.type in ~w(trak mvhd mvex)))
+    children = Enum.reject([mvhd] ++ init_traks ++ [mvex] ++ others, &is_nil/1)
     %{moov | children: children}
   end
 
@@ -101,9 +108,6 @@ defmodule ISOMedia.Fragment do
     |> Map.update!(:children, &Enum.reject(&1, fn c -> c.type == "edts" end))
     |> BoxPath.update_descendant(~w(mdia minf stbl), fn stbl -> %{stbl | children: empty} end)
   end
-
-  # Integer round-half-up (no float precision loss for long media).
-  defp scale(value, from_ts, to_ts), do: div(value * to_ts + div(from_ts, 2), from_ts)
 
   @doc """
   Boundary dts values (in the given samples' timescale): greedily take the first sync

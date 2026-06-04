@@ -5,7 +5,7 @@ defmodule ISOMedia.ProgressiveBuild do
   Preserves interleave (runs sorted by original offset for the byte layout) while keeping
   logical `{input, chunk}` order for each track's `stco`.
   """
-  alias ISOMedia.{Box, BoxPath, Layout, MdatSource, SampleTable}
+  alias ISOMedia.{Box, BoxPath, Layout, MdatSource, SampleTable, Timescale}
   alias ISOMedia.Boxes.{ChunkOffset, MediaHeader, MovieHeader, TrackHeader}
 
   @uint32_max 0xFFFFFFFF
@@ -120,7 +120,7 @@ defmodule ISOMedia.ProgressiveBuild do
       for ti <- 0..(track_count - 1)//1 do
         samples = Enum.flat_map(inputs_data, &Enum.at(&1.samples, ti))
 
-        scale(
+        Timescale.scale(
           Enum.sum(Enum.map(samples, & &1.duration)),
           track_timescale(Enum.at(base_traks, ti)),
           movie_ts
@@ -169,7 +169,7 @@ defmodule ISOMedia.ProgressiveBuild do
     |> BoxPath.update_descendant(~w(mdia mdhd), &set_mdhd_duration(&1, track_dur))
     |> BoxPath.update_descendant(
       ["tkhd"],
-      &set_tkhd_duration(&1, scale(track_dur, track_ts, movie_ts))
+      &set_tkhd_duration(&1, Timescale.scale(track_dur, track_ts, movie_ts))
     )
   end
 
@@ -183,9 +183,6 @@ defmodule ISOMedia.ProgressiveBuild do
   defp traks(moov), do: Enum.filter(moov.children, &(&1.type == "trak"))
   defp track_timescale(trak), do: MediaHeader.decode(BoxPath.dig(trak, ~w(mdia mdhd))).timescale
 
-  # Integer round-half-up (stays in arbitrary-precision integers — no float precision
-  # loss when value*to_ts exceeds 2^53 for long media).
-  defp scale(value, from_ts, to_ts), do: div(value * to_ts + div(from_ts, 2), from_ts)
   defp opt(nil), do: []
   defp opt(box), do: [box]
 
