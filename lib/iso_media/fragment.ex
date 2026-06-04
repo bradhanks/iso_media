@@ -22,4 +22,18 @@ defmodule ISOMedia.Fragment do
 
     Enum.reverse(rev)
   end
+
+  @doc """
+  Partition `samples` into one run per boundary: run `i` is the samples whose dts is in
+  `[boundaries[i], boundaries[i+1])` (the last run is open-ended). `boundaries` must be in
+  the same timescale as the samples, ascending.
+  """
+  def windows(samples, boundaries) do
+    boundaries
+    |> Enum.with_index()
+    |> Enum.map(fn {b, i} ->
+      next = Enum.at(boundaries, i + 1)
+      Enum.filter(samples, fn s -> s.dts >= b and (next == nil or s.dts < next) end)
+    end)
+  end
 end
