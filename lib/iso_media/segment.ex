@@ -15,7 +15,7 @@ defmodule ISOMedia.Segment do
   Split a fragmented tree into `%{init: [ftyp, moov], segments: [[styp, moof, mdat], …]}`.
   Raises `ArgumentError` unless the input is `[ftyp, moov, (moof, mdat)+]`.
   """
-  @spec split([Box.t()]) :: %{init: [Box.t()], segments: [[Box.t()]]}
+  @spec split(ISOMedia.tree()) :: %{init: ISOMedia.tree(), segments: [ISOMedia.tree()]}
   def split([%Box{type: "ftyp"} = ftyp, %Box{type: "moov"} = moov | rest]) do
     %{init: [ftyp, moov], segments: pair_fragments(rest, styp(ftyp), [])}
   end
@@ -49,7 +49,7 @@ defmodule ISOMedia.Segment do
   Returns `{:ok, paths}` (init first, then segments in order) or the first `write/2`
   `{:error, reason}`. Each segment streams disk→disk; the file handle is closed per segment.
   """
-  @spec write_segments(Path.t(), [Box.t()], keyword()) ::
+  @spec write_segments(Path.t(), ISOMedia.tree(), keyword()) ::
           {:ok, [Path.t()]} | {:error, term()}
   def write_segments(dir, boxes, opts \\ []) do
     %{init: init, segments: segments} = split(boxes)

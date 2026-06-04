@@ -157,5 +157,20 @@ defmodule ISOMedia.SegmentTest do
       assert File.read!(Path.join(eager_dir, "init.mp4")) ==
                File.read!(Path.join(lazy_dir, "init.mp4"))
     end
+
+    test "init_name overrides the init filename", %{dir: dir} do
+      frag = fragged()
+      assert {:ok, paths} = ISOMedia.write_segments(dir, frag, init_name: "i.mp4")
+      assert hd(paths) == Path.join(dir, "i.mp4")
+      assert File.exists?(Path.join(dir, "i.mp4"))
+    end
+
+    test "propagates a write/2 error as {:error, reason}", %{dir: dir} do
+      frag = fragged()
+      File.mkdir_p!(dir)
+      # occupy the init.mp4 slot with a directory so write/2 cannot open it for writing
+      File.mkdir_p!(Path.join(dir, "init.mp4"))
+      assert {:error, _reason} = ISOMedia.write_segments(dir, frag)
+    end
   end
 end
