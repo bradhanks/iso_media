@@ -50,4 +50,70 @@ defmodule ISOMedia.FragmentTest do
       assert Enum.map(windows, &length/1) == [1, 0, 1]
     end
   end
+
+  describe "build_fragment/4 (data_offset invariant)" do
+    test "trun data_offset points exactly into the sibling mdat payload" do
+      # one track, 2 samples of 10 bytes each, sourced from an in-memory mdat
+      payload = for(i <- 0..19, into: <<>>, do: <<i>>)
+      src_mdat = %ISOMedia.Box{type: "mdat", size_mode: :compact, data: payload}
+      mdats = ISOMedia.MdatSource.collect([src_mdat])
+
+      run = [
+        %Sample{
+          index: 1,
+          chunk_index: 1,
+          dts: 0,
+          duration: 5,
+          pts: 0,
+          size: 10,
+          offset: 8,
+          sync?: true
+        },
+        %Sample{
+          index: 2,
+          chunk_index: 1,
+          dts: 5,
+          duration: 5,
+          pts: 5,
+          size: 10,
+          offset: 18,
+          sync?: true
+        }
+      ]
+
+      metas = [%{track_id: 1, timescale: 1000, handler: "vide", samples: run, trak: nil}]
+      {moof, mdat} = Fragment.build_fragment(1, [run], metas, mdats)
+
+      trex =
+        ISOMedia.Boxes.TrackExtends.encode(%ISOMedia.Boxes.TrackExtends{
+          track_id: 1,
+          default_sample_description_index: 1,
+          default_sample_duration: 0,
+          default_sample_size: 0,
+          default_sample_flags: 0
+        })
+
+      # the moof+mdat must be a self-consistent fragment: parse it back via FragmentIndex.
+      tree = [
+        %ISOMedia.Box{type: "ftyp", data: <<"isom", 0::32>>},
+        %ISOMedia.Box{type: "moov", children: [%ISOMedia.Box{type: "mvex", children: [trex]}]},
+        moof,
+        mdat
+      ]
+
+      samples = ISOMedia.FragmentIndex.samples(tree, 1)
+      assert Enum.map(samples, & &1.size) == [10, 10]
+      assert Enum.map(samples, & &1.dts) == [0, 5]
+      # resolved bytes equal the original payload bytes for each sample
+      recs = ISOMedia.MdatSource.collect(tree)
+
+      bytes =
+        Enum.map(samples, fn smp ->
+          seg = ISOMedia.MdatSource.segment(recs, smp.offset, smp.size)
+          ISOMedia.Box.read_data(%ISOMedia.Box{type: "x", data: List.wrap(seg)})
+        end)
+
+      assert IO.iodata_to_binary(bytes) == payload
+    end
+  end
 end
