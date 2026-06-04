@@ -78,7 +78,10 @@ Each encoder is unit-tested by `decode(encode(x)) == x` (and byte-shape assertio
   4. **Build `mvex`** = one `trex` per track (defaults 0), inserted into the output `moov`
      after `mvhd`. The output `moov`'s `trak`s keep their `tkhd`/`mdhd`/`hdlr`/`stsd` but get
      an **empty `stbl`** (only `stsd` + empty `stts`/`stsc`/`stsz`/`stco` so the track parses
-     as a valid no-samples progressive skeleton).
+     as a valid no-samples progressive skeleton). **Each init `trak` is run through
+     `drop_edts/1`** — a leftover `edts`/`elst` (e.g. from a prior trim) in the init segment
+     would make players apply progressive presentation offsets to the fragmented stream and
+     corrupt playback.
   5. For each fragment, **build a `moof`** (a `mfhd` with sequence_number + one `traf` per
      track that has samples in the window) and a sibling **`mdat`** (segment list, each
      `traf`'s run resolved from the source via `MdatSource.segment/3`, contiguous per traf).
@@ -129,6 +132,11 @@ through the heap).
 - **lazy == eager:** fragmenting a lazily-read file equals the eager path, byte-for-byte.
 - **Determinism teeth:** perturb a `data_offset` by one byte and assert the round-trip byte
   check fails.
+- **No leftover `edts`:** fragment a trimmed input (which carries an `elst`) and assert the
+  init `moov`'s `trak`s contain no `edts`.
+- **`sidx`/`mfra` opaque-ignore:** assert a tree containing trailing `sidx`/`mfra` boxes parses
+  them as plain `%Box{data: binary}` leaves and that indexing/defragment ignore them (already
+  the Phase 1 parser default; asserted explicitly here).
 
 ## Scope boundary (explicit deferrals)
 
