@@ -51,6 +51,28 @@ defmodule ISOMedia.FragmentTest do
     end
   end
 
+  describe "fragment/2 structure" do
+    test "produces a valid multiplexed fMP4 tree from a progressive file" do
+      {:ok, boxes} = ISOMedia.read("test/fixtures/sample_av.mp4")
+      out = ISOMedia.fragment(boxes, target_duration: 0.3)
+
+      assert hd(out).type == "ftyp"
+      assert Enum.at(out, 1).type == "moov"
+      assert ISOMedia.FragmentIndex.fragmented?(out)
+
+      moov = Enum.find(out, &(&1.type == "moov"))
+      assert Enum.any?(moov.children, &(&1.type == "mvex"))
+      # init trak stbl carries stsd but zero samples
+      trak = Enum.find(moov.children, &(&1.type == "trak"))
+      stbl = ISOMedia.BoxPath.dig(trak, ~w(mdia minf stbl))
+      assert Enum.any?(stbl.children, &(&1.type == "stsd"))
+      refute Enum.any?(trak.children, &(&1.type == "edts"))
+
+      # the output re-serializes and re-parses cleanly
+      assert {:ok, _} = ISOMedia.parse(ISOMedia.serialize(out))
+    end
+  end
+
   describe "build_fragment/4 (data_offset invariant)" do
     test "trun data_offset points exactly into the sibling mdat payload" do
       # one track, 2 samples of 10 bytes each, sourced from an in-memory mdat

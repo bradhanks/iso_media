@@ -6,10 +6,104 @@ defmodule ISOMedia.Fragment do
   segment-list `mdat`), memory-safe. The inverse of `ISOMedia.Defragment`.
   """
 
-  alias ISOMedia.{Box, Layout, MdatSource}
-  alias ISOMedia.Boxes.{TrackFragmentDecodeTime, TrackFragmentHeader, TrackRun}
+  alias ISOMedia.{Box, BoxPath, Layout, MdatSource, SampleTable}
+
+  alias ISOMedia.Boxes.{
+    ChunkOffset,
+    Handler,
+    MediaHeader,
+    TrackExtends,
+    TrackFragmentDecodeTime,
+    TrackFragmentHeader,
+    TrackHeader,
+    TrackRun
+  }
 
   @non_sync 0x00010000
+
+  @doc "Repack a progressive tree into a multiplexed fragmented tree. `opts[:target_duration]` seconds (default 2.0)."
+  def fragment(boxes, opts \\ []) do
+    target_sec = Keyword.get(opts, :target_duration, 2.0)
+    ftyp = Enum.find(boxes, &(&1.type == "ftyp")) || raise ArgumentError, "fragment: no ftyp"
+    moov = Enum.find(boxes, &(&1.type == "moov")) || raise ArgumentError, "fragment: no moov"
+    mdats = MdatSource.collect(boxes)
+
+    metas =
+      moov.children
+      |> Enum.filter(&(&1.type == "trak"))
+      |> Enum.map(fn trak ->
+        tid = TrackHeader.decode(BoxPath.dig(trak, ["tkhd"])).track_id
+
+        %{
+          track_id: tid,
+          timescale: MediaHeader.decode(BoxPath.dig(trak, ~w(mdia mdhd))).timescale,
+          handler: Handler.decode(BoxPath.dig(trak, ~w(mdia hdlr))).handler_type,
+          samples: ISOMedia.samples(boxes, tid),
+          trak: trak
+        }
+      end)
+
+    driver = Enum.find(metas, &(&1.handler == "vide")) || hd(metas)
+    target_ts = round(target_sec * driver.timescale)
+    bounds = boundaries(driver.samples, target_ts)
+
+    windows_per_track =
+      Enum.map(metas, fn m ->
+        bts = Enum.map(bounds, fn b -> scale(b, driver.timescale, m.timescale) end)
+        windows(m.samples, bts)
+      end)
+
+    moof_mdats =
+      bounds
+      |> Enum.with_index()
+      |> Enum.flat_map(fn {_b, i} ->
+        runs_per_track = Enum.map(windows_per_track, &Enum.at(&1, i))
+        {moof, mdat} = build_fragment(i + 1, runs_per_track, metas, mdats)
+        [moof, mdat]
+      end)
+
+    [ftyp, build_init_moov(moov, metas) | moof_mdats]
+  end
+
+  defp build_init_moov(moov, metas) do
+    mvhd = Enum.find(moov.children, &(&1.type == "mvhd"))
+
+    trex_boxes =
+      Enum.map(metas, fn m ->
+        TrackExtends.encode(%TrackExtends{
+          track_id: m.track_id,
+          default_sample_description_index: 1,
+          default_sample_duration: 0,
+          default_sample_size: 0,
+          default_sample_flags: 0
+        })
+      end)
+
+    mvex = %Box{type: "mvex", children: trex_boxes}
+    init_traks = Enum.map(metas, fn m -> build_init_trak(m.trak) end)
+    others = Enum.reject(moov.children, &(&1.type in ~w(trak mvhd)))
+    children = Enum.reject([mvhd, mvex] ++ init_traks ++ others, &is_nil/1)
+    %{moov | children: children}
+  end
+
+  defp build_init_trak(trak) do
+    stsd = BoxPath.dig(trak, ~w(mdia minf stbl stsd)) || raise ArgumentError, "track missing stsd"
+
+    empty = [
+      stsd,
+      SampleTable.build_stts([]),
+      SampleTable.build_stsc([]),
+      SampleTable.build_stsz([]),
+      ChunkOffset.encode(%ChunkOffset{kind: :stco, version: 0, flags: <<0, 0, 0>>, offsets: []})
+    ]
+
+    trak
+    |> Map.update!(:children, &Enum.reject(&1, fn c -> c.type == "edts" end))
+    |> BoxPath.update_descendant(~w(mdia minf stbl), fn stbl -> %{stbl | children: empty} end)
+  end
+
+  # Integer round-half-up (no float precision loss for long media).
+  defp scale(value, from_ts, to_ts), do: div(value * to_ts + div(from_ts, 2), from_ts)
 
   @doc """
   Boundary dts values (in the given samples' timescale): greedily take the first sync

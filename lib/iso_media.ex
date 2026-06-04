@@ -42,6 +42,9 @@ defmodule ISOMedia do
   @doc "Defragment a fragmented MP4 tree into a progressive one. See `ISOMedia.Defragment.defragment/1`."
   def defragment(boxes), do: ISOMedia.Defragment.defragment(boxes)
 
+  @doc "Repack a progressive tree into a multiplexed fragmented MP4. See `ISOMedia.Fragment.fragment/2`."
+  def fragment(boxes, opts \\ []), do: ISOMedia.Fragment.fragment(boxes, opts)
+
   @doc "Recompute stco/co64 chunk offsets for the current box arrangement. See `ISOMedia.Offsets.fix_chunk_offsets/1`."
   def fix_chunk_offsets(boxes), do: ISOMedia.Offsets.fix_chunk_offsets(boxes)
 
