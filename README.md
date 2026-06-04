@@ -4,7 +4,8 @@ Lossless ISOBMFF (MP4 / MOV / M4A / HEIF) box surgery in pure Elixir.
 
 Parse any ISO Base Media file into a tree of boxes — every box, including
 unknown/vendor boxes, preserved byte-for-byte — then navigate, extract, reorder,
-insert, edit, and re-serialize.
+insert, edit, and re-serialize. The invariant throughout is
+`ISOMedia.serialize(ISOMedia.parse(file)) == file`.
 
 ```elixir
 {:ok, boxes} = ISOMedia.read("movie.mp4")
@@ -65,14 +66,12 @@ ISOMedia.samples(boxes, 1)           # => [%ISOMedia.Sample{dts:, pts:, size:, o
 ISOMedia.write("track1.mp4", ISOMedia.extract_track(boxes, 1))
 ```
 
-Extraction preserves the track's existing sample tables and chunking; it rebuilds
-only `mdat` and `stco`/`co64`. The result is already in faststart order
-(`ftyp`/`moov`/`mdat`) with a freshly synthesized `mdat`, so `faststart/1` and
-`fix_chunk_offsets/1` cannot be re-applied to it (they reject synthesized `mdat`s);
-run faststart on the source *before* extracting if you need a custom order.
-Movie/track `mvhd`/`tkhd` durations are left as-is. `stz2` sample sizes are not yet
-supported (raises). (For time-range trimming, see **Trim** below; concatenation is a
-future phase.)
+`samples/2` works on both progressive and fragmented files (it dispatches to the
+fragment indexer automatically). Extraction preserves the track's existing sample
+tables and chunking; it rebuilds only `mdat` and `stco`/`co64`. Movie/track
+`mvhd`/`tkhd` durations are left as-is. `stz2` sample sizes are not yet supported
+(raises). For time-range trimming see **Trim**, for joining clips see
+**Concatenate**, both below.
 
 ## Trim
 
@@ -86,12 +85,9 @@ ISOMedia.write("clip.mp4", ISOMedia.trim(boxes, 10.0, 25.0))   # keep 10s..25s
 ```
 
 `trim/3` rebuilds each track's sample tables and `mdat` and updates the duration
-headers. Like `extract_track/2`, the result has a freshly synthesized `mdat`, so
-`trim`/`extract_track`/`faststart` cannot be re-applied to it (they reject synthesized
-`mdat`s) — trim/extract/faststart the original first if you need to combine them.
-The result is **frame-accurate**: each track gets an edit list (`elst`) so playback
-presents exactly from the requested start, even though the decoded media begins at
-the preceding keyframe.
+headers. The result is **frame-accurate**: each track gets an edit list (`elst`) so
+playback presents exactly from the requested start, even though the decoded media
+begins at the preceding keyframe.
 
 ## Concatenate
 
@@ -110,13 +106,71 @@ keyframe lead-in frames visible at each splice. Because each track's timeline is
 sum of its own sample durations, tracks whose raw media durations differ slightly
 (e.g. audio a little longer than video) can accumulate **minor A/V drift across many
 splices** — expected for a lossless sample-level join without edit-list reconciliation.
-Inputs must be freshly read files; to concat the output of `trim`/`extract`/`concat`,
-write it to disk and read it back.
+
+## Fragment ⇆ defragment (fMP4)
+
+Convert between progressive MP4 and **fragmented** MP4 (the `moof`/`traf`/`trun`
+container behind DASH / HLS / CMAF), losslessly and memory-safely:
+
+```elixir
+{:ok, boxes} = ISOMedia.read("movie.mp4")
+
+# progressive -> fragmented: keyframe-aligned ~2s fragments (multiplexed single file)
+frag = ISOMedia.fragment(boxes, target_duration: 2.0)
+ISOMedia.write("movie.frag.mp4", frag)
+
+# fragmented -> progressive (single moov + mdat)
+{:ok, frag_boxes} = ISOMedia.read("movie.frag.mp4")
+ISOMedia.write("movie.prog.mp4", ISOMedia.defragment(frag_boxes))
+```
+
+`fragment/2` reads each track's samples, picks fragment boundaries from the first
+video track's keyframes snapped to `target_duration` (default `2.0` seconds; a
+fragment can only start on a keyframe, so it can't be finer than the keyframe
+spacing), and emits `[ftyp, moov(+mvex), moof, mdat, …]` with the media referenced
+from the source (no copy). `defragment/1` collapses the fragments back into one
+`moov` + `mdat`. The two are inverses: `defragment(fragment(x))` reproduces every
+sample's timing and bytes. Separate DASH/CMAF init + media segments and manifest
+(MPD / playlist) generation are out of scope. Encrypted (CENC) fragments raise.
+
+## In-memory pipelines
+
+`trim`, `extract_track`, `concat`, `fragment`, and `defragment` all return a box
+tree whose `mdat` references the source bytes (a lazy segment list), and they can
+read from each other's output — so you can chain operations **without writing
+intermediates to disk**:
+
+```elixir
+{:ok, a} = ISOMedia.read("a.mp4")
+{:ok, b} = ISOMedia.read("b.mp4")
+
+a
+|> ISOMedia.trim(0.0, 30.0)
+|> then(&ISOMedia.concat([&1, b]))
+|> ISOMedia.fragment(target_duration: 4.0)
+|> then(&ISOMedia.write("out.frag.mp4", &1))
+```
+
+The bytes are identical to running the same stages with a write+re-read between each,
+and memory stays at metadata + one stream chunk under `lazy:`. The one exception is
+offset rewriting: `faststart/1` and `fix_chunk_offsets/1` operate on an original,
+parsed `mdat` and **raise on a synthesized (chained) `mdat`** — run faststart on the
+source before editing, or write the result to disk and read it back.
 
 ## Status
 
-Phase 1: lossless tree surgery. Phase 2: `stco`/`co64` chunk-offset rewriting and
-faststart. Phase 3: lazy file-backed payloads for files larger than memory. Offset
-fixing assumes `mdat` payloads are unchanged (box relocation, not sample editing).
-Fragmented MP4 and HEIF `iloc` offsets remain out of scope. See
-`docs/superpowers/specs/` for the designs.
+Implemented, all lossless and verified byte-for-byte against real fixtures:
+
+- **Tree surgery** — parse → navigate/edit/reorder/insert → re-serialize, byte-exact.
+- **faststart** — `moov` to the front with `stco`/`co64` rewriting (`stco`→`co64`
+  auto-promotion).
+- **Lazy payloads** — process files larger than RAM (stream `mdat` disk→disk).
+- **Sample index + extraction** — flat `[%Sample{}]` per track; demux one track.
+- **Trim** — time-range, keyframe-aligned, frame-accurate (`elst`), interleave-preserving.
+- **Concatenate** — join compatible clips end-to-end.
+- **Recursive virtual I/O** — chain the above in memory, no disk round-trip.
+- **Fragmented MP4** — index/`defragment` fMP4, and `fragment` progressive → fMP4.
+
+Out of scope (for now): re-encoding, DASH/HLS manifest and separate-segment
+generation, encrypted (CENC) fMP4, `stz2` compact sample sizes, and HEIF/AVIF `iloc`
+image editing. See `docs/superpowers/specs/` for the per-phase designs.

@@ -1,6 +1,24 @@
 defmodule ISOMedia do
   @moduledoc """
-  Lossless ISOBMFF (MP4/MOV/M4A/HEIF) box surgery.
+  Lossless ISOBMFF (MP4/MOV/M4A/HEIF) box surgery in pure Elixir.
+
+  Parse any ISO Base Media file into a tree of `ISOMedia.Box` structs (every box,
+  including unknown/vendor boxes, preserved byte-for-byte), edit it, and re-serialize.
+  The invariant throughout is `serialize(parse(file)) == file`.
+
+  This module is the top-level entry point:
+
+    * Read/write — `read/2` (with `lazy: true` for files larger than RAM), `write/2`,
+      `parse/2`, `serialize/1`.
+    * Arrange — `faststart/1`, `fix_chunk_offsets/1`.
+    * Sample-level — `track_ids/1`, `samples/2` (progressive or fragmented),
+      `extract_track/2`, `trim/3`, `concat/1`.
+    * Fragmented MP4 — `fragment/2` (progressive → fMP4) and `defragment/1` (fMP4 →
+      progressive), inverses of each other.
+
+  `trim`, `extract_track`, `concat`, `fragment`, and `defragment` outputs can be chained
+  in memory (no disk round-trip); `faststart/1`/`fix_chunk_offsets/1` require an original
+  parsed `mdat` and raise on a synthesized one.
 
       iex> {:ok, boxes} = ISOMedia.parse(<<8::32, "free">>)
       iex> ISOMedia.serialize(boxes)
