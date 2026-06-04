@@ -5,6 +5,21 @@ defmodule ISOMedia.Boxes.TrackRun do
 
   defstruct [:version, :sample_count, :data_offset, :first_sample_flags, :samples]
 
+  @type sample :: %{
+          duration: non_neg_integer() | nil,
+          size: non_neg_integer() | nil,
+          flags: non_neg_integer() | nil,
+          composition_offset: integer() | nil
+        }
+
+  @type t :: %__MODULE__{
+          version: 0 | 1 | nil,
+          sample_count: non_neg_integer(),
+          data_offset: integer() | nil,
+          first_sample_flags: non_neg_integer() | nil,
+          samples: [sample()]
+        }
+
   @data_offset 0x000001
   @first_sample_flags 0x000004
   @sample_duration 0x000100
@@ -13,6 +28,7 @@ defmodule ISOMedia.Boxes.TrackRun do
   @sample_comp_offset 0x000800
 
   @doc "Decode a `trun` box."
+  @spec decode(ISOMedia.Box.t()) :: t()
   def decode(%Box{type: "trun", data: data}) do
     {version, <<flags::24>>, <<sample_count::32, rest::binary>>} = FullBox.parse(data)
     {data_offset, rest} = take(rest, flags, @data_offset, :signed)
@@ -70,6 +86,7 @@ defmodule ISOMedia.Boxes.TrackRun do
   duration/size/flags; writes composition offsets (v1, signed) iff any sample has a
   nonzero offset. Writes `first_sample_flags` (32-bit, after data_offset) when non-nil.
   """
+  @spec encode(t()) :: ISOMedia.Box.t()
   def encode(%__MODULE__{} = t) do
     has_comp = Enum.any?(t.samples, &((&1.composition_offset || 0) != 0))
     version = if has_comp, do: 1, else: 0

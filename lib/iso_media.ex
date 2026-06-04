@@ -27,16 +27,22 @@ defmodule ISOMedia do
 
   alias ISOMedia.{Parser, Serializer}
 
+  @type tree :: [ISOMedia.Box.t()]
+
   @doc "Parse a binary into `{:ok, [%ISOMedia.Box{}]}`. See `ISOMedia.Parser.parse/2`."
+  @spec parse(binary(), keyword()) :: {:ok, tree()} | {:error, String.t()}
   def parse(binary, opts \\ []), do: Parser.parse(binary, opts)
 
   @doc "Serialize a box or list of boxes back to a binary."
+  @spec serialize(tree()) :: binary()
   def serialize(boxes), do: Serializer.serialize(boxes)
 
   @doc "List the `track_id`s present in the movie."
+  @spec track_ids(tree()) :: [pos_integer()]
   def track_ids(boxes), do: ISOMedia.Extract.track_ids(boxes)
 
   @doc "Decode a track's sample tables into `[%ISOMedia.Sample{}]` (progressive or fragmented)."
+  @spec samples(tree(), pos_integer()) :: [ISOMedia.Sample.t()]
   def samples(boxes, track_id) do
     if ISOMedia.FragmentIndex.fragmented?(boxes) do
       ISOMedia.FragmentIndex.samples(boxes, track_id)
@@ -49,24 +55,31 @@ defmodule ISOMedia do
   end
 
   @doc "Extract a single track into a new box tree (then `write/2` or `serialize/1`)."
+  @spec extract_track(tree(), pos_integer()) :: tree()
   def extract_track(boxes, track_id), do: ISOMedia.Extract.extract_track(boxes, track_id)
 
   @doc "Losslessly trim every track to the time range `[start_sec, end_sec)`."
+  @spec trim(tree(), number(), number()) :: tree()
   def trim(boxes, start_sec, end_sec), do: ISOMedia.Trim.trim(boxes, start_sec, end_sec)
 
   @doc "Losslessly concatenate compatible clips end-to-end. See `ISOMedia.Concat.concat/1`."
+  @spec concat([tree()]) :: tree()
   def concat(inputs) when is_list(inputs), do: ISOMedia.Concat.concat(inputs)
 
   @doc "Defragment a fragmented MP4 tree into a progressive one. See `ISOMedia.Defragment.defragment/1`."
+  @spec defragment(tree()) :: tree()
   def defragment(boxes), do: ISOMedia.Defragment.defragment(boxes)
 
   @doc "Repack a progressive tree into a multiplexed fragmented MP4. See `ISOMedia.Fragment.fragment/2`."
+  @spec fragment(tree(), keyword()) :: tree()
   def fragment(boxes, opts \\ []), do: ISOMedia.Fragment.fragment(boxes, opts)
 
   @doc "Recompute stco/co64 chunk offsets for the current box arrangement. See `ISOMedia.Offsets.fix_chunk_offsets/1`."
+  @spec fix_chunk_offsets(tree()) :: tree()
   def fix_chunk_offsets(boxes), do: ISOMedia.Offsets.fix_chunk_offsets(boxes)
 
   @doc "Move `moov` before `mdat` (faststart) and fix chunk offsets. See `ISOMedia.Offsets.faststart/1`."
+  @spec faststart(tree()) :: tree()
   def faststart(boxes), do: ISOMedia.Offsets.faststart(boxes)
 
   @doc """
@@ -74,6 +87,7 @@ defmodule ISOMedia do
   (≥ `:lazy_threshold`, default 1 MB) as `ISOMedia.FileSlice` references instead of
   loading them, so files larger than memory can be processed.
   """
+  @spec read(Path.t(), keyword()) :: {:ok, tree()} | {:error, term()}
   def read(path, opts \\ []) do
     if Keyword.get(opts, :lazy, false) do
       ISOMedia.LazyParser.parse_file(path, opts)
@@ -87,6 +101,7 @@ defmodule ISOMedia do
   disk→disk (memory-safe for large files). Raises if `path` is one of the tree's
   `FileSlice` sources (you cannot stream-overwrite the file you are reading).
   """
+  @spec write(Path.t(), tree()) :: :ok | {:error, File.posix()}
   def write(path, boxes) do
     check_overwrite!(path, boxes)
 

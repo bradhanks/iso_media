@@ -10,7 +10,16 @@ defmodule ISOMedia.Boxes.TrackExtends do
     :default_sample_flags
   ]
 
+  @type t :: %__MODULE__{
+          track_id: non_neg_integer(),
+          default_sample_description_index: non_neg_integer(),
+          default_sample_duration: non_neg_integer(),
+          default_sample_size: non_neg_integer(),
+          default_sample_flags: non_neg_integer()
+        }
+
   @doc "Decode a `trex` box."
+  @spec decode(ISOMedia.Box.t()) :: t()
   def decode(%Box{type: "trex", data: data}) do
     {_v, _f, <<track_id::32, dsdi::32, dur::32, size::32, flags::32>>} = FullBox.parse(data)
 
@@ -24,6 +33,7 @@ defmodule ISOMedia.Boxes.TrackExtends do
   end
 
   @doc "Encode a `%TrackExtends{}` back into a `trex` box."
+  @spec encode(t()) :: ISOMedia.Box.t()
   def encode(%__MODULE__{} = t) do
     body =
       <<t.track_id::32, t.default_sample_description_index::32, t.default_sample_duration::32,

@@ -13,6 +13,16 @@ defmodule ISOMedia.Boxes.TrackFragmentHeader do
     :default_base_is_moof?
   ]
 
+  @type t :: %__MODULE__{
+          track_id: non_neg_integer(),
+          base_data_offset: non_neg_integer() | nil,
+          sample_description_index: non_neg_integer() | nil,
+          default_sample_duration: non_neg_integer() | nil,
+          default_sample_size: non_neg_integer() | nil,
+          default_sample_flags: non_neg_integer() | nil,
+          default_base_is_moof?: boolean()
+        }
+
   @base_data_offset 0x000001
   @sample_desc_index 0x000002
   @default_duration 0x000008
@@ -21,6 +31,7 @@ defmodule ISOMedia.Boxes.TrackFragmentHeader do
   @default_base_is_moof 0x020000
 
   @doc "Decode a `tfhd` box (only flag-present optional fields are read)."
+  @spec decode(ISOMedia.Box.t()) :: t()
   def decode(%Box{type: "tfhd", data: data}) do
     {_v, <<flags::24>>, <<track_id::32, rest::binary>>} = FullBox.parse(data)
     {bdo, rest} = take(rest, flags, @base_data_offset, 64)
@@ -50,6 +61,7 @@ defmodule ISOMedia.Boxes.TrackFragmentHeader do
   end
 
   @doc "Encode a `%TrackFragmentHeader{}` into a `tfhd` box. Supports only the default-base-is-moof form (track_id + flag 0x020000), which is what Phase 10 produces."
+  @spec encode(t()) :: ISOMedia.Box.t()
   def encode(%__MODULE__{track_id: track_id, default_base_is_moof?: true}) do
     body = <<track_id::32>>
 

@@ -22,6 +22,7 @@ defmodule ISOMedia.Fragment do
   @non_sync 0x00010000
 
   @doc "Repack a progressive tree into a multiplexed fragmented tree. `opts[:target_duration]` seconds (default 2.0)."
+  @spec fragment(ISOMedia.tree(), keyword()) :: ISOMedia.tree()
   def fragment(boxes, opts \\ []) do
     target_sec = Keyword.get(opts, :target_duration, 2.0)
     ftyp = Enum.find(boxes, &(&1.type == "ftyp")) || raise ArgumentError, "fragment: no ftyp"
@@ -113,6 +114,7 @@ defmodule ISOMedia.Fragment do
   Boundary dts values (in the given samples' timescale): greedily take the first sync
   sample, then each next sync sample whose dts ≥ previous boundary + `target_ts`.
   """
+  @spec boundaries([ISOMedia.Sample.t()], non_neg_integer()) :: [non_neg_integer()]
   def boundaries(samples, target_ts) do
     syncs = Enum.filter(samples, & &1.sync?)
 
@@ -136,6 +138,7 @@ defmodule ISOMedia.Fragment do
   preserves any leading non-sync samples (frames before the first keyframe) so that
   fragmenting remains lossless.
   """
+  @spec windows([ISOMedia.Sample.t()], [non_neg_integer()]) :: [[ISOMedia.Sample.t()]]
   def windows(samples, boundaries) do
     boundaries
     |> Enum.with_index()
@@ -153,6 +156,8 @@ defmodule ISOMedia.Fragment do
   # Build one fragment's {moof, mdat} from per-track sample runs (aligned to `metas`).
   # data_offsets are resolved in two passes: build the moof with placeholder offsets to
   # learn its exact serialized size, then rebuild with real moof-relative offsets.
+  @spec build_fragment(pos_integer(), [[ISOMedia.Sample.t()]], [map()], [map()]) ::
+          {ISOMedia.Box.t(), ISOMedia.Box.t()}
   def build_fragment(seq, runs_per_track, metas, mdats) do
     active =
       metas
