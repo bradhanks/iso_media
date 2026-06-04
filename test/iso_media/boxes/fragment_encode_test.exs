@@ -62,4 +62,24 @@ defmodule ISOMedia.Boxes.FragmentEncodeTest do
 
     assert TrackRun.decode(TrackRun.encode(x)) == x
   end
+
+  test "tfdt v0 encode/decode round-trips" do
+    x = %TrackFragmentDecodeTime{version: 0, base_media_decode_time: 5120}
+    assert TrackFragmentDecodeTime.decode(TrackFragmentDecodeTime.encode(x)) == x
+  end
+
+  test "trun with first_sample_flags round-trips" do
+    x = %TrackRun{
+      version: 0,
+      sample_count: 2,
+      data_offset: 100,
+      first_sample_flags: 0x02000000,
+      samples: [
+        %{duration: 10, size: 5, flags: 0x00010000, composition_offset: nil},
+        %{duration: 10, size: 6, flags: 0x00010000, composition_offset: nil}
+      ]
+    }
+
+    assert TrackRun.decode(TrackRun.encode(x)) == x
+  end
 end
