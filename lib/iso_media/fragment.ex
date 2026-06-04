@@ -52,15 +52,16 @@ defmodule ISOMedia.Fragment do
       |> Enum.zip(runs_per_track)
       |> Enum.reject(fn {_m, run} -> run == [] end)
 
-    moof0 = build_moof(seq, active, fn _i -> 0 end)
+    moof0 = build_moof(seq, Enum.map(active, fn {m, run} -> {m, run, 0} end))
+    # 8 = compact mdat header (size::32 + type::32)
     payload_start = Layout.box_size(moof0) + 8
 
-    {offsets, _} =
-      Enum.map_reduce(active, payload_start, fn {_m, run}, pos ->
-        {pos, pos + Enum.sum(Enum.map(run, & &1.size))}
+    {placed, _} =
+      Enum.map_reduce(active, payload_start, fn {m, run}, pos ->
+        {{m, run, pos}, pos + Enum.sum(Enum.map(run, & &1.size))}
       end)
 
-    moof = build_moof(seq, active, fn i -> Enum.at(offsets, i) end)
+    moof = build_moof(seq, placed)
 
     segments =
       Enum.flat_map(active, fn {_m, run} ->
@@ -70,18 +71,15 @@ defmodule ISOMedia.Fragment do
     {moof, %Box{type: "mdat", size_mode: :compact, data: segments}}
   end
 
-  defp build_moof(seq, active, offset_fun) do
+  defp build_moof(seq, trafs_spec) do
     mfhd = %Box{type: "mfhd", data: <<0::32, seq::32>>}
-
-    trafs =
-      active
-      |> Enum.with_index()
-      |> Enum.map(fn {{meta, run}, i} -> build_traf(meta, run, offset_fun.(i)) end)
-
+    trafs = Enum.map(trafs_spec, fn {meta, run, offset} -> build_traf(meta, run, offset) end)
     %Box{type: "moof", children: [mfhd | trafs]}
   end
 
   defp build_traf(meta, run, data_offset) do
+    [first_sample | _] = run
+
     tfhd =
       TrackFragmentHeader.encode(%TrackFragmentHeader{
         track_id: meta.track_id,
@@ -91,12 +89,12 @@ defmodule ISOMedia.Fragment do
     tfdt =
       TrackFragmentDecodeTime.encode(%TrackFragmentDecodeTime{
         version: 1,
-        base_media_decode_time: hd(run).dts
+        base_media_decode_time: first_sample.dts
       })
 
+    # TrackRun.encode/1 picks v0/v1 from composition_offset presence; no version here.
     trun =
       TrackRun.encode(%TrackRun{
-        version: 0,
         sample_count: length(run),
         data_offset: data_offset,
         first_sample_flags: nil,
