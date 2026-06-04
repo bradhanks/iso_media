@@ -42,7 +42,7 @@ defmodule ISOMedia.Segment do
     raise ArgumentError, "split_segments: expected moof/mdat fragments, got #{t}"
   end
 
-  defp styp(%Box{type: "ftyp"} = ftyp) do
-    %Box{type: "styp", data: ftyp.data, size_mode: ftyp.size_mode}
+  defp styp(%Box{} = ftyp) do
+    %Box{ftyp | type: "styp", source_offset: nil, source_size: nil}
   end
 end

@@ -50,20 +50,26 @@ defmodule ISOMedia.SegmentTest do
       assert ISOMedia.serialize(reassembled) == ISOMedia.serialize(frag)
     end
 
-    test "init ++ one segment is a self-contained fragmented file whose samples resolve" do
+    test "init ++ a segment is self-contained and its samples resolve (first and last)" do
       frag = fragged()
-      %{init: init, segments: [seg1 | _]} = ISOMedia.split_segments(frag)
-      standalone = init ++ seg1
+      %{init: init, segments: segments} = ISOMedia.split_segments(frag)
 
-      assert ISOMedia.FragmentIndex.fragmented?(standalone)
-      [tid | _] = ISOMedia.track_ids(standalone)
-      seg_samples = ISOMedia.samples(standalone, tid)
-      frag_samples = ISOMedia.samples(frag, tid) |> Enum.take(length(seg_samples))
+      for seg <- [List.first(segments), List.last(segments)] do
+        standalone = init ++ seg
 
-      assert seg_samples != []
-      assert Enum.map(seg_samples, & &1.size) == Enum.map(frag_samples, & &1.size)
-      assert Enum.map(seg_samples, & &1.dts) == Enum.map(frag_samples, & &1.dts)
-      assert sample_bytes(standalone, seg_samples) == sample_bytes(frag, frag_samples)
+        assert ISOMedia.FragmentIndex.fragmented?(standalone)
+        [tid | _] = ISOMedia.track_ids(standalone)
+        seg_samples = ISOMedia.samples(standalone, tid)
+        assert seg_samples != []
+
+        # find the matching run in the full fragmented tree by dts, and compare bytes
+        frag_samples = ISOMedia.samples(frag, tid)
+        seg_dts = Enum.map(seg_samples, & &1.dts)
+        matched = Enum.filter(frag_samples, fn s -> s.dts in seg_dts end)
+
+        assert Enum.map(seg_samples, & &1.size) == Enum.map(matched, & &1.size)
+        assert sample_bytes(standalone, seg_samples) == sample_bytes(frag, matched)
+      end
     end
 
     test "raises on progressive input, missing ftyp/moov, or an orphan moof" do
@@ -81,6 +87,16 @@ defmodule ISOMedia.SegmentTest do
       ]
 
       assert_raise ArgumentError, fn -> ISOMedia.split_segments(orphan) end
+
+      trailing = [
+        %Box{type: "ftyp", data: <<"isom", 0::32>>},
+        %Box{type: "moov"},
+        %Box{type: "moof"},
+        %Box{type: "mdat", data: <<>>},
+        %Box{type: "mdat", data: <<>>}
+      ]
+
+      assert_raise ArgumentError, fn -> ISOMedia.split_segments(trailing) end
     end
   end
 end
