@@ -6,6 +6,9 @@ defmodule ISOMedia.Codec do
   """
   import Bitwise
 
+  alias ISOMedia.{Box, BoxPath, TrackInfo}
+  alias ISOMedia.Boxes.{MediaHeader, TrackHeader}
+
   @doc """
   Decode a packed 16-bit `mdhd` language field (1 pad bit + 3×5-bit, each `char - 0x60`)
   into an ISO-639-2/T 3-letter code. Falls back to `"und"` if any character is not `a`-`z`.
@@ -42,5 +45,54 @@ defmodule ISOMedia.Codec do
 
   def find_sub_box(_bin, target) do
     raise ArgumentError, "track_info: sub-box #{target} not found"
+  end
+
+  @doc "Decode a `trak`'s codec + media metadata into a `%ISOMedia.TrackInfo{}`."
+  def info(%Box{type: "trak"} = trak) do
+    track_id = TrackHeader.decode(BoxPath.dig(trak, ["tkhd"])).track_id
+
+    mdhd =
+      BoxPath.dig(trak, ~w(mdia mdhd)) || raise ArgumentError, "track_info: track missing mdhd"
+
+    mh = MediaHeader.decode(mdhd)
+
+    language =
+      if byte_size(mh.rest) >= 2,
+        do: decode_language(binary_part(mh.rest, 0, 2)),
+        else: "und"
+
+    stsd =
+      BoxPath.dig(trak, ~w(mdia minf stbl stsd)) ||
+        raise ArgumentError, "track_info: track missing stsd"
+
+    <<_v::8, _f::24, _count::32, entry::binary>> = stsd.data
+    <<_size::32, format::binary-size(4), _::binary>> = entry
+
+    base = %TrackInfo{
+      track_id: track_id,
+      format: format,
+      timescale: mh.timescale,
+      duration: mh.duration,
+      language: language
+    }
+
+    parse_entry(format, entry, base)
+  end
+
+  @doc "Build an `avc1.PPCCLL` codec string from an `avcC` payload."
+  def avc1_codec(<<_config_version::8, profile::8, compat::8, level::8, _::binary>>) do
+    "avc1." <> Base.encode16(<<profile, compat, level>>, case: :lower)
+  end
+
+  # VisualSampleEntry: width@32, height@34; child boxes (incl. avcC) start at offset 86.
+  defp parse_entry("avc1", entry, base) do
+    <<_::binary-size(32), width::16, height::16, _::binary>> = entry
+    <<_::binary-size(86), children::binary>> = entry
+    codec = avc1_codec(find_sub_box(children, "avcC"))
+    %{base | type: :video, codec: codec, width: width, height: height}
+  end
+
+  defp parse_entry(format, _entry, _base) do
+    raise ArgumentError, "track_info: unsupported codec #{format}"
   end
 end

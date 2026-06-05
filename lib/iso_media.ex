@@ -83,6 +83,15 @@ defmodule ISOMedia do
   def write_segments(dir, boxes, opts \\ []),
     do: ISOMedia.Segment.write_segments(dir, boxes, opts)
 
+  @doc "Decode a track's codec + media metadata into `%ISOMedia.TrackInfo{}`. See `ISOMedia.Codec.info/1`."
+  @spec track_info(tree(), pos_integer()) :: ISOMedia.TrackInfo.t()
+  def track_info(boxes, track_id) do
+    case ISOMedia.Extract.find_trak(boxes, track_id) do
+      nil -> raise ArgumentError, "track_info: no track with track_id #{track_id}"
+      trak -> ISOMedia.Codec.info(trak)
+    end
+  end
+
   @doc "Recompute stco/co64 chunk offsets for the current box arrangement. See `ISOMedia.Offsets.fix_chunk_offsets/1`."
   @spec fix_chunk_offsets(tree()) :: tree()
   def fix_chunk_offsets(boxes), do: ISOMedia.Offsets.fix_chunk_offsets(boxes)

@@ -35,4 +35,35 @@ defmodule ISOMedia.CodecTest do
       assert_raise ArgumentError, fn -> Codec.find_sub_box(<<8::32, "free">>, "avcC") end
     end
   end
+
+  describe "track_info/2 — video (avc1)" do
+    defp video_tid(boxes) do
+      Enum.find(ISOMedia.track_ids(boxes), fn tid ->
+        trak = ISOMedia.Extract.find_trak(boxes, tid)
+
+        ISOMedia.Boxes.Handler.decode(ISOMedia.BoxPath.dig(trak, ~w(mdia hdlr))).handler_type ==
+          "vide"
+      end)
+    end
+
+    test "extracts avc1 codec string, dimensions, and media metadata" do
+      {:ok, boxes} = ISOMedia.read("test/fixtures/sample_av.mp4")
+      info = ISOMedia.track_info(boxes, video_tid(boxes))
+
+      assert info.type == :video
+      assert info.format == "avc1"
+      assert info.codec == "avc1.64000a"
+      assert info.width == 128
+      assert info.height == 96
+      assert info.timescale == 10240
+      assert info.language == "und"
+      assert info.sample_rate == nil and info.channels == nil
+    end
+
+    test "derives the avc1 codec string from avcC profile/compat/level bytes" do
+      # avcC payload: configurationVersion=1, profile=0x64, compat=0x00, level=0x1f, then more
+      avcc = <<1, 0x64, 0x00, 0x1F, 0xFF, 0xE1>>
+      assert ISOMedia.Codec.avc1_codec(avcc) == "avc1.64001f"
+    end
+  end
 end
