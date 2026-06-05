@@ -92,7 +92,47 @@ defmodule ISOMedia.Codec do
     %{base | type: :video, codec: codec, width: width, height: height}
   end
 
+  # AudioSampleEntry: channelcount@24, samplerate@32 (16.16 fixed, integer part); esds@36.
+  defp parse_entry("mp4a", entry, base) do
+    <<_::binary-size(24), channels::16, _samplesize::16, _::16, _::16, sample_rate::16,
+      _sr_low::16, _::binary>> = entry
+
+    <<_::binary-size(36), children::binary>> = entry
+    codec = mp4a_codec(find_sub_box(children, "esds"))
+    %{base | type: :audio, codec: codec, sample_rate: sample_rate, channels: channels}
+  end
+
   defp parse_entry(format, _entry, _base) do
     raise ArgumentError, "track_info: unsupported codec #{format}"
+  end
+
+  @doc """
+  Build an `mp4a.<oti>.<aot>` codec string from an `esds` payload by walking the MPEG-4
+  descriptors. Falls back to `"mp4a.40.2"` (AAC-LC) if the descriptor chain can't be walked.
+  """
+  def mp4a_codec(esds) do
+    <<_v::8, _f::24, descriptors::binary>> = esds
+    {oti, aot} = parse_es_descriptor(descriptors)
+    "mp4a." <> Integer.to_string(oti, 16) <> "." <> Integer.to_string(aot)
+  rescue
+    _ -> "mp4a.40.2"
+  end
+
+  defp parse_es_descriptor(<<0x03, rest::binary>>) do
+    {_len, body} = decode_expandable_length(rest)
+    <<_es_id::16, _flags::8, dcd::binary>> = body
+    parse_decoder_config(dcd)
+  end
+
+  defp parse_decoder_config(<<0x04, rest::binary>>) do
+    {_len, body} = decode_expandable_length(rest)
+    <<oti::8, _stream_type::8, _buffer::24, _max_br::32, _avg_br::32, dsi::binary>> = body
+    {oti, parse_decoder_specific(dsi)}
+  end
+
+  defp parse_decoder_specific(<<0x05, rest::binary>>) do
+    {_len, asc} = decode_expandable_length(rest)
+    <<aot::5, _::bitstring>> = asc
+    aot
   end
 end

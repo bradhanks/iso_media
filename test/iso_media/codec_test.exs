@@ -66,4 +66,38 @@ defmodule ISOMedia.CodecTest do
       assert ISOMedia.Codec.avc1_codec(avcc) == "avc1.64001f"
     end
   end
+
+  describe "track_info/2 — audio (mp4a)" do
+    defp audio_tid(boxes) do
+      Enum.find(ISOMedia.track_ids(boxes), fn tid ->
+        trak = ISOMedia.Extract.find_trak(boxes, tid)
+
+        ISOMedia.Boxes.Handler.decode(ISOMedia.BoxPath.dig(trak, ~w(mdia hdlr))).handler_type ==
+          "soun"
+      end)
+    end
+
+    test "extracts mp4a codec string, sample rate, channels" do
+      {:ok, boxes} = ISOMedia.read("test/fixtures/sample_av.mp4")
+      info = ISOMedia.track_info(boxes, audio_tid(boxes))
+
+      assert info.type == :audio
+      assert info.format == "mp4a"
+      assert info.codec == "mp4a.40.2"
+      assert info.sample_rate == 44100
+      assert info.channels == 1
+      assert info.timescale == 44100
+      assert info.width == nil and info.height == nil
+    end
+
+    test "derives mp4a.40.2 from an AAC-LC esds descriptor chain" do
+      # esds: FullBox(4) + ES_Descriptor(0x03) -> DecoderConfig(0x04, oti 0x40)
+      #       -> DecoderSpecificInfo(0x05, AudioSpecificConfig 0x12 -> aot 2)
+      dsi = <<0x05, 0x02, 0x12, 0x08>>
+      dcd = <<0x04, 0x0D, 0x40, 0x15, 0::24, 0::32, 0::32>> <> dsi
+      es = <<0x03, byte_size(<<0::16, 0::8>> <> dcd), 0::16, 0::8>> <> dcd
+      esds = <<0::32>> <> es
+      assert ISOMedia.Codec.mp4a_codec(esds) == "mp4a.40.2"
+    end
+  end
 end
