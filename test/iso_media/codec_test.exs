@@ -100,4 +100,45 @@ defmodule ISOMedia.CodecTest do
       assert ISOMedia.Codec.mp4a_codec(esds) == "mp4a.40.2"
     end
   end
+
+  describe "track_info/2 — errors and invariants" do
+    test "raises on an unsupported codec format" do
+      # Minimal hand-built trak: info/1 needs tkhd (track_id), mdia/mdhd, mdia/minf/stbl/stsd.
+      tkhd = %ISOMedia.Box{
+        type: "tkhd",
+        data: <<0::8, 0::24, 0::32, 0::32, 1::32, 0::32, 0::32, 0::480>>
+      }
+
+      mdhd = %ISOMedia.Box{
+        type: "mdhd",
+        data: <<0::8, 0::24, 0::32, 0::32, 1000::32, 0::32, 0x55C4::16, 0::16>>
+      }
+
+      stsd = %ISOMedia.Box{type: "stsd", data: <<0::8, 0::24, 1::32, 16::32, "hvc1", 0::64>>}
+      stbl = %ISOMedia.Box{type: "stbl", children: [stsd]}
+      minf = %ISOMedia.Box{type: "minf", children: [stbl]}
+      mdia = %ISOMedia.Box{type: "mdia", children: [mdhd, minf]}
+      trak = %ISOMedia.Box{type: "trak", children: [tkhd, mdia]}
+      moov = %ISOMedia.Box{type: "moov", children: [trak]}
+
+      assert_raise ArgumentError, ~r/unsupported codec hvc1/, fn ->
+        ISOMedia.track_info([moov], 1)
+      end
+    end
+
+    test "raises when the track_id is absent" do
+      {:ok, boxes} = ISOMedia.read("test/fixtures/sample_av.mp4")
+
+      assert_raise ArgumentError, ~r/no track with track_id 999/, fn ->
+        ISOMedia.track_info(boxes, 999)
+      end
+    end
+
+    test "track_info does not disturb the byte-for-byte round trip" do
+      bin = File.read!("test/fixtures/sample_av.mp4")
+      {:ok, boxes} = ISOMedia.parse(bin)
+      _ = ISOMedia.track_info(boxes, hd(ISOMedia.track_ids(boxes)))
+      assert ISOMedia.serialize(boxes) == bin
+    end
+  end
 end
