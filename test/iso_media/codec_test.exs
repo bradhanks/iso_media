@@ -99,6 +99,47 @@ defmodule ISOMedia.CodecTest do
       esds = <<0::32>> <> es
       assert ISOMedia.Codec.mp4a_codec(esds) == "mp4a.40.2"
     end
+
+    test "the synthetic AAC-LC esds also yields sample_rate 44100 (freq index 4)" do
+      dsi = <<0x05, 0x02, 0x12, 0x08>>
+      dcd = <<0x04, 0x0D, 0x40, 0x15, 0::24, 0::32, 0::32>> <> dsi
+      es = <<0x03, byte_size(<<0::16, 0::8>> <> dcd), 0::16, 0::8>> <> dcd
+      esds = <<0::32>> <> es
+      assert ISOMedia.Codec.mp4a_sample_rate(esds, 999) == 44100
+    end
+
+    test "HE-AAC esds yields mp4a.40.5" do
+      # AudioSpecificConfig with audioObjectType 5 (top 5 bits of 0x28 = 00101)
+      dsi = <<0x05, 0x02, 0x28, 0x00>>
+      dcd = <<0x04, 0x0D, 0x40, 0x15, 0::24, 0::32, 0::32>> <> dsi
+      es = <<0x03, byte_size(<<0::16, 0::8>> <> dcd), 0::16, 0::8>> <> dcd
+      esds = <<0::32>> <> es
+      assert ISOMedia.Codec.mp4a_codec(esds) == "mp4a.40.5"
+    end
+
+    test "walks an ES_Descriptor with streamDependenceFlag set (does not fall back)" do
+      dsi = <<0x05, 0x02, 0x12, 0x08>>
+      dcd = <<0x04, 0x0D, 0x40, 0x15, 0::24, 0::32, 0::32>> <> dsi
+      # ES flags 0x80 (streamDependenceFlag) -> 2 extra bytes (dependsOn_ES_ID) after flags
+      es_body = <<0::16, 0x80, 0xAB, 0xCD>> <> dcd
+      es = <<0x03, byte_size(es_body)>> <> es_body
+      esds = <<0::32>> <> es
+      assert ISOMedia.Codec.mp4a_codec(esds) == "mp4a.40.2"
+    end
+
+    test "a 96 kHz esds (freq index 0) reports sample_rate 96000, not a truncated value" do
+      # AudioSpecificConfig: aot 2 (00010), freq index 0 (0000) -> 0x10, 0x00
+      dsi = <<0x05, 0x02, 0x10, 0x00>>
+      dcd = <<0x04, 0x0D, 0x40, 0x15, 0::24, 0::32, 0::32>> <> dsi
+      es = <<0x03, byte_size(<<0::16, 0::8>> <> dcd), 0::16, 0::8>> <> dcd
+      esds = <<0::32>> <> es
+      assert ISOMedia.Codec.mp4a_sample_rate(esds, 1) == 96000
+    end
+
+    test "falls back to the given rate when the esds can't be walked" do
+      assert ISOMedia.Codec.mp4a_sample_rate(<<0::32, 0x03, 0x02, 0xFF>>, 48000) == 48000
+      assert ISOMedia.Codec.mp4a_codec(<<0::32, 0x03, 0x02, 0xFF>>) == "mp4a.40.2"
+    end
   end
 
   describe "track_info/2 — errors and invariants" do
