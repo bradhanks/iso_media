@@ -266,7 +266,15 @@ defmodule ISOMedia.Codec do
     }
   end
 
-  defp parse_entry(format, entry, _base) when format in ["avc1", "mp4a"] do
+  # HEVC VisualSampleEntry: same layout as avc1 (width@32, height@34, child boxes@86).
+  defp parse_entry(fmt, entry, base) when fmt in ["hvc1", "hev1"] and byte_size(entry) >= 86 do
+    <<_::binary-size(32), width::16, height::16, _::binary>> = entry
+    <<_::binary-size(86), children::binary>> = entry
+    codec = hvc1_codec(fmt, find_sub_box(children, "hvcC"))
+    %{base | type: :video, codec: codec, width: width, height: height}
+  end
+
+  defp parse_entry(format, entry, _base) when format in ["avc1", "mp4a", "hvc1", "hev1"] do
     raise ArgumentError,
           "track_info: truncated #{format} sample entry (#{byte_size(entry)} bytes)"
   end

@@ -196,6 +196,78 @@ defmodule ISOMedia.CodecTest do
     end
   end
 
+  describe "track_info/2 — video (hvc1/hev1)" do
+    # A full VisualSampleEntry (86-byte header: width@32, height@34, children@86) wrapping an
+    # hvcC box, mirroring the hand-built-trak idiom used by the unsupported-codec test below.
+    defp hevc_trak(fourcc) do
+      hvcc_record = <<1, 0x01, 0x60, 0, 0, 0, 0xB0, 0, 0, 0, 0, 0, 93, 0xFF, 0xFF>>
+      hvcc_box = <<byte_size(hvcc_record) + 8::32, "hvcC", hvcc_record::binary>>
+
+      entry_body =
+        <<0::48, 1::16, 0::16, 0::16, 0::96, 320::16, 240::16, 0::32, 0::32, 0::32, 0::16, 0::256,
+          0x18::16, 0xFFFF::16>> <> hvcc_box
+
+      entry = <<byte_size(entry_body) + 8::32, fourcc::binary>> <> entry_body
+      stsd = %ISOMedia.Box{type: "stsd", data: <<0::8, 0::24, 1::32>> <> entry}
+
+      tkhd = %ISOMedia.Box{
+        type: "tkhd",
+        data: <<0::8, 0::24, 0::32, 0::32, 1::32, 0::32, 0::32, 0::480>>
+      }
+
+      mdhd = %ISOMedia.Box{
+        type: "mdhd",
+        data: <<0::8, 0::24, 0::32, 0::32, 15360::32, 0::32, 0x55C4::16, 0::16>>
+      }
+
+      stbl = %ISOMedia.Box{type: "stbl", children: [stsd]}
+      minf = %ISOMedia.Box{type: "minf", children: [stbl]}
+      mdia = %ISOMedia.Box{type: "mdia", children: [mdhd, minf]}
+      trak = %ISOMedia.Box{type: "trak", children: [tkhd, mdia]}
+      [%ISOMedia.Box{type: "moov", children: [trak]}]
+    end
+
+    test "decodes an hvc1 sample entry to codec string + dimensions" do
+      info = ISOMedia.track_info(hevc_trak("hvc1"), 1)
+      assert info.type == :video
+      assert info.format == "hvc1"
+      assert info.codec == "hvc1.1.6.L93.B0"
+      assert info.width == 320
+      assert info.height == 240
+      assert info.timescale == 15360
+    end
+
+    test "decodes an hev1 sample entry, preserving the hev1 prefix" do
+      info = ISOMedia.track_info(hevc_trak("hev1"), 1)
+      assert info.format == "hev1"
+      assert info.codec == "hev1.1.6.L93.B0"
+      assert info.type == :video
+    end
+
+    test "raises on a truncated hvc1 sample entry (shorter than 86 bytes)" do
+      stsd = %ISOMedia.Box{type: "stsd", data: <<0::8, 0::24, 1::32, 16::32, "hvc1", 0::64>>}
+
+      tkhd = %ISOMedia.Box{
+        type: "tkhd",
+        data: <<0::8, 0::24, 0::32, 0::32, 1::32, 0::32, 0::32, 0::480>>
+      }
+
+      mdhd = %ISOMedia.Box{
+        type: "mdhd",
+        data: <<0::8, 0::24, 0::32, 0::32, 1000::32, 0::32, 0x55C4::16, 0::16>>
+      }
+
+      stbl = %ISOMedia.Box{type: "stbl", children: [stsd]}
+      minf = %ISOMedia.Box{type: "minf", children: [stbl]}
+      mdia = %ISOMedia.Box{type: "mdia", children: [mdhd, minf]}
+      trak = %ISOMedia.Box{type: "trak", children: [tkhd, mdia]}
+
+      assert_raise ArgumentError, ~r/truncated hvc1/, fn ->
+        ISOMedia.track_info([%ISOMedia.Box{type: "moov", children: [trak]}], 1)
+      end
+    end
+  end
+
   describe "track_info/2 — errors and invariants" do
     test "raises on an unsupported codec format" do
       # Minimal hand-built trak: info/1 needs tkhd (track_id), mdia/mdhd, mdia/minf/stbl/stsd.
@@ -209,14 +281,14 @@ defmodule ISOMedia.CodecTest do
         data: <<0::8, 0::24, 0::32, 0::32, 1000::32, 0::32, 0x55C4::16, 0::16>>
       }
 
-      stsd = %ISOMedia.Box{type: "stsd", data: <<0::8, 0::24, 1::32, 16::32, "hvc1", 0::64>>}
+      stsd = %ISOMedia.Box{type: "stsd", data: <<0::8, 0::24, 1::32, 16::32, "av01", 0::64>>}
       stbl = %ISOMedia.Box{type: "stbl", children: [stsd]}
       minf = %ISOMedia.Box{type: "minf", children: [stbl]}
       mdia = %ISOMedia.Box{type: "mdia", children: [mdhd, minf]}
       trak = %ISOMedia.Box{type: "trak", children: [tkhd, mdia]}
       moov = %ISOMedia.Box{type: "moov", children: [trak]}
 
-      assert_raise ArgumentError, ~r/unsupported codec hvc1/, fn ->
+      assert_raise ArgumentError, ~r/unsupported codec av01/, fn ->
         ISOMedia.track_info([moov], 1)
       end
     end
