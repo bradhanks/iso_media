@@ -23,9 +23,14 @@ defmodule IsoMedia.MixProject do
 
   def application do
     [
-      extra_applications: [:logger]
+      # :xmerl is OTP stdlib, loaded only in test to re-parse generated DASH MPDs for
+      # well-formedness; the library itself stays zero-runtime-dependency.
+      extra_applications: extra_applications(Mix.env())
     ]
   end
+
+  defp extra_applications(:test), do: [:logger, :xmerl]
+  defp extra_applications(_), do: [:logger]
 
   defp elixirc_paths(:test), do: ["lib", "test/support"]
   defp elixirc_paths(_), do: ["lib"]

@@ -95,6 +95,14 @@ defmodule ISOMedia do
   @spec write_hls(Path.t(), tree(), keyword()) :: {:ok, [Path.t()]}
   def write_hls(dir, boxes, opts \\ []), do: ISOMedia.HLS.write_hls(dir, boxes, opts)
 
+  @doc "Generate the DASH MPD (`.mpd`) for a fragmented tree. See `ISOMedia.DASH.manifest/2`."
+  @spec dash_manifest(tree(), keyword()) :: String.t()
+  def dash_manifest(boxes, opts \\ []), do: ISOMedia.DASH.manifest(boxes, opts)
+
+  @doc "Write a full DASH bundle (MPD + segments) into `dir`. See `ISOMedia.DASH.write_dash/3`."
+  @spec write_dash(Path.t(), tree(), keyword()) :: {:ok, [Path.t()]}
+  def write_dash(dir, boxes, opts \\ []), do: ISOMedia.DASH.write_dash(dir, boxes, opts)
+
   @doc "Decode a track's codec + media metadata into `%ISOMedia.TrackInfo{}`. See `ISOMedia.Codec.info/1`."
   @spec track_info(tree(), pos_integer()) :: ISOMedia.TrackInfo.t()
   def track_info(boxes, track_id) do
