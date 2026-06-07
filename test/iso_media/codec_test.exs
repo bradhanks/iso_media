@@ -83,6 +83,12 @@ defmodule ISOMedia.CodecTest do
       assert ISOMedia.Codec.hvc1_codec("hvc1", rec) == "hvc1.B1.6.L93.B0"
     end
 
+    test "profile_space 3 prefixes the profile with C" do
+      # byte1: space=3 (11), tier=0 (0), idc=1 (00001) -> 0b11_0_00001 = 0xC1
+      rec = <<1, 0xC1, 0x60, 0, 0, 0, 0xB0, 0, 0, 0, 0, 0, 93>>
+      assert ISOMedia.Codec.hvc1_codec("hvc1", rec) == "hvc1.C1.6.L93.B0"
+    end
+
     test "raises on an hvcC record shorter than 13 bytes" do
       assert_raise ArgumentError, ~r/hvcC/, fn ->
         ISOMedia.Codec.hvc1_codec("hvc1", <<1, 0x01, 0x60, 0x00>>)
@@ -240,6 +246,7 @@ defmodule ISOMedia.CodecTest do
       assert info.width == 320
       assert info.height == 240
       assert info.timescale == 15360
+      assert info.sample_rate == nil and info.channels == nil
     end
 
     test "decodes an hev1 sample entry, preserving the hev1 prefix" do
