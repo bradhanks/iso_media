@@ -89,14 +89,14 @@ defmodule ISOMedia.Codec do
     "avc1." <> Base.encode16(<<profile, compat, level>>, case: :lower)
   end
 
+  @spec hvc1_codec(binary(), binary()) :: String.t()
   @doc """
   Build an RFC 6381 HEVC codec string (`hvc1.*` / `hev1.*`) from `fourcc` and an `hvcC`
   HEVCDecoderConfigurationRecord payload: profile (with profile-space prefix), the
   bit-reversed compatibility flags (uppercase hex, leading zeros dropped), `L`/`H` tier +
-  level, and the constraint bytes (`%02X`, trailing-zero bytes omitted). Raises on a record
-  shorter than 13 bytes.
+  level, and the constraint bytes (each formatted as two-digit uppercase hex, trailing-zero
+  bytes omitted). Raises on a record shorter than 13 bytes.
   """
-  @spec hvc1_codec(binary(), binary()) :: String.t()
   def hvc1_codec(fourcc, <<
         _config_version::8,
         profile_space::2,
