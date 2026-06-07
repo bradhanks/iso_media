@@ -27,4 +27,14 @@ defmodule ISOMedia.HLSTest do
     {:ok, prog} = ISOMedia.read("test/fixtures/sample_av.mp4")
     assert_raise ArgumentError, fn -> ISOMedia.hls_media_playlist(prog) end
   end
+
+  test "master_playlist is the byte-exact multivariant playlist" do
+    expected = """
+    #EXTM3U
+    #EXT-X-STREAM-INF:BANDWIDTH=96392,CODECS="avc1.64000a,mp4a.40.2",RESOLUTION=128x96
+    media.m3u8
+    """
+
+    assert ISOMedia.hls_master_playlist(fragged()) == expected
+  end
 end

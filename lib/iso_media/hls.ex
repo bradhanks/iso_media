@@ -35,6 +35,45 @@ defmodule ISOMedia.HLS do
     Enum.join(lines, "\n") <> "\n"
   end
 
+  @doc "The HLS multivariant (master) playlist (`.m3u8`) for a fragmented tree."
+  @spec master_playlist([ISOMedia.Box.t()], keyword()) :: String.t()
+  def master_playlist(boxes, opts \\ []) do
+    validate!(boxes)
+    media_uri = Keyword.get(opts, :media_uri, "media.m3u8")
+
+    attrs =
+      ["BANDWIDTH=#{peak_bandwidth(boxes)}", ~s(CODECS="#{track_codecs(boxes)}")] ++
+        case resolution(boxes) do
+          nil -> []
+          res -> ["RESOLUTION=#{res}"]
+        end
+
+    Enum.join(["#EXTM3U", "#EXT-X-STREAM-INF:#{Enum.join(attrs, ",")}", media_uri], "\n") <> "\n"
+  end
+
+  defp track_infos(boxes) do
+    boxes
+    |> ISOMedia.track_ids()
+    |> Enum.map(&ISOMedia.track_info(boxes, &1))
+    |> Enum.sort_by(fn ti -> if ti.type == :video, do: 0, else: 1 end)
+  end
+
+  defp track_codecs(boxes), do: track_infos(boxes) |> Enum.map(& &1.codec) |> Enum.join(",")
+
+  defp resolution(boxes) do
+    case Enum.find(track_infos(boxes), &(&1.type == :video)) do
+      nil -> nil
+      ti -> "#{ti.width}x#{ti.height}"
+    end
+  end
+
+  # Peak per-segment bit rate (bits/sec), integer ceil — HLS BANDWIDTH is the peak segment rate.
+  defp peak_bandwidth(boxes) do
+    FragmentIndex.fragment_spans(boxes)
+    |> Enum.map(fn s -> div(s.bytes * 8 * s.timescale + s.duration_ts - 1, s.duration_ts) end)
+    |> Enum.max()
+  end
+
   defp seconds(%{duration_ts: d, timescale: ts}), do: d / ts
 
   defp validate!(boxes) do
