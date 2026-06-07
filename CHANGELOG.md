@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **HEVC codec metadata** — `track_info/2` now decodes `hvc1`/`hev1` video tracks, producing
   the RFC 6381 codec string (e.g. `hvc1.1.6.L60.90`); HLS and DASH manifest generation work on
   HEVC content.
+- **Box creation helpers** — `ISOMedia.Box.leaf/3`, `container/3`, and `new/2` build boxes
+  without raw struct literals (the "create" verb of the box-editing API).
 
 ## [0.2.0] - 2026-06-07
 

@@ -34,6 +34,54 @@ defmodule ISOMedia.Box do
   def leaf?(%__MODULE__{data: nil}), do: false
   def leaf?(%__MODULE__{}), do: true
 
+  @doc """
+  Build a leaf box (raw payload, no children). `data` is a binary, an `ISOMedia.FileSlice`,
+  or a recursive segment list. `opts` may set `:uuid` and `:size_mode` (default `:compact`).
+  """
+  @spec leaf(String.t(), binary() | ISOMedia.FileSlice.t() | list(), keyword()) :: t()
+  def leaf(type, data, opts \\ []) do
+    %__MODULE__{
+      type: type,
+      data: data,
+      uuid: Keyword.get(opts, :uuid),
+      size_mode: Keyword.get(opts, :size_mode, :compact)
+    }
+  end
+
+  @doc """
+  Build a container box (child boxes, no payload). `children` defaults to `[]`. `opts` may set
+  `:uuid` and `:size_mode` (default `:compact`).
+  """
+  @spec container(String.t(), [t()], keyword()) :: t()
+  def container(type, children \\ [], opts \\ []) do
+    %__MODULE__{
+      type: type,
+      data: nil,
+      children: children,
+      uuid: Keyword.get(opts, :uuid),
+      size_mode: Keyword.get(opts, :size_mode, :compact)
+    }
+  end
+
+  @doc """
+  Convenience constructor dispatching on the second argument: a binary or `ISOMedia.FileSlice`
+  builds a leaf; a list of boxes (or an empty list) builds a container. Raises on an ambiguous
+  list (e.g. a raw segment-list payload) — use `leaf/3` or `container/3` explicitly there.
+  """
+  @spec new(String.t(), binary() | ISOMedia.FileSlice.t() | [t()]) :: t()
+  def new(type, data) when is_binary(data), do: leaf(type, data)
+  def new(type, %ISOMedia.FileSlice{} = data), do: leaf(type, data)
+
+  def new(type, children) when is_list(children) do
+    if Enum.all?(children, &is_struct(&1, __MODULE__)) do
+      container(type, children)
+    else
+      raise ArgumentError,
+            "Box.new/2: ambiguous list for #{inspect(type)}; " <>
+              "use Box.leaf/3 or Box.container/3 explicitly"
+    end
+  end
+
   @doc "Return the first box matching the type-path, or `nil`."
   def find(boxes, path) when is_list(boxes), do: boxes |> find_all(path) |> List.first()
 

@@ -126,4 +126,80 @@ defmodule ISOMedia.BoxTest do
       assert Box.read_data(box) == <<8, 7, 6>>
     end
   end
+
+  describe "leaf/3" do
+    test "builds a leaf box from a binary payload with defaults" do
+      box = Box.leaf("free", <<0, 0>>)
+      assert box.type == "free"
+      assert box.data == <<0, 0>>
+      assert box.children == []
+      assert box.size_mode == :compact
+      assert box.uuid == nil
+      assert Box.leaf?(box)
+    end
+
+    test "accepts a FileSlice payload" do
+      fs = %ISOMedia.FileSlice{path: "x", offset: 0, length: 4}
+      box = Box.leaf("mdat", fs)
+      assert box.data == fs
+      assert Box.leaf?(box)
+    end
+
+    test "opts set uuid and size_mode" do
+      box = Box.leaf("uuid", <<1, 2>>, uuid: <<0::128>>, size_mode: :large)
+      assert box.uuid == <<0::128>>
+      assert box.size_mode == :large
+    end
+  end
+
+  describe "container/3" do
+    test "builds an empty container by default" do
+      box = Box.container("moov")
+      assert box.type == "moov"
+      assert box.data == nil
+      assert box.children == []
+      assert box.size_mode == :compact
+      assert Box.container?(box)
+    end
+
+    test "builds a container from child boxes" do
+      child = Box.leaf("free", <<>>)
+      box = Box.container("moov", [child])
+      assert box.children == [child]
+      assert Box.container?(box)
+    end
+
+    test "opts set uuid and size_mode" do
+      box = Box.container("moov", [], size_mode: :large)
+      assert box.size_mode == :large
+    end
+  end
+
+  describe "new/2" do
+    test "a binary payload makes a leaf" do
+      assert Box.new("free", <<1>>) == Box.leaf("free", <<1>>)
+      assert Box.leaf?(Box.new("free", <<1>>))
+    end
+
+    test "a FileSlice makes a leaf" do
+      fs = %ISOMedia.FileSlice{path: "x", offset: 0, length: 1}
+      assert Box.leaf?(Box.new("mdat", fs))
+    end
+
+    test "a list of boxes makes a container" do
+      child = Box.leaf("free", <<>>)
+      assert Box.new("moov", [child]) == Box.container("moov", [child])
+      assert Box.container?(Box.new("moov", [child]))
+    end
+
+    test "an empty list makes an empty container" do
+      assert Box.container?(Box.new("moov", []))
+    end
+
+    test "raises on an ambiguous list (e.g. a segment list), directing to leaf/container" do
+      assert_raise ArgumentError, ~r/leaf\/3 or .*container\/3/, fn ->
+        Box.new("mdat", [<<1, 2>>, <<3, 4>>])
+      end
+    end
+  end
 end
