@@ -83,6 +83,10 @@ defmodule ISOMedia do
   def write_segments(dir, boxes, opts \\ []),
     do: ISOMedia.Segment.write_segments(dir, boxes, opts)
 
+  @doc "Generate the HLS media playlist (`.m3u8`) for a fragmented tree. See `ISOMedia.HLS.media_playlist/2`."
+  @spec hls_media_playlist(tree(), keyword()) :: String.t()
+  def hls_media_playlist(boxes, opts \\ []), do: ISOMedia.HLS.media_playlist(boxes, opts)
+
   @doc "Decode a track's codec + media metadata into `%ISOMedia.TrackInfo{}`. See `ISOMedia.Codec.info/1`."
   @spec track_info(tree(), pos_integer()) :: ISOMedia.TrackInfo.t()
   def track_info(boxes, track_id) do
