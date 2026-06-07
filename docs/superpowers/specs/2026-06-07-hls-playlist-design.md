@@ -35,6 +35,16 @@ Public API:
 
 ## Components
 
+`ISOMedia.FragmentIndex.fragment_spans/1` (new, shared) — `fragment_spans(boxes)` →
+`[%{duration_ts, timescale, bytes}]`, one entry per `moof` in tree order. For each `moof` it
+picks the **video** `traf` (its `tfhd.track_id` matches the `vide`-handler track) or, if the
+fragment has none, the first `traf`; resolves that `traf`'s `trun` sample durations via the
+existing cascade (`resolve_run`/`trex`/`tfhd` defaults) and sums them → `duration_ts`;
+`timescale` is the track's `mdhd` timescale; `bytes` is the sibling `mdat`'s payload size
+(`Layout.box_size(mdat) - Layout.header_size(mdat)`). This lives in `FragmentIndex` (which
+already owns the `moof`/`traf`/`trun` cascade) so the trun-duration summing has **one** home;
+`HLS` consumes it and only formats (standard 7 / DRY).
+
 `ISOMedia.HLS` (`lib/iso_media/hls.ex`):
 
 - **`media_playlist(boxes, opts)`** → the media `.m3u8`:
@@ -69,15 +79,15 @@ raising `ArgumentError` identically to `split_segments/1` on anything else. Then
 `moof`/`mdat` pairs once, computing per-segment `{duration, bytes}`. The segment count is the
 `moof` count (== `length(split_segments(boxes).segments)`).
 
-- **Per-segment duration** (`#EXTINF`, and `TARGETDURATION = ceil(max)`): walk the tree's
-  `moof`s in order; for each, pick the **video** `traf` (its `tfhd.track_id` matches the
-  `vide`-handler track) or, if the fragment has none, the first `traf`; decode its `trun` and
-  sum the sample durations; divide by that track's `mdhd` timescale → seconds. (`fragment/2`
-  writes all-explicit `trun` durations, so summing them is exact.)
-- **Per-segment bytes** (for bandwidth): the i-th `mdat`'s payload size =
-  `Layout.box_size(mdat) - Layout.header_size(mdat)` (handles segment-list/lazy `mdat`s).
+All per-segment durations and bytes come from `FragmentIndex.fragment_spans(boxes)` (above) —
+`HLS` does not walk `moof`s/`trun`s itself.
+
+- **Per-segment duration** (`#EXTINF`, and `TARGETDURATION = ceil(max)`):
+  `seconds_i = span.duration_ts / span.timescale`. (`fragment/2` writes all-explicit `trun`
+  durations, and the shared resolver also handles defaulted ones.)
+- **Per-segment bytes** (for bandwidth): `span.bytes`.
 - **`BANDWIDTH`** = the **peak** per-segment bit rate =
-  `max_i ceil(bytes_i * 8 / seconds_i)`, an integer bits/sec (HLS `BANDWIDTH` is the peak
+  `max_i ceil(span.bytes_i * 8 / seconds_i)`, an integer bits/sec (HLS `BANDWIDTH` is the peak
   segment rate). This is the `bitrate` computation Phase 12 deferred to here.
 - **`CODECS`** = each track's `%TrackInfo{}.codec` (via `track_info/2`), video first then
   audio, comma-joined (`"avc1.64000a,mp4a.40.2"`).
