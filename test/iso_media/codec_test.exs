@@ -36,6 +36,54 @@ defmodule ISOMedia.CodecTest do
     end
   end
 
+  describe "hvc1_codec/2" do
+    # hvcC HEVCDecoderConfigurationRecord (first 13 bytes):
+    #   config_version | profile_space(2)/tier(1)/profile_idc(5) | compat(32)
+    #   | constraint(48, 6 bytes) | level_idc | trailers...
+    # Main profile, level 3.1 (93), one constraint byte 0xB0:
+    #   profile_idc=1 -> byte1 0x01; compat 0x60000000 reverses to 0x6.
+    defp main_hvcc(level \\ 93) do
+      <<1, 0x01, 0x60, 0, 0, 0, 0xB0, 0, 0, 0, 0, 0, level, 0xFF, 0xFF>>
+    end
+
+    test "Main profile, level 3.1 -> hvc1.1.6.L93.B0" do
+      assert ISOMedia.Codec.hvc1_codec("hvc1", main_hvcc()) == "hvc1.1.6.L93.B0"
+    end
+
+    test "hev1 fourcc is preserved as the prefix" do
+      assert ISOMedia.Codec.hvc1_codec("hev1", main_hvcc()) == "hev1.1.6.L93.B0"
+    end
+
+    test "compatibility flags are bit-reversed, uppercase hex, leading zeros dropped" do
+      # compat 0x00000001 (only bit 0) reverses to 0x80000000 -> "80000000"
+      rec = <<1, 0x01, 0x00, 0x00, 0x00, 0x01, 0xB0, 0, 0, 0, 0, 0, 93, 0xFF>>
+      assert ISOMedia.Codec.hvc1_codec("hvc1", rec) == "hvc1.1.80000000.L93.B0"
+    end
+
+    test "multiple non-zero constraint bytes are dot-joined (%02X), trailing zeros dropped" do
+      # constraint bytes 0x90, 0x80, then zeros -> "90.80"
+      rec = <<1, 0x01, 0x60, 0, 0, 0, 0x90, 0x80, 0, 0, 0, 0, 93>>
+      assert ISOMedia.Codec.hvc1_codec("hvc1", rec) == "hvc1.1.6.L93.90.80"
+    end
+
+    test "all-zero constraint flags omit the constraint section entirely" do
+      rec = <<1, 0x01, 0x60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 93>>
+      assert ISOMedia.Codec.hvc1_codec("hvc1", rec) == "hvc1.1.6.L93"
+    end
+
+    test "profile_space 1 prefixes the profile with A; high tier uses H" do
+      # byte1: space=1 (01), tier=1 (1), idc=2 (00010) -> 0b01_1_00010 = 0x62; level 120
+      rec = <<1, 0x62, 0x60, 0, 0, 0, 0xB0, 0, 0, 0, 0, 0, 120>>
+      assert ISOMedia.Codec.hvc1_codec("hvc1", rec) == "hvc1.A2.6.H120.B0"
+    end
+
+    test "raises on an hvcC record shorter than 13 bytes" do
+      assert_raise ArgumentError, ~r/hvcC/, fn ->
+        ISOMedia.Codec.hvc1_codec("hvc1", <<1, 0x01, 0x60, 0x00>>)
+      end
+    end
+  end
+
   describe "track_info/2 — video (avc1)" do
     defp video_tid(boxes) do
       Enum.find(ISOMedia.track_ids(boxes), fn tid ->

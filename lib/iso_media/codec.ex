@@ -89,6 +89,70 @@ defmodule ISOMedia.Codec do
     "avc1." <> Base.encode16(<<profile, compat, level>>, case: :lower)
   end
 
+  @doc """
+  Build an RFC 6381 HEVC codec string (`hvc1.*` / `hev1.*`) from `fourcc` and an `hvcC`
+  HEVCDecoderConfigurationRecord payload: profile (with profile-space prefix), the
+  bit-reversed compatibility flags (uppercase hex, leading zeros dropped), `L`/`H` tier +
+  level, and the constraint bytes (`%02X`, trailing-zero bytes omitted). Raises on a record
+  shorter than 13 bytes.
+  """
+  @spec hvc1_codec(binary(), binary()) :: String.t()
+  def hvc1_codec(fourcc, <<
+        _config_version::8,
+        profile_space::2,
+        tier_flag::1,
+        profile_idc::5,
+        compat_flags::32,
+        c1::8,
+        c2::8,
+        c3::8,
+        c4::8,
+        c5::8,
+        c6::8,
+        level_idc::8,
+        _rest::binary
+      >>) do
+    space =
+      case profile_space do
+        0 -> ""
+        1 -> "A"
+        2 -> "B"
+        3 -> "C"
+      end
+
+    profile = "#{space}#{profile_idc}"
+    compat = compat_flags |> reverse_32_bits() |> Integer.to_string(16)
+    tier_level = "#{if tier_flag == 1, do: "H", else: "L"}#{level_idc}"
+
+    constraints =
+      [c1, c2, c3, c4, c5, c6]
+      |> Enum.reverse()
+      |> Enum.drop_while(&(&1 == 0))
+      |> Enum.reverse()
+      |> Enum.map(&String.pad_leading(Integer.to_string(&1, 16), 2, "0"))
+
+    Enum.join([fourcc, profile, compat, tier_level | constraints], ".")
+  end
+
+  def hvc1_codec(_fourcc, _payload) do
+    raise ArgumentError, "track_info: truncated or invalid hvcC payload"
+  end
+
+  # Reverse the 32 compatibility-flag bits via a 1-bit binary match (no Bitwise).
+  defp reverse_32_bits(val) do
+    <<b01::1, b02::1, b03::1, b04::1, b05::1, b06::1, b07::1, b08::1, b09::1, b10::1, b11::1,
+      b12::1, b13::1, b14::1, b15::1, b16::1, b17::1, b18::1, b19::1, b20::1, b21::1, b22::1,
+      b23::1, b24::1, b25::1, b26::1, b27::1, b28::1, b29::1, b30::1, b31::1, b32::1>> =
+      <<val::32>>
+
+    <<reversed::32>> =
+      <<b32::1, b31::1, b30::1, b29::1, b28::1, b27::1, b26::1, b25::1, b24::1, b23::1, b22::1,
+        b21::1, b20::1, b19::1, b18::1, b17::1, b16::1, b15::1, b14::1, b13::1, b12::1, b11::1,
+        b10::1, b09::1, b08::1, b07::1, b06::1, b05::1, b04::1, b03::1, b02::1, b01::1>>
+
+    reversed
+  end
+
   # AudioSpecificConfig sampling-frequency index table (ISO/IEC 14496-3).
   @asc_freq %{
     0 => 96_000,
