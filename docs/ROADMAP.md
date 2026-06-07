@@ -14,27 +14,24 @@ The guiding invariant for everything below is unchanged: **byte-for-byte round-t
   fragment / defragment, CMAF segment emission.
 - **0.2.0** — `track_info/2` codec metadata, HLS playlist generation, DASH MPD generation.
 
-## Next up (leading candidates)
+## Next up (leading candidate)
 
-Two items stand out as the highest-value next phases; both are detailed in their sections below.
-
-1. **HEVC support** (`hvc1` / `hev1`) — `hvcC` config parse + `hvc1.*` codec string. Unblocks
-   modern web / Apple content end to end: indexing, `track_info/2`, and both manifests light up
-   once the codec decodes. Self-contained, no input-pipeline changes. *Recommended first.*
-2. **ABR / multi-bitrate manifests** — multiple `Representation`s (DASH) / `#EXT-X-STREAM-INF`
+1. **ABR / multi-bitrate manifests** — multiple `Representation`s (DASH) / `#EXT-X-STREAM-INF`
    variants (HLS). The actual point of adaptive streaming; larger, since it needs a
    multi-encode ingest path the library doesn't yet produce.
+
+(HEVC support — previously the top candidate — **shipped** in Unreleased; see Codec coverage.)
 
 ---
 
 ## Codec coverage
 
-`track_info/2` currently supports `avc1` (H.264) and `mp4a` (AAC); every other sample-entry
-format raises (`codec.ex:211`). Manifests can only describe what `track_info/2` can decode,
+`track_info/2` currently supports `avc1` (H.264), `hvc1`/`hev1` (HEVC), and `mp4a` (AAC); every
+other sample-entry format raises. Manifests can only describe what `track_info/2` can decode,
 so this gates manifest reach.
 
-- **HEVC** (`hvc1` / `hev1`) — `hvcC` config parse → `hvc1.*` RFC 6381 string. *Highest user
-  value: unblocks modern web / Apple content.* Needs a fixture.
+- ~~**HEVC** (`hvc1` / `hev1`)~~ — **shipped** (Unreleased): `hvcC` config parse →
+  `hvc1.*`/`hev1.*` RFC 6381 string; `track_info/2` + HLS/DASH work on HEVC content.
 - **AV1** (`av01`) — `av1C` config parse → `av01.*`. Needs a fixture.
 - **Subtitle / text tracks** (`wvtt`, `stpp`, …) — adds `:subtitle` to the `TrackInfo.type`
   union; unblocks subtitle rendition entries in manifests.

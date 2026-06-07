@@ -1,8 +1,8 @@
 defmodule ISOMedia.Codec do
   @moduledoc """
   Read-only extraction of a track's codec + media metadata into `%ISOMedia.TrackInfo{}`.
-  Slices the opaque `stsd` sample entry and `mdhd` tail directly (avc1 + mp4a); the core
-  parser/Registry are untouched, so the byte-for-byte round-trip invariant is preserved.
+  Slices the opaque `stsd` sample entry and `mdhd` tail directly (avc1 + hvc1/hev1 + mp4a);
+  the core parser/Registry are untouched, so the byte-for-byte round-trip invariant is preserved.
   """
   import Bitwise
 
