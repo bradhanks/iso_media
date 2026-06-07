@@ -91,6 +91,10 @@ defmodule ISOMedia do
   @spec hls_master_playlist(tree(), keyword()) :: String.t()
   def hls_master_playlist(boxes, opts \\ []), do: ISOMedia.HLS.master_playlist(boxes, opts)
 
+  @doc "Write a full HLS bundle (playlists + segments) into `dir`. See `ISOMedia.HLS.write_hls/3`."
+  @spec write_hls(Path.t(), tree(), keyword()) :: {:ok, [Path.t()]}
+  def write_hls(dir, boxes, opts \\ []), do: ISOMedia.HLS.write_hls(dir, boxes, opts)
+
   @doc "Decode a track's codec + media metadata into `%ISOMedia.TrackInfo{}`. See `ISOMedia.Codec.info/1`."
   @spec track_info(tree(), pos_integer()) :: ISOMedia.TrackInfo.t()
   def track_info(boxes, track_id) do

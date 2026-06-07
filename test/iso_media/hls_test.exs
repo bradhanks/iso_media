@@ -37,4 +37,57 @@ defmodule ISOMedia.HLSTest do
 
     assert ISOMedia.hls_master_playlist(fragged()) == expected
   end
+
+  describe "write_hls/3 and edge cases" do
+    setup do
+      dir = Path.join(System.tmp_dir!(), "iso_hls_#{System.unique_integer([:positive])}")
+      on_exit(fn -> File.rm_rf(dir) end)
+      {:ok, dir: dir}
+    end
+
+    test "writes master + media + init + segments; all referenced files exist", %{dir: dir} do
+      frag = fragged()
+      n = Enum.count(frag, &(&1.type == "moof"))
+
+      assert {:ok, paths} = ISOMedia.write_hls(dir, frag)
+
+      assert paths == [
+               Path.join(dir, "master.m3u8"),
+               Path.join(dir, "media.m3u8"),
+               Path.join(dir, "init.mp4")
+               | Enum.map(1..n, &Path.join(dir, "seg-#{&1}.m4s"))
+             ]
+
+      assert Enum.all?(paths, &File.exists?/1)
+      assert File.read!(Path.join(dir, "master.m3u8")) =~ "media.m3u8"
+      media = File.read!(Path.join(dir, "media.m3u8"))
+      assert media =~ ~s(URI="init.mp4")
+      assert media =~ "seg-1.m4s"
+    end
+
+    test "audio-only: master has the audio codec and no RESOLUTION" do
+      {:ok, b} = ISOMedia.read("test/fixtures/sample.m4a")
+      frag = ISOMedia.fragment(b, target_duration: 0.3)
+      master = ISOMedia.hls_master_playlist(frag)
+
+      assert master =~ ~s(CODECS="mp4a.40.2")
+      refute master =~ "RESOLUTION="
+      assert ISOMedia.hls_media_playlist(frag) =~ "#EXT-X-ENDLIST"
+    end
+
+    test "custom opts flow through to playlists and filenames", %{dir: dir} do
+      frag = fragged()
+
+      assert {:ok, _} =
+               ISOMedia.write_hls(dir, frag,
+                 media_uri: "v.m3u8",
+                 segment_pattern: fn i -> "c#{i}.m4s" end
+               )
+
+      assert File.exists?(Path.join(dir, "v.m3u8"))
+      assert File.exists?(Path.join(dir, "c1.m4s"))
+      assert File.read!(Path.join(dir, "master.m3u8")) =~ "v.m3u8"
+      assert File.read!(Path.join(dir, "v.m3u8")) =~ "c1.m4s"
+    end
+  end
 end

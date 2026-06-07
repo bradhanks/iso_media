@@ -51,6 +51,23 @@ defmodule ISOMedia.HLS do
     Enum.join(["#EXTM3U", "#EXT-X-STREAM-INF:#{Enum.join(attrs, ",")}", media_uri], "\n") <> "\n"
   end
 
+  @doc """
+  Write the HLS bundle into `dir` (created if absent): `master.m3u8`, the media playlist
+  (`opts[:media_uri]`, default `media.m3u8`), and — via `ISOMedia.write_segments/3` — `init.mp4`
+  + `seg-N.m4s`. Returns `{:ok, [master, media | segment_paths]}`.
+  """
+  @spec write_hls(Path.t(), [ISOMedia.Box.t()], keyword()) :: {:ok, [Path.t()]}
+  def write_hls(dir, boxes, opts \\ []) do
+    File.mkdir_p!(dir)
+    master_path = Path.join(dir, "master.m3u8")
+    media_path = Path.join(dir, Keyword.get(opts, :media_uri, "media.m3u8"))
+
+    File.write!(master_path, master_playlist(boxes, opts))
+    File.write!(media_path, media_playlist(boxes, opts))
+    {:ok, segment_paths} = ISOMedia.write_segments(dir, boxes, opts)
+    {:ok, [master_path, media_path | segment_paths]}
+  end
+
   defp track_infos(boxes) do
     boxes
     |> ISOMedia.track_ids()
