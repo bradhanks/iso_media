@@ -200,9 +200,14 @@ defmodule ISOMedia.CodecTest do
     # A full VisualSampleEntry (86-byte header: width@32, height@34, children@86) wrapping an
     # hvcC box, mirroring the hand-built-trak idiom used by the unsupported-codec test below.
     defp hevc_trak(fourcc) do
+      # 13-byte config header + 2 trailing bytes (absorbed by hvc1_codec/2's _rest)
       hvcc_record = <<1, 0x01, 0x60, 0, 0, 0, 0xB0, 0, 0, 0, 0, 0, 93, 0xFF, 0xFF>>
       hvcc_box = <<byte_size(hvcc_record) + 8::32, "hvcC", hvcc_record::binary>>
 
+      # VisualSampleEntry body (entry offset 8 onward):
+      #   reserved(6) data_ref_index(2) pre_defined(2) reserved(2) pre_defined[3](12)
+      #   width(2) height(2) horizres(4) vertres(4) reserved(4) frame_count(2)
+      #   compressorname(32) depth(2) pre_defined(2)  -> 78 bytes; child boxes at entry+86
       entry_body =
         <<0::48, 1::16, 0::16, 0::16, 0::96, 320::16, 240::16, 0::32, 0::32, 0::32, 0::16, 0::256,
           0x18::16, 0xFFFF::16>> <> hvcc_box
@@ -242,6 +247,8 @@ defmodule ISOMedia.CodecTest do
       assert info.format == "hev1"
       assert info.codec == "hev1.1.6.L93.B0"
       assert info.type == :video
+      assert info.width == 320
+      assert info.height == 240
     end
 
     test "raises on a truncated hvc1 sample entry (shorter than 86 bytes)" do
