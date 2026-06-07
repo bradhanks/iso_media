@@ -6,8 +6,17 @@ defmodule ISOMedia.FragmentIndex do
   resolves per-sample duration/size/flags. `chunk_index` is a per-`trun` counter.
   """
   import Bitwise
-  alias ISOMedia.{Box, Layout, Sample}
-  alias ISOMedia.Boxes.{TrackExtends, TrackFragmentDecodeTime, TrackFragmentHeader, TrackRun}
+  alias ISOMedia.{Box, BoxPath, Extract, Layout, Sample}
+
+  alias ISOMedia.Boxes.{
+    Handler,
+    MediaHeader,
+    TrackExtends,
+    TrackFragmentDecodeTime,
+    TrackFragmentHeader,
+    TrackHeader,
+    TrackRun
+  }
 
   @non_sync 0x00010000
 
@@ -17,6 +26,43 @@ defmodule ISOMedia.FragmentIndex do
     has_mvex = moov != nil and Enum.any?(moov.children, &(&1.type == "mvex"))
     has_moof = Enum.any?(boxes, &(&1.type == "moof"))
     has_mvex and has_moof
+  end
+
+  @doc """
+  Per-`moof` spans for the fragmented tree `boxes`, in tree order:
+  `[%{duration_ts, timescale, bytes}]`. For each `moof` the video `traf` is preferred (else
+  the first `traf`); its `trun` sample durations are summed (via the cascade) for
+  `duration_ts`, `timescale` is that track's `mdhd` timescale, and `bytes` is the sibling
+  `mdat`'s payload size. Shared by HLS/DASH manifest generation.
+  """
+  @spec fragment_spans([Box.t()]) :: [
+          %{duration_ts: non_neg_integer(), timescale: pos_integer(), bytes: non_neg_integer()}
+        ]
+  def fragment_spans(boxes) do
+    video_tid = video_track_id(boxes)
+    moofs = Enum.filter(boxes, &(&1.type == "moof"))
+    mdats = Enum.filter(boxes, &(&1.type == "mdat"))
+
+    moofs
+    |> Enum.zip(mdats)
+    |> Enum.map(fn {moof, mdat} ->
+      traf = (video_tid && traf_for(moof, video_tid)) || first_traf(moof)
+      tfhd = TrackFragmentHeader.decode(child!(traf, "tfhd"))
+      defaults = defaults(tfhd, trex_for!(boxes, tfhd.track_id))
+
+      duration_ts =
+        traf.children
+        |> Enum.filter(&(&1.type == "trun"))
+        |> Enum.flat_map(fn t -> resolve_run(TrackRun.decode(t), defaults) end)
+        |> Enum.map(& &1.duration)
+        |> Enum.sum()
+
+      %{
+        duration_ts: duration_ts,
+        timescale: track_timescale(boxes, tfhd.track_id),
+        bytes: Layout.box_size(mdat) - Layout.header_size(mdat)
+      }
+    end)
   end
 
   @doc "Index the fragmented track `track_id` into `[%ISOMedia.Sample{}]`."
@@ -135,6 +181,25 @@ defmodule ISOMedia.FragmentIndex do
     if Enum.any?(traf.children, &(&1.type in ~w(senc saiz saio))) do
       raise ArgumentError, "fMP4: encrypted fragments (senc/saiz/saio) are not supported"
     end
+  end
+
+  defp first_traf(moof), do: Enum.find(moof.children, &(&1.type == "traf"))
+
+  defp video_track_id(boxes) do
+    moov = Enum.find(boxes, &(&1.type == "moov"))
+
+    moov.children
+    |> Enum.filter(&(&1.type == "trak"))
+    |> Enum.find_value(fn trak ->
+      if Handler.decode(BoxPath.dig(trak, ~w(mdia hdlr))).handler_type == "vide" do
+        TrackHeader.decode(BoxPath.dig(trak, ["tkhd"])).track_id
+      end
+    end)
+  end
+
+  defp track_timescale(boxes, track_id) do
+    trak = Extract.find_trak(boxes, track_id)
+    MediaHeader.decode(BoxPath.dig(trak, ~w(mdia mdhd))).timescale
   end
 
   defp child(%Box{children: children}, type), do: Enum.find(children, &(&1.type == type))
