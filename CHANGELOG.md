@@ -5,6 +5,19 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **Track codec metadata** — `track_info/2` decodes a track's codec and media
+  metadata into `%ISOMedia.TrackInfo{}`, including the RFC 6381 codec string
+  (`avc1.PPCCLL` / `mp4a.40.2`) that streaming manifests require.
+- **HLS playlists** — `hls_media_playlist/2`, `hls_master_playlist/2`, and
+  `write_hls/3` generate HLS VOD `.m3u8` playlists for the CMAF segments.
+- **DASH MPD** — `dash_manifest/2` and `write_dash/3` generate a static/VOD DASH
+  `.mpd` (single muxed rendition, `SegmentTemplate` + `SegmentTimeline`) for the
+  CMAF segments, via a zero-dependency XML builder.
+
 ## [0.1.0] - 2026-06-05
 
 Initial release.
@@ -32,4 +45,5 @@ Initial release.
 - **CMAF segments** — `split_segments/1` and `write_segments/3` emit a CMAF
   init segment plus `.m4s` media segments.
 
+[Unreleased]: https://github.com/bradhanks/iso_media/compare/v0.1.0...HEAD
 [0.1.0]: https://github.com/bradhanks/iso_media/releases/tag/v0.1.0
