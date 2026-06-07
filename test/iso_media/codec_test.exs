@@ -315,4 +315,36 @@ defmodule ISOMedia.CodecTest do
       assert ISOMedia.serialize(boxes) == bin
     end
   end
+
+  describe "HEVC fixture integration" do
+    defp hevc_video_tid(boxes) do
+      Enum.find(ISOMedia.track_ids(boxes), fn tid ->
+        ISOMedia.track_info(boxes, tid).type == :video
+      end)
+    end
+
+    test "track_info decodes the real HEVC fixture" do
+      {:ok, b} = ISOMedia.read("test/fixtures/sample_hevc.mp4")
+      info = ISOMedia.track_info(b, hevc_video_tid(b))
+      assert info.type == :video
+      assert info.format == "hvc1"
+      assert info.codec == "hvc1.1.6.L60.90"
+      assert info.width == 320
+      assert info.height == 240
+    end
+
+    test "HEVC unblocks HLS master and DASH manifests (previously raised)" do
+      {:ok, b} = ISOMedia.read("test/fixtures/sample_hevc.mp4")
+      frag = ISOMedia.fragment(b, target_duration: 0.5)
+      assert ISOMedia.hls_master_playlist(frag) =~ ~s(CODECS="hvc1.)
+      assert ISOMedia.dash_manifest(frag) =~ ~s(codecs="hvc1.)
+    end
+
+    test "track_info does not disturb the HEVC fixture's byte-for-byte round trip" do
+      bin = File.read!("test/fixtures/sample_hevc.mp4")
+      {:ok, b} = ISOMedia.parse(bin)
+      _ = ISOMedia.track_info(b, hevc_video_tid(b))
+      assert ISOMedia.serialize(b) == bin
+    end
+  end
 end
