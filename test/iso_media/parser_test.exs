@@ -100,4 +100,40 @@ defmodule ISOMedia.ParserTest do
     assert mvhd.source_offset == 108
     assert free.source_offset == 116
   end
+
+  describe "binary pinning" do
+    # `:binary.referenced_byte_size/1` returns the size of the underlying refc
+    # binary a sub-binary points into, or the binary's own size if it is a
+    # standalone heap binary. A retained sub-binary of a large source therefore
+    # reports the *source* size; a copied field reports its own (tiny) size.
+
+    test "parsed box `type` does not pin the source binary" do
+      # A >64-byte payload forces `source` to be an off-heap refc binary, so a
+      # naive sub-binary `type` would pin all ~500 bytes of it.
+      big = :binary.copy(<<0>>, 500)
+      source = <<8 + byte_size(big)::32, "mdat", big::binary>>
+      assert :binary.referenced_byte_size(source) > 64
+
+      assert {:ok, [box]} = Parser.parse(source)
+      assert box.type == "mdat"
+      assert :binary.referenced_byte_size(box.type) == 4
+    end
+
+    test "parsed box `uuid` does not pin the source binary" do
+      uuid = :binary.copy(<<1>>, 16)
+      big = :binary.copy(<<0>>, 500)
+      source = <<8 + 16 + byte_size(big)::32, "uuid", uuid::binary, big::binary>>
+
+      assert {:ok, [box]} = Parser.parse(source)
+      assert box.uuid == uuid
+      assert :binary.referenced_byte_size(box.uuid) == 16
+    end
+
+    test "copying preserves the byte-exact round-trip" do
+      big = :binary.copy(<<0>>, 500)
+      source = <<8 + byte_size(big)::32, "mdat", big::binary>>
+      assert {:ok, boxes} = Parser.parse(source)
+      assert ISOMedia.serialize(boxes) == source
+    end
+  end
 end
