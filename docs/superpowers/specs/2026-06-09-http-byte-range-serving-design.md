@@ -240,9 +240,11 @@ is emitted on every 200/206 (required for Safari/iOS seeking).
 ### 4.5 `Response` bodies, multipart boundary, and exact `Content-Length`
 
 - **Boundary** is derived **purely and deterministically** from the validator and the request
-  shape: `boundary = "ISOMedia" <> Base.encode16(:erlang.md5(etag <> range_signature), case: :lower)`.
-  `:erlang.md5/1` is a BIF (no `:crypto` application), so the core stays zero-dep; the boundary
-  is observable from the `%Response{}` struct (good for tests) and cannot contain CRLF.
+  shape: `boundary = "ISOMedia" <> Base.encode16(:erlang.md5(etag <> :erlang.term_to_binary(ranges)), case: :lower)`.
+  `:erlang.term_to_binary/1` gives a fast, deterministic, collision-free encoding of the coalesced
+  range list (no `inspect/1` limits or string-formatting overhead); `:erlang.md5/1` is a BIF (no
+  `:crypto` application), so the core stays zero-dep. The boundary is observable from the
+  `%Response{}` struct (good for tests) and cannot contain CRLF.
 - **Per-part preamble** (built during `serve/2`, summed for the header *and* emitted by the stream):
   ```
   --BOUNDARY CRLF
