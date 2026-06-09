@@ -80,7 +80,7 @@ defmodule ISOMedia.Extract do
       Enum.map_reduce(run_lengths, mdat_payload_start, fn len, pos -> {pos, pos + len} end)
 
     moov = rebuild_moov(boxes, trak, offset_box(co_kind, chunk_offsets))
-    mdat = %Box{type: "mdat", data: segments, size_mode: mdat_mode}
+    mdat = MdatSource.synthesized_mdat(segments, mdat_mode, mdat_payload_start)
     [ftyp, moov, mdat]
   end
 
