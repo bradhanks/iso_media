@@ -19,6 +19,24 @@ defmodule ISOMedia.HTTP.DateTest do
     test "garbage is :error" do
       assert Date.parse("not a date") == :error
     end
+
+    test "invalid calendar date is :error" do
+      assert Date.parse("Wed, 30 Feb 1994 08:49:37 GMT") == :error
+    end
+
+    test "asctime with a two-digit day" do
+      assert Date.parse("Sat Nov 16 08:49:37 1994") == {:ok, {{1994, 11, 16}, {8, 49, 37}}}
+    end
+
+    test "RFC 850 two-digit year window (69 => 2069, 70 => 1970)" do
+      assert Date.parse("Sunday, 01-Jan-69 00:00:00 GMT") == {:ok, {{2069, 1, 1}, {0, 0, 0}}}
+      assert Date.parse("Thursday, 01-Jan-70 00:00:00 GMT") == {:ok, {{1970, 1, 1}, {0, 0, 0}}}
+    end
+
+    test "non-binary input is :error, never raises" do
+      assert Date.parse(nil) == :error
+      assert Date.parse(12_345) == :error
+    end
   end
 
   describe "format/1 (IMF-fixdate)" do
