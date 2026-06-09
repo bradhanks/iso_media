@@ -10,6 +10,7 @@ defmodule ISOMedia.HTTP do
 
   alias ISOMedia.Box
   alias ISOMedia.Boxes.{FileType, Handler}
+  alias ISOMedia.HTTP.{Request, Resource}
   alias ISOMedia.SeekIndex
 
   defmodule Resource do
@@ -163,5 +164,67 @@ defmodule ISOMedia.HTTP do
 
   defp all_boxes(boxes) do
     Enum.flat_map(boxes, fn %Box{children: kids} = b -> [b | all_boxes(kids || [])] end)
+  end
+
+  @doc """
+  Build a cacheable `%Resource{}` from a tree (or a prebuilt `SeekIndex`). Build once per
+  `(file, validator)` and reuse across requests. With a bare `SeekIndex` (no tree), the
+  content type defaults to `opts[:content_type] || "application/mp4"` (no tree to inspect).
+  """
+  @spec resource(SeekIndex.t() | Box.t() | [Box.t()], keyword()) :: Resource.t()
+  def resource(index_or_tree, opts \\ [])
+
+  def resource(%SeekIndex{} = idx, opts), do: build_resource(idx, nil, opts)
+
+  def resource(tree, opts) do
+    idx = SeekIndex.build(tree)
+    build_resource(idx, tree, opts)
+  end
+
+  defp build_resource(idx, tree, opts) do
+    %Resource{
+      index: idx,
+      etag: etag(idx, opts),
+      last_modified: Keyword.get(opts, :last_modified),
+      content_type: opts[:content_type] || derive_ct(tree, opts),
+      content_length: SeekIndex.content_length(idx)
+    }
+  end
+
+  defp derive_ct(nil, _opts), do: "application/mp4"
+
+  defp derive_ct(tree, opts) do
+    base = content_type(tree)
+    if opts[:codecs], do: base <> ~s(; codecs="#{ISOMedia.Manifest.codecs(tree)}"), else: base
+  end
+
+  @doc "Normalize a header list/map + method into a `%Request{}` (lowercased header keys)."
+  @spec from_headers([{binary(), binary()}] | map(), atom() | binary()) :: Request.t()
+  def from_headers(headers, method) do
+    h = normalize_headers(headers)
+
+    %Request{
+      method: normalize_method(method),
+      range: h["range"],
+      if_none_match: h["if-none-match"],
+      if_match: h["if-match"],
+      if_modified_since: h["if-modified-since"],
+      if_unmodified_since: h["if-unmodified-since"],
+      if_range: h["if-range"]
+    }
+  end
+
+  defp normalize_headers(headers) do
+    Map.new(headers, fn {k, v} -> {String.downcase(to_string(k)), v} end)
+  end
+
+  defp normalize_method(m) when is_atom(m), do: normalize_method(Atom.to_string(m))
+
+  defp normalize_method(m) do
+    case String.upcase(m) do
+      "GET" -> :get
+      "HEAD" -> :head
+      _ -> :other
+    end
   end
 end
