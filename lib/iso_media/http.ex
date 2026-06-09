@@ -15,14 +15,15 @@ defmodule ISOMedia.HTTP do
 
   defmodule Resource do
     @moduledoc "Precomputed, cacheable per-representation state."
-    defstruct [:index, :etag, :last_modified, :content_type, :content_length]
+    defstruct [:index, :etag, :last_modified, :content_type, :content_length, extra_headers: []]
 
     @type t :: %__MODULE__{
             index: ISOMedia.SeekIndex.t(),
             etag: binary(),
             last_modified: :calendar.datetime() | nil,
             content_type: binary(),
-            content_length: non_neg_integer()
+            content_length: non_neg_integer(),
+            extra_headers: [{binary(), binary()}]
           }
   end
 
@@ -126,7 +127,7 @@ defmodule ISOMedia.HTTP do
       Box.find(tree, ~w(styp)) -> "video/iso.segment"
       "qt  " in brands -> "video/quicktime"
       Enum.any?(@avif_brands, &(&1 in brands)) -> "image/avif"
-      Enum.any?(@heif_brands, &(&1 in brands)) and "pict" in handlers -> "image/heic"
+      Enum.any?(@heif_brands, &(&1 in brands)) -> "image/heic"
       "vide" in handlers -> "video/mp4"
       "soun" in handlers -> "audio/mp4"
       true -> "application/mp4"
@@ -144,8 +145,7 @@ defmodule ISOMedia.HTTP do
 
   defp handler_types(tree) do
     tree
-    |> all_boxes()
-    |> Enum.filter(&(&1.type == "hdlr"))
+    |> Box.find_all(~w(moov trak mdia hdlr))
     |> Enum.flat_map(fn box ->
       case safe(fn -> Handler.decode(box).handler_type end) do
         nil -> []
@@ -160,10 +160,6 @@ defmodule ISOMedia.HTTP do
     fun.()
   rescue
     _ -> nil
-  end
-
-  defp all_boxes(boxes) do
-    Enum.flat_map(boxes, fn %Box{children: kids} = b -> [b | all_boxes(kids || [])] end)
   end
 
   @doc """
@@ -187,8 +183,16 @@ defmodule ISOMedia.HTTP do
       etag: etag(idx, opts),
       last_modified: Keyword.get(opts, :last_modified),
       content_type: opts[:content_type] || derive_ct(tree, opts),
-      content_length: SeekIndex.content_length(idx)
+      content_length: SeekIndex.content_length(idx),
+      extra_headers: extra_headers(opts)
     }
+  end
+
+  # `:cache_control` is sugar for a `Cache-Control` header; `:extra_headers` is an
+  # explicit verbatim list. Both are emitted on every served response (see base_headers/1).
+  defp extra_headers(opts) do
+    cc = if v = opts[:cache_control], do: [{"cache-control", v}], else: []
+    cc ++ Keyword.get(opts, :extra_headers, [])
   end
 
   defp derive_ct(nil, _opts), do: "application/mp4"
@@ -394,7 +398,7 @@ defmodule ISOMedia.HTTP do
 
   defp base_headers(res) do
     [{"accept-ranges", "bytes"}, {"etag", res.etag}, {"content-type", res.content_type}] ++
-      last_modified_header(res)
+      last_modified_header(res) ++ res.extra_headers
   end
 
   defp validator_headers(res), do: [{"etag", res.etag}] ++ last_modified_header(res)
