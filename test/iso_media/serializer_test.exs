@@ -172,6 +172,14 @@ defmodule ISOMedia.SerializerTest do
       assert bytes == <<1::32, "mdat", 20::64>>
       assert byte_size(bytes) == Layout.header_size(box)
     end
+
+    test "encodes the :eof header (size field 0, no largesize)" do
+      box = %Box{type: "mdat", data: <<9, 9, 9>>, size_mode: :eof}
+      bytes = Serializer.header_bytes(box)
+      # eof: size field == 0 ("extends to end"); 8-byte header, no uuid here.
+      assert bytes == <<0::32, "mdat">>
+      assert byte_size(bytes) == Layout.header_size(box)
+    end
   end
 
   describe "segment-list payload" do
