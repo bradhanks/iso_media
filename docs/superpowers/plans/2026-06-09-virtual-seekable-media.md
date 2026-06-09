@@ -775,11 +775,15 @@ Add to `test/iso_media/seek_index_test.exs`:
       end
     end
 
-    test "composition: read_range over an in-memory trim |> faststart tree matches the oracle" do
+    test "composition: read_range over an in-memory trim tree (segment-list mdat) matches the oracle" do
       original = File.read!(Path.join([__DIR__, "..", "fixtures", "sample.mp4"]))
       {:ok, boxes} = ISOMedia.parse(original)
-      # synthesized segment-list mdat, fully in memory
-      synth = boxes |> ISOMedia.faststart()
+      # trim synthesizes a segment-list mdat entirely in memory — this directly exercises
+      # build/1's walk_payload(list)/walk_seg recursion (a `{:bytes,_}`/nested-list provider),
+      # not just header/payload splicing. (trim is shipped on main; no other branch needed.)
+      synth = ISOMedia.trim(boxes, 0, 1)
+      assert Enum.any?(synth, fn b -> b.type == "mdat" and is_list(b.data) end)
+
       full = Serializer.serialize(synth)
       idx = SeekIndex.build(synth)
 
@@ -792,7 +796,7 @@ Add to `test/iso_media/seek_index_test.exs`:
   end
 ```
 
-> Note: `faststart/1` on `sample.mp4` rearranges boxes; its `mdat` stays a parsed leaf here, but `read_range` over the rearranged tree still exercises multi-segment splicing across header/payload boundaries against the oracle. If the synthesized-mdat branch (`feat/synthesized-mdat-offsets`) lands first, swap `faststart` for `ISOMedia.trim(boxes, 0, 1)` to exercise a segment-list `mdat` provider directly.
+> Note: the assertion `Enum.any?(... is_list(b.data) ...)` first confirms `trim` actually produced a segment-list `mdat`, so the oracle below genuinely exercises the segment-list provider path rather than passing vacuously.
 
 - [ ] **Step 2: Run the tests to verify they pass**
 
