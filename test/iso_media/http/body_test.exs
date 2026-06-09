@@ -32,6 +32,7 @@ defmodule ISOMedia.HTTP.BodyTest do
         r200 = HTTP.serve(res, request("GET", %{}))
         assert body_bin(r200) == full
         assert clen(r200) == total
+        assert stream_bin(r200) == full
 
         off = rem(seed, total)
         len = rem(div(seed, 7), total - off) + 1
