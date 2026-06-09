@@ -4,6 +4,7 @@ defmodule ISOMedia.Serializer do
   alias ISOMedia.Box
   alias ISOMedia.FileSlice
   alias ISOMedia.Layout
+  alias ISOMedia.Payload
 
   @doc "Serialize a box or list of boxes to a binary (materializes any FileSlice payloads)."
   def serialize(boxes), do: boxes |> materialize() |> to_iodata() |> IO.iodata_to_binary()
@@ -12,27 +13,12 @@ defmodule ISOMedia.Serializer do
   def materialize(%Box{} = box), do: materialize_box(box)
   def materialize(boxes) when is_list(boxes), do: Enum.map(boxes, &materialize_box/1)
 
-  defp materialize_box(%Box{data: %FileSlice{} = slice} = box),
-    do: %{box | data: FileSlice.read(slice)}
-
-  defp materialize_box(%Box{data: parts} = box) when is_list(parts) do
-    %{box | data: flatten_segments(parts)}
-  end
-
   defp materialize_box(%Box{data: nil, children: children} = box),
     do: %{box | children: Enum.map(children, &materialize_box/1)}
 
-  defp materialize_box(%Box{} = box), do: box
+  defp materialize_box(%Box{data: data} = box) when is_binary(data), do: box
 
-  defp flatten_segments(parts) do
-    parts
-    |> Enum.map(fn
-      %FileSlice{} = s -> FileSlice.read(s)
-      bin when is_binary(bin) -> bin
-      nested when is_list(nested) -> flatten_segments(nested)
-    end)
-    |> IO.iodata_to_binary()
-  end
+  defp materialize_box(%Box{data: data} = box), do: %{box | data: Payload.read(data)}
 
   @doc "Serialize a box or list of boxes to iodata (no full-binary materialization)."
   def to_iodata(%Box{} = box), do: to_iodata([box])
@@ -128,25 +114,10 @@ defmodule ISOMedia.Serializer do
     stream_payload(box, io, chunk_size)
   end
 
-  defp stream_payload(%Box{data: %FileSlice{} = slice}, io, chunk),
-    do: FileSlice.stream(slice, io, chunk)
-
-  defp stream_payload(%Box{data: parts}, io, chunk) when is_list(parts) do
-    stream_segments(parts, io, chunk)
-  end
-
   defp stream_payload(%Box{data: nil, children: children}, io, chunk),
     do: Enum.each(children, &stream_box(&1, io, chunk))
 
-  defp stream_payload(%Box{data: data}, io, _chunk) when is_binary(data), do: write!(io, data)
-
-  defp stream_segments(parts, io, chunk) do
-    Enum.each(parts, fn
-      %FileSlice{} = s -> FileSlice.stream(s, io, chunk)
-      bin when is_binary(bin) -> write!(io, bin)
-      nested when is_list(nested) -> stream_segments(nested, io, chunk)
-    end)
-  end
+  defp stream_payload(%Box{data: data}, io, chunk), do: Payload.stream(data, io, chunk)
 
   defp write!(io, data) do
     case :file.write(io, data) do

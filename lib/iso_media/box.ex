@@ -182,20 +182,9 @@ defmodule ISOMedia.Box do
   end
 
   @doc """
-  Return a leaf box's payload bytes, reading the file if it's a `FileSlice`.
-  Returns `nil` for a container.
+  Return a leaf box's payload bytes, reading the file if it's a `FileSlice` (or a
+  segment list). Returns `nil` for a container.
   """
-  def read_data(%__MODULE__{data: %ISOMedia.FileSlice{} = slice}),
-    do: ISOMedia.FileSlice.read(slice)
-
-  def read_data(%__MODULE__{data: parts}) when is_list(parts) do
-    parts
-    |> Enum.map(fn
-      %ISOMedia.FileSlice{} = s -> ISOMedia.FileSlice.read(s)
-      bin when is_binary(bin) -> bin
-    end)
-    |> IO.iodata_to_binary()
-  end
-
-  def read_data(%__MODULE__{data: data}), do: data
+  def read_data(%__MODULE__{data: nil}), do: nil
+  def read_data(%__MODULE__{data: data}), do: ISOMedia.Payload.read(data)
 end
