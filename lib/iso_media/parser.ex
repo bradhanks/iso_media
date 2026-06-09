@@ -11,10 +11,13 @@ defmodule ISOMedia.Parser do
     * `:offset` (default `0`) — absolute byte offset the binary begins at; threaded
       into every box's `source_offset` so they are absolute even when parsing a slice.
   """
+  @spec parse(binary(), keyword()) :: {:ok, [Box.t()]} | {:error, String.t()}
   def parse(binary, opts \\ []) when is_binary(binary) do
     {:ok, parse_boxes(binary, opts)}
   rescue
-    e -> {:error, Exception.message(e)}
+    # Malformed input surfaces as a binary-match / clause failure; convert those to an
+    # error tuple but let an unexpected exception (a real bug) propagate.
+    e in [MatchError, FunctionClauseError, ArgumentError] -> {:error, Exception.message(e)}
   end
 
   defp parse_boxes(binary, opts), do: parse_boxes(binary, opts, Keyword.get(opts, :offset, 0))

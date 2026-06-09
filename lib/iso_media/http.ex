@@ -155,11 +155,12 @@ defmodule ISOMedia.HTTP do
   end
 
   # Decode helpers run against untrusted input; a malformed box degrades to "absent"
-  # so content_type/1 stays total (falls through to application/mp4).
+  # so content_type/1 stays total (falls through to application/mp4). Only the
+  # malformed-input exceptions are absorbed — a real bug still surfaces.
   defp safe(fun) do
     fun.()
   rescue
-    _ -> nil
+    _ in [MatchError, FunctionClauseError, ArgumentError] -> nil
   end
 
   @doc """
