@@ -82,6 +82,78 @@ defmodule ISOMedia.SeekIndex do
   defp read_provider({:bytes, bin}, rel, n), do: :binary.part(bin, rel, n)
   defp read_provider({:slice, fs}, rel, n), do: FileSlice.read_range(fs, rel, n)
 
+  @doc """
+  Lazily stream bytes `[offset, offset+length)` as a `Stream` of `chunk_size`-byte binaries.
+  Memory-safe for large `FileSlice`-backed ranges; the underlying file is opened once per
+  touched slice (not per chunk) and closed deterministically on halt, error, or completion
+  via `Stream.resource/3`'s `after_fun`. Same input guards as `read_range/3`.
+  """
+  def stream_range(idx, offset, length, chunk_size \\ 65_536)
+
+  def stream_range(%__MODULE__{} = idx, offset, length, chunk_size)
+      when is_integer(offset) and offset >= 0 and is_integer(length) and length >= 0 and
+             is_integer(chunk_size) and chunk_size > 0 do
+    {start, finish} = clamp_range(offset, length, idx.byte_size)
+
+    Stream.resource(
+      fn -> %{pos: start, fd: nil} end,
+      fn state -> stream_next(state, idx, finish, chunk_size) end,
+      fn state -> close_fd(state) end
+    )
+  end
+
+  def stream_range(%__MODULE__{}, offset, length, _chunk_size) do
+    raise ArgumentError,
+          "stream_range/4 offset and length must be non-negative integers, got: #{inspect({offset, length})}"
+  end
+
+  defp stream_next(%{pos: pos} = state, _idx, finish, _chunk) when pos >= finish do
+    {:halt, state}
+  end
+
+  defp stream_next(%{pos: pos} = state, idx, finish, chunk_size) do
+    seg = elem(idx.segments, bsearch(idx.segments, idx.count, pos))
+    seg_hi = seg.abs_offset + seg.size
+    take_hi = Enum.min([finish, seg_hi, pos + chunk_size])
+    rel = pos - seg.abs_offset
+    n = take_hi - pos
+
+    case seg.provider do
+      {:bytes, bin} ->
+        {[:binary.part(bin, rel, n)], %{close_fd(state) | pos: take_hi}}
+
+      {:slice, fs} ->
+        {io, state} = ensure_open(state, fs)
+        {[pread!(io, fs.offset + rel, n)], %{state | pos: take_hi}}
+    end
+  end
+
+  # Keep the same fd open across consecutive chunks of one FileSlice; reopen on slice change.
+  defp ensure_open(%{fd: {fs, io}} = state, fs), do: {io, state}
+
+  defp ensure_open(state, fs) do
+    state = close_fd(state)
+    io = File.open!(fs.path, [:read, :binary, :raw])
+    {io, %{state | fd: {fs, io}}}
+  end
+
+  defp close_fd(%{fd: nil} = state), do: state
+
+  defp close_fd(%{fd: {_fs, io}} = state) do
+    File.close(io)
+    %{state | fd: nil}
+  end
+
+  defp pread!(io, at, n) do
+    case :file.pread(io, at, n) do
+      {:ok, data} when byte_size(data) == n -> data
+      :eof when n == 0 -> <<>>
+      :eof -> raise "SeekIndex.stream_range: unexpected EOF reading #{n} bytes at #{at}"
+      {:ok, data} -> raise "SeekIndex.stream_range: short read at #{at}: wanted #{n}, got #{byte_size(data)}"
+      {:error, reason} -> raise "SeekIndex.stream_range: #{:file.format_error(reason)} at #{at}"
+    end
+  end
+
   # --- build walk: record physical runs in the exact order serialize/1 emits them ---
 
   defp walk(boxes, off, acc) do

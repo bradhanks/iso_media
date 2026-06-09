@@ -104,4 +104,48 @@ defmodule ISOMedia.SeekIndexTest do
       assert_raise ArgumentError, fn -> SeekIndex.read_range(idx, 1.5, 4) end
     end
   end
+
+  describe "stream_range/4" do
+    test "streamed bytes equal read_range for the same window, in chunk_size pieces" do
+      boxes = [
+        %Box{type: "ftyp", data: <<"isom", 0::32>>, size_mode: :compact},
+        %Box{type: "free", data: :binary.copy(<<7>>, 50), size_mode: :compact}
+      ]
+
+      idx = SeekIndex.build(boxes)
+      bs = SeekIndex.content_length(idx)
+
+      chunks = idx |> SeekIndex.stream_range(0, bs, 8) |> Enum.to_list()
+      assert IO.iodata_to_binary(chunks) == SeekIndex.read_range(idx, 0, bs)
+      # all chunks 8 bytes except possibly the last
+      assert Enum.all?(Enum.drop(chunks, -1), &(byte_size(&1) == 8))
+      assert length(chunks) == ceil(bs / 8)
+    end
+
+    @tag :tmp_dir
+    test "streams a FileSlice-backed range lazily and correctly", %{tmp_dir: tmp} do
+      # Build a file with a >64-byte mdat so lazy parse keeps it as a FileSlice.
+      payload = :binary.copy(<<0xAB>>, 300)
+      ftyp = <<12::32, "ftyp", "isom">>
+      mdat = <<8 + byte_size(payload)::32, "mdat", payload::binary>>
+      path = Path.join(tmp, "big.mp4")
+      File.write!(path, ftyp <> mdat)
+
+      {:ok, boxes} = ISOMedia.read(path, lazy: true, lazy_threshold: 64)
+      assert Enum.any?(boxes, &match?(%Box{data: %ISOMedia.FileSlice{}}, &1))
+
+      idx = SeekIndex.build(boxes)
+      full = Serializer.serialize(boxes)
+
+      # a mid-file sub-range that lands inside the FileSlice
+      streamed = idx |> SeekIndex.stream_range(40, 120, 16) |> Enum.into(<<>>, & &1)
+      assert streamed == :binary.part(full, 40, 120)
+    end
+
+    test "raises ArgumentError on negative / non-integer offset or length" do
+      idx = SeekIndex.build([%Box{type: "free", data: <<1>>, size_mode: :compact}])
+      assert_raise ArgumentError, fn -> SeekIndex.stream_range(idx, -1, 4) |> Enum.to_list() end
+      assert_raise ArgumentError, fn -> SeekIndex.stream_range(idx, 0, -1) |> Enum.to_list() end
+    end
+  end
 end
