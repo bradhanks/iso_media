@@ -22,9 +22,19 @@ defmodule ISOMedia.HTTP.ResourceTest do
       assert r.last_modified == lm
     end
 
-    test ":codecs appends a codecs= param" do
+    test ":codecs omits the param when there are no recognized codecs" do
       r = HTTP.resource(tree(), codecs: true)
-      assert r.content_type =~ ~r/^application\/mp4; codecs="/
+      # tree() has no media tracks, so Manifest.codecs/1 is "" — no empty codecs param.
+      assert r.content_type == "application/mp4"
+      refute r.content_type =~ "codecs="
+    end
+
+    test "accepts a prebuilt SeekIndex (content_type defaults to application/mp4)" do
+      idx = ISOMedia.SeekIndex.build(tree())
+      r = HTTP.resource(idx)
+      assert r.content_length == byte_size(Serializer.serialize(tree()))
+      assert r.content_type == "application/mp4"
+      assert String.starts_with?(r.etag, "\"")
     end
   end
 
@@ -43,6 +53,12 @@ defmodule ISOMedia.HTTP.ResourceTest do
       req = HTTP.from_headers(%{"if-match" => "*"}, :post)
       assert req.method == :other
       assert req.if_match == "*"
+    end
+
+    test "atom header keys are normalized; HEAD method recognized" do
+      req = HTTP.from_headers(%{range: "bytes=0-9"}, "HEAD")
+      assert req.method == :head
+      assert req.range == "bytes=0-9"
     end
   end
 end

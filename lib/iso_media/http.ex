@@ -195,7 +195,11 @@ defmodule ISOMedia.HTTP do
 
   defp derive_ct(tree, opts) do
     base = content_type(tree)
-    if opts[:codecs], do: base <> ~s(; codecs="#{ISOMedia.Manifest.codecs(tree)}"), else: base
+
+    case opts[:codecs] && ISOMedia.Manifest.codecs(tree) do
+      codecs when is_binary(codecs) and codecs != "" -> base <> ~s(; codecs="#{codecs}")
+      _ -> base
+    end
   end
 
   @doc "Normalize a header list/map + method into a `%Request{}` (lowercased header keys)."
