@@ -17,6 +17,27 @@ defmodule ISOMedia.HTTP.ETagTest do
     test "different content yields a different tag" do
       refute HTTP.etag(tree(<<1, 2, 3>>)) == HTTP.etag(tree(<<1, 2, 4>>))
     end
+
+    test "distinct slice provider sequences never collide (framing is injective)" do
+      a = [
+        %Box{
+          type: "mdat",
+          data: %FileSlice{path: "ab", offset: 0, length: 4},
+          size_mode: :compact
+        }
+      ]
+
+      b = [
+        %Box{
+          type: "mdat",
+          data: %FileSlice{path: "a", offset: 0, length: 4},
+          size_mode: :compact
+        },
+        %Box{type: "mdat", data: %FileSlice{path: "b", offset: 4, length: 4}, size_mode: :compact}
+      ]
+
+      refute HTTP.etag(a) == HTTP.etag(b)
+    end
   end
 
   describe "etag/2 :stat" do

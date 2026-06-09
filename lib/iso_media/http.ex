@@ -89,15 +89,20 @@ defmodule ISOMedia.HTTP do
     do: :erlang.md5_update(ctx, [<<0, byte_size(bin)::64>>, bin])
 
   defp fold({:slice, fs}, ctx, :pure),
-    do: :erlang.md5_update(ctx, [<<1>>, fs.path, <<0, fs.offset::64, fs.length::64>>])
+    do:
+      :erlang.md5_update(ctx, [
+        <<1, byte_size(fs.path)::64>>,
+        fs.path,
+        <<fs.offset::64, fs.length::64>>
+      ])
 
   defp fold({:slice, fs}, ctx, :stat) do
     %File.Stat{size: size, mtime: mtime} = File.stat!(fs.path, time: :posix)
 
     :erlang.md5_update(ctx, [
-      <<2>>,
+      <<2, byte_size(fs.path)::64>>,
       fs.path,
-      <<0, fs.offset::64, fs.length::64, size::64, mtime::64>>
+      <<fs.offset::64, fs.length::64, size::64, mtime::64-signed>>
     ])
   end
 end
