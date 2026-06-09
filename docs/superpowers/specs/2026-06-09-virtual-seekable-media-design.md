@@ -44,6 +44,20 @@ origin's memory claim applies to `read(path, lazy: true)` inputs (the memory-saf
 - A defining invariant that makes the whole feature property-testable against the already
   trusted `serialize/1`.
 
+### Contracts the caller owns
+
+- **Backing files are immutable for the index's lifetime.** A `SeekIndex` captures
+  `FileSlice` references; if a backing file is truncated or rewritten after `build/1`, a later
+  `read_range`/`stream_range` reads stale or short bytes. This fails **loud** (the `FileSlice`
+  read raises on short-read/EOF — same semantics the rest of the library already relies on), not
+  silently, but the immutability assumption is the caller's to uphold (standard 11). An index is
+  cheap to rebuild if the source changes.
+- **Index reuse / hot origins.** The index is an immutable value passed by reference, so a
+  server may build once and share it across concurrent requests, or stash it in
+  `:persistent_term`/ETS for a hot origin — concurrent reads are race-free (ephemeral per-call
+  fds, no shared mutable state). The library deliberately does **not** wrap the index in a
+  GenServer (that would serialize the hot read path); caching strategy is the caller's choice.
+
 ### Non-goals (scope boundary)
 
 - **No bundled HTTP server.** Users wire `stream_range/4` into Plug/Bandit/Phoenix themselves;
@@ -67,6 +81,27 @@ All on `ISOMedia`, delegating to `ISOMedia.SeekIndex`:
 
 `tree` is a `%Box{}` or `[%Box{}]` (same shapes `serialize/1` accepts). The index is opaque —
 callers never pattern-match its internals.
+
+**Input validation at the boundary (untrusted-input contract).** The `@spec`s above are
+Dialyzer contracts, *not* runtime enforcement — but the headline use case (§8) feeds `offset`
+and `length` straight from a parsed HTTP `Range:` header, i.e. untrusted client input. So
+`read_range/3` and `stream_range/4` **guard their public boundary**:
+
+```elixir
+def read_range(%SeekIndex{} = idx, offset, length)
+    when is_integer(offset) and offset >= 0 and is_integer(length) and length >= 0 do
+  ...
+end
+# any other shape (negative, float, non-integer) raises ArgumentError via the missing clause,
+# rather than flowing a negative `start` into clamp_range -> bsearch -> elem(_, -1) / :binary.part.
+```
+
+A negative or non-integer value is a caller bug (or an unsanitized `Range` header), and must
+fail fast and clearly at the door, never reach the core splice math. The HTTP example in §8
+parses and validates the `Range` header (returning `416 Range Not Satisfiable` on malformed or
+unsatisfiable ranges)
+**before** calling — and uses `stream_range/4` for large ranges so a hostile multi-GB request
+streams in bounded memory instead of materializing (resource-exhaustion guard).
 
 ## 4. Internal design
 
@@ -269,6 +304,8 @@ clamp to get right. `serialize/1` is the trusted oracle, so this is directly pro
 - `largesize` (64-bit) and `uuid` extended-type headers — sizes already correct via
   `Layout.header_size/1`; header bytes emitted by the serializer's encoder.
 - Empty tree / `content_length == 0`.
+- Negative / non-integer `offset` or `length` → `ArgumentError` at the public guard (never
+  reaches `clamp_range`/`bsearch`).
 
 ## 7. Testing plan
 
@@ -282,6 +319,10 @@ errors surface immediately.
 - **Memory-safety test** — `stream_range/4` over a large `FileSlice`-backed range reads only the
   touched bytes (assert via chunk count and that no full materialization occurs); confirm fd
   cleanup on early `Enum.take` / halt.
+- **Input-validation test** — negative / non-integer `offset`/`length` raise `ArgumentError` at
+  the public boundary (never reach the splice math); past-EOF and zero-length return `""`.
+- Any test that writes scratch files uses ExUnit's `@tag :tmp_dir` so the suite stays isolated
+  and `async`-safe (standard 5).
 - **Composition test** — `read_range/3` over an in-memory `trim |> fragment` tree, proving it
   works on synthesized segment-list `mdat`s, not just parsed files.
 - **Representation-equivalence test** — if/when a small-N list strategy is added, assert it
@@ -295,6 +336,12 @@ build the index once (or per request), and stream the response — e.g. `Plug.Co
 `206 Partial Content` `Content-Range`. Demonstrates a zero-dep streaming origin that can
 `faststart`/`trim`/`fragment` on the fly. (The O(range) memory claim assumes `FileSlice`-backed
 lazy trees — see §2.)
+
+The example must, on the untrusted `Range` header: parse it, reject malformed/unsatisfiable
+ranges with `416 Range Not Satisfiable`, clamp the satisfiable range against `content_length/1`,
+and feed `stream_range/4` (not a single `read_range/3` materialization) so a hostile large range
+streams in bounded memory. Validation lives in the handler; the library's guard (§3) is the
+belt-and-suspenders backstop.
 
 ## 9. Performance notes
 
@@ -320,6 +367,11 @@ lazy trees — see §2.)
   `content_length/1`.
 - **Reuse (unchanged):** `Layout.header_size/box_size/segment_size`, the (now public) serializer
   header encoder, `MdatSource` segment-resolution discipline.
+- **DRY watch-item (standard 7):** `SeekIndex.build`'s flattening of the recursive
+  `[binary | FileSlice | [..]]` segment shape and `MdatSource`'s resolution both walk that same
+  structure. They serve different purposes (build a full flat map vs. resolve one range), so
+  they are *not* duplication today — but if a third walker appears, factor a shared
+  `Layout`-level segment-walk helper rather than a third parallel recursion.
 - **Tests:** `test/iso_media/seek_index_test.exs` (property + unit), fixtures reused from
   existing trim/fragment/concat tests.
 - **Docs:** README HTTP-integration section; CLAUDE.md module-map entry; ROADMAP "Shipped".
