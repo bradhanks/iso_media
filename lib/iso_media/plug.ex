@@ -8,7 +8,11 @@ if Code.ensure_loaded?(Plug.Conn) do
       * `:resolver` — `(conn -> {:ok, tree | Resource.t()} | {:ok, tree, res_opts} | :not_found)`
       * `:root` — directory; maps `conn.request_path` to a file (read lazily). Use instead of `:resolver`.
       * `:lazy` — read backing files as `FileSlice` (default `true`; the O(range) path)
-      * `:cache` — `:none` (default) | `:persistent_term` (cache `Resource` by `{path, mtime, size}`)
+      * `:cache` — `:none` (default) | `:persistent_term` (cache `Resource` by `{path, mtime, size}`).
+        **`:persistent_term` is global, never-evicted, and triggers a global GC on every write.**
+        Use it only for a small, stable set of assets (e.g. a handful of VOD files). Do not use it
+        with frequently-changing files or an unbounded path space — each distinct `{path, mtime, size}`
+        adds a permanent entry and a GC pass.
       * `:chunk_size` — stream chunk size (default 65_536)
       * `:etag`/`:content_type`/`:codecs`/`:last_modified`/`:cache_control`/`:extra_headers` — passed to `resource/2`
     """
