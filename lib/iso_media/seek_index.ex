@@ -27,6 +27,61 @@ defmodule ISOMedia.SeekIndex do
   @doc "Total size of the serialized output (the HTTP `Content-Length`); reads no payload bytes."
   def content_length(%__MODULE__{byte_size: bs}), do: bs
 
+  @doc """
+  Return bytes `[offset, offset+length)` of the serialized output. Clamps to the output
+  bounds (a read past EOF returns the available tail, not an error — HTTP-Range friendly).
+  Raises `ArgumentError` on a negative or non-integer `offset`/`length` (the public boundary
+  is fed untrusted HTTP `Range` values; bad input must fail fast, never reach the splice math).
+  """
+  def read_range(%__MODULE__{} = idx, offset, length)
+      when is_integer(offset) and offset >= 0 and is_integer(length) and length >= 0 do
+    {start, finish} = clamp_range(offset, length, idx.byte_size)
+
+    if finish == start do
+      <<>>
+    else
+      i = bsearch(idx.segments, idx.count, start)
+      idx.segments |> splice(i, start, finish, []) |> IO.iodata_to_binary()
+    end
+  end
+
+  def read_range(%__MODULE__{}, offset, length) do
+    raise ArgumentError,
+          "read_range/3 offset and length must be non-negative integers, got: #{inspect({offset, length})}"
+  end
+
+  # Canonical clamp — the ONE definition the test oracle is also derived from.
+  defp clamp_range(offset, length, bs), do: {min(offset, bs), min(offset + length, bs)}
+
+  # Largest index i with segments[i].abs_offset <= target. Only called when start < byte_size,
+  # so count >= 1 and segments[0].abs_offset == 0 <= target, giving a valid i in [0, count-1].
+  defp bsearch(segments, count, target), do: bsearch(segments, target, 0, count - 1)
+
+  defp bsearch(_segments, _target, lo, hi) when lo >= hi, do: lo
+
+  defp bsearch(segments, target, lo, hi) do
+    mid = div(lo + hi + 1, 2)
+
+    if elem(segments, mid).abs_offset <= target,
+      do: bsearch(segments, target, mid, hi),
+      else: bsearch(segments, target, lo, mid - 1)
+  end
+
+  # Walk forward from segment i, slicing each segment's overlap with [pos, finish).
+  defp splice(_segments, _i, pos, finish, acc) when pos >= finish, do: Enum.reverse(acc)
+
+  defp splice(segments, i, pos, finish, acc) do
+    seg = elem(segments, i)
+    seg_hi = seg.abs_offset + seg.size
+    take_hi = min(finish, seg_hi)
+    rel = pos - seg.abs_offset
+    chunk = read_provider(seg.provider, rel, take_hi - pos)
+    splice(segments, i + 1, take_hi, finish, [chunk | acc])
+  end
+
+  defp read_provider({:bytes, bin}, rel, n), do: :binary.part(bin, rel, n)
+  defp read_provider({:slice, fs}, rel, n), do: FileSlice.read_range(fs, rel, n)
+
   # --- build walk: record physical runs in the exact order serialize/1 emits them ---
 
   defp walk(boxes, off, acc) do
