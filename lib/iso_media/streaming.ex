@@ -47,7 +47,7 @@ defmodule ISOMedia.Streaming do
   def hls_master_playlist(boxes, opts \\ []), do: HLS.master_playlist(boxes, opts)
 
   @doc "Write a full HLS bundle (playlists + segments) into `dir`. See `ISOMedia.HLS.write_hls/3`."
-  @spec write_hls(Path.t(), tree(), keyword()) :: {:ok, [Path.t()]}
+  @spec write_hls(Path.t(), tree(), keyword()) :: {:ok, [Path.t()]} | {:error, term()}
   def write_hls(dir, boxes, opts \\ []), do: HLS.write_hls(dir, boxes, opts)
 
   # --- DASH ---
@@ -57,7 +57,7 @@ defmodule ISOMedia.Streaming do
   def dash_manifest(boxes, opts \\ []), do: DASH.manifest(boxes, opts)
 
   @doc "Write a full DASH bundle (MPD + segments) into `dir`. See `ISOMedia.DASH.write_dash/3`."
-  @spec write_dash(Path.t(), tree(), keyword()) :: {:ok, [Path.t()]}
+  @spec write_dash(Path.t(), tree(), keyword()) :: {:ok, [Path.t()]} | {:error, term()}
   def write_dash(dir, boxes, opts \\ []), do: DASH.write_dash(dir, boxes, opts)
 
   # --- HTTP byte-range serving ---

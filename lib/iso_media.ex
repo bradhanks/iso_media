@@ -95,7 +95,7 @@ defmodule ISOMedia do
     do: ISOMedia.Streaming.hls_master_playlist(boxes, opts)
 
   @doc "Write a full HLS bundle (playlists + segments) into `dir`. See `ISOMedia.Streaming.write_hls/3`."
-  @spec write_hls(Path.t(), tree(), keyword()) :: {:ok, [Path.t()]}
+  @spec write_hls(Path.t(), tree(), keyword()) :: {:ok, [Path.t()]} | {:error, term()}
   def write_hls(dir, boxes, opts \\ []), do: ISOMedia.Streaming.write_hls(dir, boxes, opts)
 
   @doc "Generate the DASH MPD (`.mpd`) for a fragmented tree. See `ISOMedia.Streaming.dash_manifest/2`."
@@ -103,7 +103,7 @@ defmodule ISOMedia do
   def dash_manifest(boxes, opts \\ []), do: ISOMedia.Streaming.dash_manifest(boxes, opts)
 
   @doc "Write a full DASH bundle (MPD + segments) into `dir`. See `ISOMedia.Streaming.write_dash/3`."
-  @spec write_dash(Path.t(), tree(), keyword()) :: {:ok, [Path.t()]}
+  @spec write_dash(Path.t(), tree(), keyword()) :: {:ok, [Path.t()]} | {:error, term()}
   def write_dash(dir, boxes, opts \\ []), do: ISOMedia.Streaming.write_dash(dir, boxes, opts)
 
   @doc "Decode a track's codec + media metadata into `%ISOMedia.TrackInfo{}`. See `ISOMedia.Codec.info/1`."

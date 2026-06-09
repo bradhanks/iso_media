@@ -84,13 +84,12 @@ defmodule ISOMedia.DASH do
   segments. The `write_segments` `:segment_pattern` is derived from `:segment_template` so the
   written filenames match the manifest. Returns `{:ok, [manifest_path | segment_paths]}`.
   """
-  @spec write_dash(Path.t(), [ISOMedia.Box.t()], keyword()) :: {:ok, [Path.t()]}
+  @spec write_dash(Path.t(), [ISOMedia.Box.t()], keyword()) ::
+          {:ok, [Path.t()]} | {:error, term()}
   def write_dash(dir, boxes, opts \\ []) do
     File.mkdir_p!(dir)
     template = Keyword.get(opts, :segment_template, "seg-$Number$.m4s")
     manifest_path = Path.join(dir, Keyword.get(opts, :manifest_name, "manifest.mpd"))
-
-    File.write!(manifest_path, manifest(boxes, opts))
 
     seg_opts =
       opts
@@ -99,8 +98,10 @@ defmodule ISOMedia.DASH do
         String.replace(template, "$Number$", Integer.to_string(i))
       end)
 
-    {:ok, segment_paths} = ISOMedia.write_segments(dir, boxes, seg_opts)
-    {:ok, [manifest_path | segment_paths]}
+    with :ok <- File.write(manifest_path, manifest(boxes, opts)),
+         {:ok, segment_paths} <- ISOMedia.write_segments(dir, boxes, seg_opts) do
+      {:ok, [manifest_path | segment_paths]}
+    end
   end
 
   @doc """
