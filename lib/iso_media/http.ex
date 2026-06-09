@@ -8,6 +8,8 @@ defmodule ISOMedia.HTTP do
   socket — see the optional `ISOMedia.Plug` for a transport adapter.
   """
 
+  alias ISOMedia.Box
+  alias ISOMedia.Boxes.{FileType, Handler}
   alias ISOMedia.SeekIndex
 
   defmodule Resource do
@@ -104,5 +106,51 @@ defmodule ISOMedia.HTTP do
       fs.path,
       <<fs.offset::64, fs.length::64, size::64, mtime::64-signed>>
     ])
+  end
+
+  @heif_brands ~w(heic heix heim heis mif1)
+  @avif_brands ~w(avif avis)
+
+  @doc """
+  Derive a media `Content-Type` from a tree's `ftyp` brands and track handler types.
+  """
+  @spec content_type([Box.t()] | Box.t()) :: binary()
+  def content_type(%Box{} = box), do: content_type([box])
+
+  def content_type(tree) when is_list(tree) do
+    brands = brands(tree)
+    handlers = handler_types(tree)
+
+    cond do
+      Box.find(tree, ~w(styp)) -> "video/iso.segment"
+      "qt  " in brands -> "video/quicktime"
+      Enum.any?(@avif_brands, &(&1 in brands)) -> "image/avif"
+      Enum.any?(@heif_brands, &(&1 in brands)) and "pict" in handlers -> "image/heic"
+      "vide" in handlers -> "video/mp4"
+      "soun" in handlers -> "audio/mp4"
+      true -> "application/mp4"
+    end
+  end
+
+  defp brands(tree) do
+    case Box.find(tree, ~w(ftyp)) do
+      nil ->
+        []
+
+      box ->
+        ft = FileType.decode(box)
+        [ft.major_brand | ft.compatible_brands]
+    end
+  end
+
+  defp handler_types(tree) do
+    tree
+    |> all_boxes()
+    |> Enum.filter(&(&1.type == "hdlr"))
+    |> Enum.map(&Handler.decode(&1).handler_type)
+  end
+
+  defp all_boxes(boxes) do
+    Enum.flat_map(boxes, fn %Box{children: kids} = b -> [b | all_boxes(kids || [])] end)
   end
 end
