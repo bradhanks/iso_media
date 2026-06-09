@@ -170,7 +170,12 @@ defmodule ISOMedia.SeekIndexTest do
 
       boxes = [
         %Box{type: "ftyp", data: <<"isom", 0::32>>, size_mode: :compact},
-        %Box{type: "uuid", uuid: uuid, data: <<1, 2, 3, 4, 5, 6, 7, 8, 9, 10>>, size_mode: :compact}
+        %Box{
+          type: "uuid",
+          uuid: uuid,
+          data: <<1, 2, 3, 4, 5, 6, 7, 8, 9, 10>>,
+          size_mode: :compact
+        }
       ]
 
       idx = SeekIndex.build(boxes)
@@ -206,7 +211,9 @@ defmodule ISOMedia.SeekIndexTest do
       check all(offset <- integer(0..500), length <- integer(0..500)) do
         start = min(offset, byte_size(full))
         finish = min(offset + length, byte_size(full))
-        assert SeekIndex.read_range(idx, offset, length) == :binary.part(full, start, finish - start)
+
+        assert SeekIndex.read_range(idx, offset, length) ==
+                 :binary.part(full, start, finish - start)
       end
     end
 
@@ -225,7 +232,9 @@ defmodule ISOMedia.SeekIndexTest do
       check all(offset <- integer(0..(byte_size(full) + 50)), length <- integer(0..300)) do
         start = min(offset, byte_size(full))
         finish = min(offset + length, byte_size(full))
-        assert SeekIndex.read_range(idx, offset, length) == :binary.part(full, start, finish - start)
+
+        assert SeekIndex.read_range(idx, offset, length) ==
+                 :binary.part(full, start, finish - start)
       end
     end
   end

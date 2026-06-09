@@ -13,7 +13,11 @@ defmodule ISOMedia.SeekIndex do
 
   defstruct [:segments, :count, :byte_size]
 
-  @type t :: %__MODULE__{segments: tuple(), count: non_neg_integer(), byte_size: non_neg_integer()}
+  @type t :: %__MODULE__{
+          segments: tuple(),
+          count: non_neg_integer(),
+          byte_size: non_neg_integer()
+        }
 
   @doc "Build the index from a `%Box{}` or list of boxes (same shapes `serialize/1` accepts)."
   def build(%Box{} = box), do: build([box])
@@ -146,11 +150,20 @@ defmodule ISOMedia.SeekIndex do
 
   defp pread!(io, at, n) do
     case :file.pread(io, at, n) do
-      {:ok, data} when byte_size(data) == n -> data
-      :eof when n == 0 -> <<>>
-      :eof -> raise "SeekIndex.stream_range: unexpected EOF reading #{n} bytes at #{at}"
-      {:ok, data} -> raise "SeekIndex.stream_range: short read at #{at}: wanted #{n}, got #{byte_size(data)}"
-      {:error, reason} -> raise "SeekIndex.stream_range: #{:file.format_error(reason)} at #{at}"
+      {:ok, data} when byte_size(data) == n ->
+        data
+
+      :eof when n == 0 ->
+        <<>>
+
+      :eof ->
+        raise "SeekIndex.stream_range: unexpected EOF reading #{n} bytes at #{at}"
+
+      {:ok, data} ->
+        raise "SeekIndex.stream_range: short read at #{at}: wanted #{n}, got #{byte_size(data)}"
+
+      {:error, reason} ->
+        raise "SeekIndex.stream_range: #{:file.format_error(reason)} at #{at}"
     end
   end
 
@@ -193,5 +206,7 @@ defmodule ISOMedia.SeekIndex do
   # Zero-size runs (empty leaves) are NOT recorded: keeping every segment size > 0 makes
   # abs_offsets strictly increasing and contiguous, so the splice loop always advances.
   defp emit(acc, _off, 0, _provider), do: acc
-  defp emit(acc, off, size, provider), do: [%{abs_offset: off, size: size, provider: provider} | acc]
+
+  defp emit(acc, off, size, provider),
+    do: [%{abs_offset: off, size: size, provider: provider} | acc]
 end
