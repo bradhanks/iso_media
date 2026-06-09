@@ -57,7 +57,10 @@ if Code.ensure_loaded?(Plug.Conn) do
       |> Enum.reduce_while(conn, fn data, c ->
         case chunk(c, data) do
           {:ok, c} -> {:cont, c}
-          {:error, :closed} -> {:halt, c}
+          # Any write failure (client disconnect `:closed`, or an adapter `:timeout`,
+          # `:enotconn`, …) stops the stream — the Stream.resource closes its fd in its
+          # after_fun, so there is no leak. Matching only `:closed` would crash here.
+          {:error, _reason} -> {:halt, c}
         end
       end)
       |> halt()
