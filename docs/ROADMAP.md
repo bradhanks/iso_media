@@ -70,7 +70,10 @@ point of adaptive streaming and are the natural follow-on once multi-encode inpu
 ## Sample-table / editing gaps
 
 - **`stz2`** compact sample sizes (`sample_table.ex:7` raises) — a second `stsz` encoding.
-- **Sample-level offset editing** (`offsets.ex:79`) — offset rewriting is currently chunk-level.
+- **Sample-level offset editing** (`offsets.ex`) — chunk-offset *relocation* of a synthesized
+  (segment-list) `mdat` now works in memory (`fix_chunk_offsets`/`faststart` no longer raise on
+  synthesized trees; see `MdatSource.synthesized_mdat/3`). Still deferred: recomputing offsets
+  from `stsc`/`stsz` for genuine payload *reordering/resizing* (a size change still raises).
 
 ## Core architecture (deferred from the Phase 8 brainstorm)
 

@@ -152,10 +152,11 @@ a
 ```
 
 The bytes are identical to running the same stages with a write+re-read between each,
-and memory stays at metadata + one stream chunk under `lazy:`. The one exception is
-offset rewriting: `faststart/1` and `fix_chunk_offsets/1` operate on an original,
-parsed `mdat` and **raise on a synthesized (chained) `mdat`** — run faststart on the
-source before editing, or write the result to disk and read it back.
+and memory stays at metadata + one stream chunk under `lazy:`. `faststart/1` and
+`fix_chunk_offsets/1` compose in too: they also handle a synthesized (chained) `mdat`
+in memory — a no-op when it hasn't moved, a uniform chunk-offset remap when a box edit
+relocates it — so no write-and-reread round-trip is needed. (A genuine sample-size
+change to a synthesized `mdat` still raises; that is out of scope.)
 
 ## Serving byte ranges (streaming origin)
 

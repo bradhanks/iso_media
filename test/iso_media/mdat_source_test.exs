@@ -23,6 +23,38 @@ defmodule ISOMedia.MdatSourceTest do
     end
   end
 
+  describe "synthesized_mdat/3" do
+    test "stamps source_offset (box start) and source_size (box size) for a compact mdat" do
+      segments = [<<1, 2, 3, 4>>]
+      # payload_start 100 => box starts 8 bytes earlier (compact header); size = 8 + 4
+      mdat = MdatSource.synthesized_mdat(segments, :compact, 100)
+
+      assert %Box{type: "mdat", data: ^segments, size_mode: :compact} = mdat
+      assert mdat.source_offset == 92
+      assert mdat.source_size == 12
+    end
+
+    test "uses the large (16-byte) header for :large size_mode" do
+      segments = [<<0, 0, 0, 0>>]
+      # payload_start 200 => box starts 16 bytes earlier (large header); size = 16 + 4
+      mdat = MdatSource.synthesized_mdat(segments, :large, 200)
+
+      assert mdat.size_mode == :large
+      assert mdat.source_offset == 184
+      assert mdat.source_size == 20
+    end
+
+    test "handles :eof size_mode (8-byte header, same as compact)" do
+      segments = [<<1, 2, 3>>]
+      # payload_start 100 => box starts 8 bytes earlier (eof header is 8); size = 8 + 3
+      mdat = MdatSource.synthesized_mdat(segments, :eof, 100)
+
+      assert mdat.size_mode == :eof
+      assert mdat.source_offset == 92
+      assert mdat.source_size == 11
+    end
+  end
+
   describe "segment/3 leaves" do
     test "binary mdat returns a binary_part at the relative offset" do
       mdat = %Box{type: "mdat", size_mode: :compact, data: for(i <- 0..15, into: <<>>, do: <<i>>)}
