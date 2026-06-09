@@ -85,19 +85,28 @@ callers never pattern-match its internals.
 **Input validation at the boundary (untrusted-input contract).** The `@spec`s above are
 Dialyzer contracts, *not* runtime enforcement — but the headline use case (§8) feeds `offset`
 and `length` straight from a parsed HTTP `Range:` header, i.e. untrusted client input. So
-`read_range/3` and `stream_range/4` **guard their public boundary**:
+`read_range/3` and `stream_range/4` **guard their public boundary** with a valid-input clause
+plus an explicit raising fallback. A guard-only definition would raise `FunctionClauseError` on
+a missing clause — opaque, and not the `ArgumentError` the contract (§6) and test (§7) promise.
+So pair the guarded clause with a fallback that raises `ArgumentError` with a clear message:
 
 ```elixir
 def read_range(%SeekIndex{} = idx, offset, length)
     when is_integer(offset) and offset >= 0 and is_integer(length) and length >= 0 do
   ...
 end
-# any other shape (negative, float, non-integer) raises ArgumentError via the missing clause,
-# rather than flowing a negative `start` into clamp_range -> bsearch -> elem(_, -1) / :binary.part.
+
+# explicit backstop: negative / float / non-integer -> a clear ArgumentError, never a negative
+# `start` flowing into clamp_range -> bsearch -> elem(_, -1) / :binary.part.
+def read_range(%SeekIndex{}, offset, length) do
+  raise ArgumentError,
+        "read_range/3 offset and length must be non-negative integers, got: #{inspect({offset, length})}"
+end
 ```
 
-A negative or non-integer value is a caller bug (or an unsanitized `Range` header), and must
-fail fast and clearly at the door, never reach the core splice math. The HTTP example in §8
+`stream_range/4` guards identically (valid clause + raising fallback). A negative or
+non-integer value is a caller bug (or an unsanitized `Range` header), and must fail fast and
+clearly at the door, never reach the core splice math. The HTTP example in §8
 parses and validates the `Range` header (returning `416 Range Not Satisfiable` on malformed or
 unsatisfiable ranges)
 **before** calling — and uses `stream_range/4` for large ranges so a hostile multi-GB request
@@ -296,8 +305,8 @@ clamp to get right. `serialize/1` is the trusted oracle, so this is directly pro
 ## 6. Edge cases
 
 - Zero-length read → `""`.
-- `offset >= byte_size` → `""` (clamped tail).
-- `offset + length > byte_size` → returns available tail, no error (HTTP-Range semantics).
+- `offset >= content_length` → `""` (clamped tail).
+- `offset + length > content_length` → returns available tail, no error (HTTP-Range semantics).
 - Range exactly on a header/payload boundary.
 - Range entirely inside one `FileSlice` — the hot path: one `pread`, zero waste.
 - Range crossing a recursive segment-list `mdat` (synthesized by `trim`/`fragment`/`concat`).
@@ -315,7 +324,7 @@ errors surface immediately.
 - **Property test** — random `(offset, length)` (including out-of-range, zero-length, exact
   boundaries) over a fixture matrix: parsed files, lazy-read (`read(path, lazy: true)`) trees,
   and synthesized trees from `trim` / `fragment` / `concat` / `faststart`. Assert byte-equality
-  with the `:binary.part` oracle and `byte_size` equality.
+  with the `:binary.part` oracle and `content_length` equality.
 - **Memory-safety test** — `stream_range/4` over a large `FileSlice`-backed range reads only the
   touched bytes (assert via chunk count and that no full materialization occurs); confirm fd
   cleanup on early `Enum.take` / halt.
