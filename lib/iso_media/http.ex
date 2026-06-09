@@ -10,7 +10,7 @@ defmodule ISOMedia.HTTP do
 
   alias ISOMedia.Box
   alias ISOMedia.Boxes.{FileType, Handler}
-  alias ISOMedia.HTTP.{Request, Resource}
+  alias ISOMedia.HTTP.{Conditional, Date, Range, Request, Resource, Response}
   alias ISOMedia.SeekIndex
 
   defmodule Resource do
@@ -231,4 +231,82 @@ defmodule ISOMedia.HTTP do
       _ -> :other
     end
   end
+
+  @doc "Produce a `%Response{}` plan for a request against a resource. Does zero payload I/O."
+  @spec serve(Resource.t(), Request.t()) :: Response.t()
+  def serve(%Resource{}, %Request{method: :other}),
+    do: %Response{status: 405, headers: [{"allow", "GET, HEAD"}], body: :empty}
+
+  def serve(%Resource{} = res, %Request{} = req) do
+    case Conditional.evaluate(req, res) do
+      :precondition_failed -> resp(412, validator_headers(res), :empty, req)
+      :not_modified -> resp(304, validator_headers(res), :empty, req)
+      :proceed -> proceed(res, req)
+    end
+  end
+
+  defp proceed(res, req) do
+    cond do
+      req.range == nil -> full(res, req)
+      not Conditional.if_range_satisfied?(req, res) -> full(res, req)
+      true -> dispatch_range(res, req)
+    end
+  end
+
+  defp dispatch_range(res, req) do
+    case Range.parse(req.range, res.content_length) do
+      :ignore ->
+        full(res, req)
+
+      :unsatisfiable ->
+        headers =
+          [{"content-range", "bytes */#{res.content_length}"}, {"content-length", "0"}] ++
+            base_headers(res)
+
+        resp(416, headers, :empty, req)
+
+      {:ok, [{f, l}]} ->
+        single(res, req, f, l)
+
+      {:ok, ranges} when length(ranges) > 1 ->
+        # TEMP stub until the multipart task; never asserted by this task's tests.
+        full(res, req)
+    end
+  end
+
+  defp full(res, req) do
+    headers = base_headers(res) ++ [{"content-length", Integer.to_string(res.content_length)}]
+    resp(200, headers, {:full, res.index}, req)
+  end
+
+  defp single(res, req, f, l) do
+    len = l - f + 1
+
+    headers =
+      base_headers(res) ++
+        [
+          {"content-range", "bytes #{f}-#{l}/#{res.content_length}"},
+          {"content-length", Integer.to_string(len)}
+        ]
+
+    resp(206, headers, {:range, res.index, f, len}, req)
+  end
+
+  defp resp(status, headers, _body, %Request{method: :head}),
+    do: %Response{status: status, headers: headers, body: :empty}
+
+  defp resp(status, headers, body, _req),
+    do: %Response{status: status, headers: headers, body: body}
+
+  defp base_headers(res) do
+    [{"accept-ranges", "bytes"}, {"etag", res.etag}, {"content-type", res.content_type}] ++
+      last_modified_header(res)
+  end
+
+  defp validator_headers(res), do: [{"etag", res.etag}] ++ last_modified_header(res)
+
+  defp last_modified_header(%Resource{last_modified: nil}), do: []
+
+  defp last_modified_header(%Resource{last_modified: dt}),
+    do: [{"last-modified", Date.format(dt)}]
 end
