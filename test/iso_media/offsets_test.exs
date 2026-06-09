@@ -307,5 +307,40 @@ defmodule ISOMedia.OffsetsTest do
         assert :binary.part(after_bin, s.offset, s.size) == bytes
       end)
     end
+
+    test "promotes stco to co64 on a synthesized tree and samples still resolve" do
+      {synth, tid} = synth_track()
+      base = ISOMedia.serialize(synth)
+      expected = Enum.map(ISOMedia.samples(synth, tid), fn s -> :binary.part(base, s.offset, s.size) end)
+
+      # Threshold 1 forces promotion: every real chunk offset exceeds it.
+      fixed = ISOMedia.Offsets.fix_chunk_offsets(synth, co64_threshold: 1)
+      assert ISOMedia.Box.find(fixed, ~w(moov trak mdia minf stbl co64)) != nil
+
+      out = ISOMedia.serialize(fixed)
+      # Zip by sample index (robust even when several samples share a size); the bytes
+      # are unchanged content, only their absolute offsets move with the larger co64 table.
+      Enum.zip(expected, ISOMedia.samples(fixed, tid))
+      |> Enum.each(fn {bytes, s} -> assert :binary.part(out, s.offset, s.size) == bytes end)
+    end
+
+    test "fix_chunk_offsets is idempotent after a move" do
+      {synth, _tid} = synth_track()
+      moved = List.insert_at(synth, 2, %Box{type: "free", data: <<0, 0, 0, 0>>})
+      once = ISOMedia.fix_chunk_offsets(moved)
+      twice = ISOMedia.fix_chunk_offsets(once)
+      assert ISOMedia.serialize(twice) == ISOMedia.serialize(once)
+    end
+
+    test "still raises when a stamped mdat's size no longer matches its basis" do
+      {synth, _tid} = synth_track()
+      # Prepend a byte to the mdat segment list: box_size now != stamped source_size.
+      grown =
+        Enum.map(synth, fn b ->
+          if b.type == "mdat", do: %{b | data: [<<0>> | b.data]}, else: b
+        end)
+
+      assert_raise ArgumentError, fn -> ISOMedia.fix_chunk_offsets(grown) end
+    end
   end
 end
