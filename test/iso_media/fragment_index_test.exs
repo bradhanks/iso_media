@@ -164,7 +164,7 @@ defmodule ISOMedia.FragmentIndexTest do
 
       for tid <- tids do
         samples = ISOMedia.samples(boxes, tid)
-        assert length(samples) > 0
+        assert samples != []
         dts = Enum.map(samples, & &1.dts)
         assert dts == Enum.sort(dts)
         assert Enum.all?(samples, &(&1.size > 0))

@@ -11,8 +11,8 @@ defmodule ISOMedia.Offsets do
   idempotent and lets repeated edit→fix cycles compose.
   """
 
-  alias ISOMedia.Layout
   alias ISOMedia.Boxes.ChunkOffset
+  alias ISOMedia.Layout
 
   @uint32_max 0xFFFFFFFF
   @max_iterations 16

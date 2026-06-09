@@ -1,7 +1,7 @@
 defmodule ISOMedia.Boxes.HeadersTest do
   use ExUnit.Case
   alias ISOMedia.Box
-  alias ISOMedia.Boxes.{MovieHeader, TrackHeader, MediaHeader}
+  alias ISOMedia.Boxes.{MediaHeader, MovieHeader, TrackHeader}
 
   test "MovieHeader v0 decodes timescale/duration and round-trips" do
     # FullBox(v0) + ctime,mtime,timescale,duration (32 each) + trailing rest
