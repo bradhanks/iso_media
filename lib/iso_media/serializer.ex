@@ -65,6 +65,18 @@ defmodule ISOMedia.Serializer do
 
   defp encode_payload(%Box{data: data}), do: data
 
+  @doc """
+  The full pre-payload bytes of a box: the 4/8/16-byte size+type header, followed by
+  the 16 `uuid` bytes for an extended-type box. Its length equals `Layout.header_size/1`
+  by construction. Exposed so `ISOMedia.SeekIndex` reuses the one header encoder rather
+  than duplicating it (the uuid bytes are emitted *after* the header — see `stream_box`).
+  """
+  def header_bytes(%Box{uuid: uuid} = box) do
+    u = uuid || <<>>
+    body_len = byte_size(u) + (Layout.box_size(box) - Layout.header_size(box))
+    encode_header(box, body_len) <> u
+  end
+
   # compact: total size = 8 (header) + body
   defp encode_header(%Box{type: type, size_mode: :compact}, body_len) do
     <<8 + body_len::32, type::binary>>

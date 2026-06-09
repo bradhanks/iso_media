@@ -146,6 +146,34 @@ defmodule ISOMedia.SerializerTest do
     end
   end
 
+  describe "header_bytes/1" do
+    alias ISOMedia.{Box, Layout, Serializer}
+
+    test "returns size+type bytes whose length equals header_size for a compact box" do
+      box = %Box{type: "free", data: <<1, 2, 3, 4>>, size_mode: :compact}
+      bytes = Serializer.header_bytes(box)
+      assert bytes == <<12::32, "free">>
+      assert byte_size(bytes) == Layout.header_size(box)
+    end
+
+    test "appends the 16 uuid bytes after the header for an extended-type box" do
+      uuid = :binary.copy(<<0xAB>>, 16)
+      box = %Box{type: "uuid", uuid: uuid, data: <<9, 9>>, size_mode: :compact}
+      bytes = Serializer.header_bytes(box)
+      # size field counts header(8) + uuid(16) + payload(2) = 26; then type; then uuid.
+      assert bytes == <<26::32, "uuid", uuid::binary>>
+      assert byte_size(bytes) == Layout.header_size(box)
+    end
+
+    test "uses the 16-byte largesize header for :large size_mode" do
+      box = %Box{type: "mdat", data: <<9, 9, 9, 9>>, size_mode: :large}
+      bytes = Serializer.header_bytes(box)
+      # large header: size field == 1, then type, then 64-bit largesize (16 header + 4 payload).
+      assert bytes == <<1::32, "mdat", 20::64>>
+      assert byte_size(bytes) == Layout.header_size(box)
+    end
+  end
+
   describe "segment-list payload" do
     setup do
       path = Path.join(System.tmp_dir!(), "iso_seg_#{System.unique_integer([:positive])}.bin")
