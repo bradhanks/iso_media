@@ -139,17 +139,26 @@ defmodule ISOMedia.Fragment do
   fragmenting remains lossless.
   """
   @spec windows([ISOMedia.Sample.t()], [non_neg_integer()]) :: [[ISOMedia.Sample.t()]]
+  def windows(_samples, []), do: []
+
   def windows(samples, boundaries) do
-    boundaries
-    |> Enum.with_index()
-    |> Enum.map(fn {b, i} ->
-      next = Enum.at(boundaries, i + 1)
-      # The first window is open-ended on the low end: any samples before the first
-      # boundary (e.g. leading non-sync frames) must be kept so fragmenting is lossless.
-      Enum.filter(samples, fn s ->
-        (i == 0 or s.dts >= b) and (next == nil or s.dts < next)
+    # Samples are dts-ordered, so one left-to-right pass suffices: peel off the prefix
+    # below each boundary's upper edge. The first window's lower edge is open (leading
+    # samples before boundaries[0] stay in it); each later window's lower edge is implied
+    # by what the previous split already consumed. O(boundaries + samples).
+    uppers = tl(boundaries) ++ [nil]
+
+    {rev, _rest} =
+      Enum.reduce(uppers, {[], samples}, fn
+        nil, {acc, rest} ->
+          {[rest | acc], []}
+
+        upper, {acc, rest} ->
+          {window, rest} = Enum.split_while(rest, &(&1.dts < upper))
+          {[window | acc], rest}
       end)
-    end)
+
+    Enum.reverse(rev)
   end
 
   @doc false

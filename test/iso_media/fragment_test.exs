@@ -59,6 +59,18 @@ defmodule ISOMedia.FragmentTest do
 
       assert Enum.map(windows, fn run -> Enum.map(run, & &1.dts) end) == [[0, 10, 20, 30], [40]]
     end
+
+    test "empty boundaries yields no windows" do
+      assert Fragment.windows([s(0, true), s(10, true)], []) == []
+    end
+
+    test "a sample whose dts equals a boundary belongs to the later window [b_i, b_{i+1})" do
+      samples = for d <- 0..50//10, do: s(d, true)
+      windows = Fragment.windows(samples, [0, 20, 40])
+
+      assert Enum.map(windows, fn run -> Enum.map(run, & &1.dts) end) ==
+               [[0, 10], [20, 30], [40, 50]]
+    end
   end
 
   describe "fragment/2 structure" do
