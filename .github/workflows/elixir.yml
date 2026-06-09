@@ -18,17 +18,16 @@ jobs:
   build:
 
     name: Build and test
-    # Pinned to 22.04: erlef/setup-beam@v1.16.0 can't map GitHub's ubuntu-24 image
-    # (fails at "Set up Elixir"). Revisit with a newer setup-beam to move back to -latest.
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v4
     - name: Set up Elixir
-      uses: erlef/setup-beam@61e01a43a562a89bfc54c7f9a378ff67b03e4a21 # v1.16.0
+      # v1 (not the old v1.16.0 SHA) so it supports current Elixir/OTP + ubuntu-24.
+      uses: erlef/setup-beam@v1
       with:
-        elixir-version: '1.15.2' # [Required] Define the Elixir version
-        otp-version: '26.0'      # [Required] Define the Erlang/OTP version
+        elixir-version: '1.19' # match the repo's formatter (CI was stale at 1.15)
+        otp-version: '27'
     - name: Restore dependencies cache
       uses: actions/cache@v3
       with:
@@ -43,7 +42,7 @@ jobs:
       uses: actions/cache@v3
       with:
         path: priv/plts
-        key: ${{ runner.os }}-plt-elixir1.15.2-otp26.0-${{ hashFiles('**/mix.lock') }}
-        restore-keys: ${{ runner.os }}-plt-elixir1.15.2-otp26.0-
+        key: ${{ runner.os }}-plt-elixir1.19-otp27-${{ hashFiles('**/mix.lock') }}
+        restore-keys: ${{ runner.os }}-plt-elixir1.19-otp27-
     - name: Dialyzer
       run: mix dialyzer
