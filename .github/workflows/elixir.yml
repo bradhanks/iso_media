@@ -18,7 +18,7 @@ jobs:
   # Format/credo/dialyzer/coverage are formatter- and tool-version-specific, so they
   # run once on the canonical dev version (the version the repo is formatted with).
   checks:
-    name: Checks (format · credo · dialyzer · coverage)
+    name: Checks (format · credo · deps.audit · dialyzer · coverage)
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
