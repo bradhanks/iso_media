@@ -73,6 +73,24 @@ tables and chunking; it rebuilds only `mdat` and `stco`/`co64`. Movie/track
 (raises). For time-range trimming see **Trim**, for joining clips see
 **Concatenate**, both below.
 
+## Serving over HTTP (byte ranges)
+
+Serve any tree with HTTP range/conditional semantics — pure, zero-dependency:
+
+```elixir
+{:ok, boxes} = ISOMedia.read("movie.mp4", lazy: true)
+res = ISOMedia.http_resource(boxes)              # build once, reuse per request
+req = ISOMedia.http_from_headers(conn.req_headers, conn.method)
+resp = ISOMedia.http_serve(res, req)             # %Response{status, headers, body}
+# stream resp via ISOMedia.http_body_stream(resp) — O(range) memory, zero disk writes
+```
+
+Or drop the optional Plug into any Phoenix/Plug app:
+
+```elixir
+plug ISOMedia.Plug, root: "/srv/videos", cache: :persistent_term
+```
+
 ## Trim
 
 Losslessly trim every track to a time range (no re-encode). The video start snaps

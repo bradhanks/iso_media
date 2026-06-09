@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **HTTP byte-range serving** — `ISOMedia.HTTP` (`resource/2`, `serve/2`, `from_headers/2`,
+  `body_stream/2`/`body_iodata/1`, `etag/2`, `content_type/1`): a pure, zero-dependency layer
+  over `SeekIndex` implementing RFC 7233 Range requests, RFC 7232 conditionals,
+  `multipart/byteranges` with exact `Content-Length`, and validators. Plus an optional
+  `ISOMedia.Plug` reference adapter (compiled only when Plug is present).
 - **HEVC codec metadata** — `track_info/2` now decodes `hvc1`/`hev1` video tracks, producing
   the RFC 6381 codec string (e.g. `hvc1.1.6.L60.90`); HLS and DASH manifest generation work on
   HEVC content.
