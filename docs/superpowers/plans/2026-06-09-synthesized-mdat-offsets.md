@@ -378,3 +378,8 @@ Expected: compiles clean.
 
 Run: `git diff --name-only main..HEAD -- lib/iso_media/offsets.ex`
 Expected: empty output (the offset engine is unchanged by design — the core promise of this feature).
+
+- [ ] **Step 5: Confirm nothing outside `offsets.ex` reads the stamp**
+
+Run: `grep -rn "source_offset\|source_size" lib/ | grep -v "_test"`
+Expected: `source_offset`/`source_size` are *read* only in `lib/iso_media/offsets.ex` (`check_integrity!`, `mdat_ranges`). All other hits are *writes* (`parser.ex`/`lazy_parser.ex` on parse, `offsets.ex` `rebase_mdats`, `segment.ex` nilling them for `styp`) or the parser's own `offset + box.source_size` threading on freshly-parsed boxes. This confirms stamping a synthesized mdat is inert everywhere except the offset engine, and (since `source_*` is never serialized) that no round-trip/property test can change. *(Pre-verified during plan review — re-run here as a backstop.)*
