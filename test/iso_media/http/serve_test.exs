@@ -59,5 +59,30 @@ defmodule ISOMedia.HTTP.ServeTest do
       assert resp.status == 200
       assert match?({:full, _}, resp.body)
     end
+
+    test "last-modified header present on 200 and 304 when set" do
+      lm = {{2024, 1, 1}, {0, 0, 0}}
+      r = res(last_modified: lm)
+      get200 = HTTP.serve(r, request("GET", %{}))
+      assert Enum.any?(get200.headers, fn {k, _} -> k == "last-modified" end)
+
+      not_mod = HTTP.serve(r, request("GET", %{"if-none-match" => r.etag}))
+      assert not_mod.status == 304
+      assert Enum.any?(not_mod.headers, fn {k, _} -> k == "last-modified" end)
+    end
+
+    test "If-Match miss => 412 with validator headers only (no accept-ranges)" do
+      resp = HTTP.serve(res(), request("GET", %{"if-match" => "\"nope\""}))
+      assert resp.status == 412
+      assert resp.body == :empty
+      assert {"etag", res().etag} in resp.headers
+      refute Enum.any?(resp.headers, fn {k, _} -> k == "accept-ranges" end)
+    end
+
+    test "multi-range currently hits the temporary stub (200 full) until multipart lands" do
+      resp = HTTP.serve(res(), request("GET", %{"range" => "bytes=0-9,20-29"}))
+      assert resp.status == 200
+      assert match?({:full, _}, resp.body)
+    end
   end
 end
