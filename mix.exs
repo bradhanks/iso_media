@@ -57,6 +57,7 @@ defmodule IsoMedia.MixProject do
       # Dev/test quality tooling — none ship at runtime (the library stays zero-dep).
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
+      {:mix_audit, "~> 2.1", only: [:dev, :test], runtime: false},
       {:excoveralls, "~> 0.18", only: :test},
       # Optional: only ISOMedia.Plug uses it; never required at runtime by consumers.
       # optional: true deps are still fetched/compiled for this library's own env,
@@ -68,11 +69,13 @@ defmodule IsoMedia.MixProject do
   defp aliases do
     [
       # `mix check` — the full quality gate (excludes dialyzer; run `mix dialyzer`
-      # separately since its first PLT build is slow).
+      # separately since its first PLT build is slow). `deps.audit` checks mix.lock
+      # against the bundled advisory DB (offline, fast).
       check: [
         "format --check-formatted",
         "compile --warnings-as-errors",
         "credo --strict",
+        "deps.audit",
         "coveralls"
       ]
     ]
