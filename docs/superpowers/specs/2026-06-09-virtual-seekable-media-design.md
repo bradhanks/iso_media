@@ -268,7 +268,7 @@ clamp to get right. `serialize/1` is the trusted oracle, so this is directly pro
 - Range crossing a recursive segment-list `mdat` (synthesized by `trim`/`fragment`/`concat`).
 - `largesize` (64-bit) and `uuid` extended-type headers — sizes already correct via
   `Layout.header_size/1`; header bytes emitted by the serializer's encoder.
-- Empty tree / `byte_size == 0`.
+- Empty tree / `content_length == 0`.
 
 ## 7. Testing plan
 
