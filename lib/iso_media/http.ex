@@ -222,8 +222,14 @@ defmodule ISOMedia.HTTP do
     }
   end
 
+  # Lowercase keys; per RFC 7230 §3.2.2, multiple instances of the same header field
+  # are equivalent to one comma-joined value, so duplicates are joined rather than
+  # last-wins-dropped (which would silently lose If-None-Match / Range values).
   defp normalize_headers(headers) do
-    Map.new(headers, fn {k, v} -> {String.downcase(to_string(k)), v} end)
+    Enum.reduce(headers, %{}, fn {k, v}, acc ->
+      key = String.downcase(to_string(k))
+      Map.update(acc, key, to_string(v), &(&1 <> ", " <> to_string(v)))
+    end)
   end
 
   defp normalize_method(m) when is_atom(m), do: normalize_method(Atom.to_string(m))

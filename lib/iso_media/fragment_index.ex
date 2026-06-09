@@ -41,6 +41,11 @@ defmodule ISOMedia.FragmentIndex do
     moofs = Box.children(boxes, "moof")
     mdats = Box.children(boxes, "mdat")
 
+    if length(moofs) != length(mdats) do
+      raise ArgumentError,
+            "fragment_spans: #{length(moofs)} moof but #{length(mdats)} mdat boxes (malformed)"
+    end
+
     moofs
     |> Enum.zip(mdats)
     |> Enum.map(fn {moof, mdat} ->

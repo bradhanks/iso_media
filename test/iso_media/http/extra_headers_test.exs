@@ -35,4 +35,14 @@ defmodule ISOMedia.HTTP.ExtraHeadersTest do
     resp = HTTP.serve(res, request("GET", %{}))
     refute Enum.any?(resp.headers, fn {k, _} -> k == "cache-control" end)
   end
+
+  test "duplicate request headers are comma-joined, not last-wins (RFC 7230)" do
+    req =
+      HTTP.from_headers(
+        [{"If-None-Match", ~s("a")}, {"if-none-match", ~s("b")}],
+        "GET"
+      )
+
+    assert req.if_none_match == ~s("a", "b")
+  end
 end
