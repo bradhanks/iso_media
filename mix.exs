@@ -57,7 +57,11 @@ defmodule IsoMedia.MixProject do
       # Dev/test quality tooling — none ship at runtime (the library stays zero-dep).
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
-      {:excoveralls, "~> 0.18", only: :test}
+      {:excoveralls, "~> 0.18", only: :test},
+      # Optional: only ISOMedia.Plug uses it; never required at runtime by consumers.
+      # optional: true deps are still fetched/compiled for this library's own env,
+      # so Plug.Test is available in :test.
+      {:plug, "~> 1.0", optional: true}
     ]
   end
 
