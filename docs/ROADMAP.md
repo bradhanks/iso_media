@@ -13,6 +13,9 @@ The guiding invariant for everything below is unchanged: **byte-for-byte round-t
   extraction, time-based / frame-accurate trim, lossless concat, recursive virtual I/O,
   fragment / defragment, CMAF segment emission.
 - **0.2.0** — `track_info/2` codec metadata, HLS playlist generation, DASH MPD generation.
+- **Unreleased** — **virtual seekable media**: `seek_index/1` + `read_range/3` (pread-style) +
+  `stream_range/4` (lazy, leak-safe) return any byte range of a tree's serialization without
+  materializing it; a streaming-origin primitive. Byte-exact against `serialize/1`.
 
 ## Next up (leading candidate)
 

@@ -158,6 +158,44 @@ in memory — a no-op when it hasn't moved, a uniform chunk-offset remap when a 
 relocates it — so no write-and-reread round-trip is needed. (A genuine sample-size
 change to a synthesized `mdat` still raises; that is out of scope.)
 
+## Serving byte ranges (streaming origin)
+
+`ISOMedia.seek_index/1` builds a random-access index over a (possibly transformed,
+possibly lazy) tree; `read_range/3` and `stream_range/4` then return any byte range of
+its `serialize/1` output, reading only the bytes the range touches. Wire it into any web
+server (no dependency is bundled). Validate the `Range` header in the handler — the
+library guards too, as a backstop — and use `stream_range/4` for large ranges so a hostile
+request streams in bounded memory:
+
+```elixir
+# Plug sketch — parse "Range: bytes=START-END", clamp, stream a 206.
+def serve(conn, idx) do
+  total = ISOMedia.content_length(idx)
+
+  case parse_range(get_req_header(conn, "range"), total) do
+    {start, finish} ->                       # satisfiable [start, finish)
+      conn
+      |> put_resp_header("content-range", "bytes #{start}-#{finish - 1}/#{total}")
+      |> put_resp_header("accept-ranges", "bytes")
+      |> send_chunked(206)
+      |> stream_into(ISOMedia.stream_range(idx, start, finish - start))
+
+    :unsatisfiable ->
+      send_resp(conn, 416, "")
+
+    :none ->                                 # no Range: send the whole thing
+      conn
+      |> put_resp_header("content-length", Integer.to_string(total))
+      |> send_chunked(200)
+      |> stream_into(ISOMedia.stream_range(idx, 0, total))
+  end
+end
+```
+
+`parse_range/2` and `stream_into/2` are yours to implement against your server; the index
+is immutable, so build it once and share it across requests (e.g. cache it in
+`:persistent_term`). The `O(range)` memory guarantee assumes a `FileSlice`-backed lazy tree.
+
 ## Status
 
 Implemented, all lossless and verified byte-for-byte against real fixtures:

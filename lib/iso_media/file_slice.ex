@@ -35,6 +35,34 @@ defmodule ISOMedia.FileSlice do
   end
 
   @doc """
+  Read `len` bytes starting `rel` bytes into the slice (a bounded sub-range of the
+  slice). Opens/preads/closes like `read/1`, so it never holds a file handle. The
+  `rel + len <= length` guard makes an out-of-bounds request a contract violation,
+  not a silent short read.
+  """
+  def read_range(%__MODULE__{path: path, offset: offset, length: length}, rel, len)
+      when is_integer(rel) and rel >= 0 and is_integer(len) and len >= 0 and rel + len <= length do
+    File.open!(path, [:read, :binary, :raw], fn io ->
+      case :file.pread(io, offset + rel, len) do
+        {:ok, data} when byte_size(data) == len ->
+          data
+
+        {:ok, data} ->
+          raise "FileSlice.read_range: short read at #{offset + rel} of #{path}: wanted #{len}, got #{byte_size(data)}"
+
+        :eof when len == 0 ->
+          <<>>
+
+        :eof ->
+          raise "FileSlice.read_range: unexpected EOF reading #{len} bytes at #{offset + rel} of #{path}"
+
+        {:error, reason} ->
+          raise "FileSlice.read_range: #{:file.format_error(reason)} reading #{len} bytes at #{offset + rel} of #{path}"
+      end
+    end)
+  end
+
+  @doc """
   Stream the slice's bytes to an already-open (raw) `io_device` in `chunk_size`
   chunks. The source is opened once (callback form, so it closes even if a write
   raises) and read sequentially.
