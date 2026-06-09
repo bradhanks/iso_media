@@ -848,5 +848,5 @@ Expected: compiles clean (no unused-variable/private-function warnings — `enco
 
 - [ ] **Step 4: Byte-exact invariant spot check (optional, in IEx)**
 
-Run: `mix run -e 'alias ISOMedia, as: M; {:ok, b} = M.read("test/fixtures/sample.mp4"); idx = M.seek_index(b); ^idx = idx; full = M.serialize(b); true = M.read_range(idx, 0, M.content_length(idx)) == full; IO.puts("byte-exact OK")'`
+Run: `mix run -e 'alias ISOMedia, as: M; {:ok, b} = M.read("test/fixtures/sample.mp4"); idx = M.seek_index(b); full = M.serialize(b); true = M.read_range(idx, 0, M.content_length(idx)) == full; IO.puts("byte-exact OK")'`
 Expected: prints `byte-exact OK`.
