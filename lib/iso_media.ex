@@ -191,16 +191,42 @@ defmodule ISOMedia do
   Serialize boxes and write them to `path`, streaming any `FileSlice` payloads
   disk→disk (memory-safe for large files). Raises if `path` is one of the tree's
   `FileSlice` sources (you cannot stream-overwrite the file you are reading).
+
+  Atomic: the bytes are written to a temp file in the same directory and renamed into
+  place, so a mid-stream failure (e.g. a `FileSlice` source that vanished) leaves any
+  existing `path` untouched and never leaves a partial file behind.
   """
   @spec write(Path.t(), tree()) :: :ok | {:error, File.posix()}
   def write(path, boxes) do
     check_overwrite!(path, boxes)
+    tmp = path <> ".isotmp." <> Integer.to_string(:erlang.unique_integer([:positive]))
 
-    case File.open(path, [:write, :binary, :raw], fn io ->
-           ISOMedia.Serializer.stream(boxes, io)
-         end) do
-      {:ok, :ok} -> :ok
-      {:error, reason} -> {:error, reason}
+    try do
+      case File.open(tmp, [:write, :binary, :raw], fn io ->
+             ISOMedia.Serializer.stream(boxes, io)
+           end) do
+        {:ok, :ok} ->
+          finalize_write(tmp, path)
+
+        {:error, reason} ->
+          _ = File.rm(tmp)
+          {:error, reason}
+      end
+    rescue
+      e ->
+        _ = File.rm(tmp)
+        reraise e, __STACKTRACE__
+    end
+  end
+
+  defp finalize_write(tmp, path) do
+    case File.rename(tmp, path) do
+      :ok ->
+        :ok
+
+      {:error, reason} ->
+        _ = File.rm(tmp)
+        {:error, reason}
     end
   end
 
