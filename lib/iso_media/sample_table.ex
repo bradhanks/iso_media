@@ -10,20 +10,27 @@ defmodule ISOMedia.SampleTable do
   alias ISOMedia.{Box, FullBox, Sample}
   alias ISOMedia.Boxes.ChunkOffset
 
+  # Sanity ceiling on a track's sample count. The chunk structure (`stco`/`stsc`) is
+  # the only table that backs a sample count with bytes-on-disk, so it is computed
+  # first and used to bound every other table's run-length expansion — a hostile box
+  # cannot claim billions of samples and force a multi-GB allocation. 100M samples is
+  # ~46 days of 25fps video; no real file approaches it.
+  @max_samples 100_000_000
+
   @doc "Decode a `trak` box into `[%ISOMedia.Sample{}]`."
   def build(%Box{type: "trak"} = trak) do
     stbl = dig(trak, ~w(mdia minf stbl)) || raise ArgumentError, "trak is missing mdia/minf/stbl"
 
-    sizes = sample_sizes(stbl)
-    sample_count = length(sizes)
     chunk_offsets = chunk_offsets(stbl)
     spc = expand_stsc(stsc_entries(stbl), length(chunk_offsets))
+    sample_count = Enum.sum(spc)
 
-    if Enum.sum(spc) != sample_count do
+    if sample_count > @max_samples do
       raise ArgumentError,
-            "stsc/stsz mismatch: chunks describe #{Enum.sum(spc)} samples but stsz has #{sample_count}"
+            "stbl declares #{sample_count} samples, exceeds the #{@max_samples} ceiling"
     end
 
+    sizes = sample_sizes(stbl, sample_count)
     durations = decode_durations(stbl, sample_count)
     dts = cumulative(durations)
     ctts = decode_ctts(stbl, sample_count)
@@ -91,7 +98,7 @@ defmodule ISOMedia.SampleTable do
 
   # --- table decoders ---
 
-  defp sample_sizes(stbl) do
+  defp sample_sizes(stbl, expected) do
     cond do
       box = dig(stbl, ["stsz"]) ->
         {_v, _f, <<sample_size::32, count::32, rest::binary>>} = FullBox.parse(box.data)
@@ -102,8 +109,20 @@ defmodule ISOMedia.SampleTable do
           if length(sizes) != count,
             do: raise(ArgumentError, "stsz: declared #{count} sizes but found #{length(sizes)}")
 
+          if length(sizes) != expected do
+            raise ArgumentError,
+                  "stsc/stsz mismatch: chunks describe #{expected} samples but stsz has #{length(sizes)}"
+          end
+
           sizes
         else
+          # Constant size: `count` has no per-sample byte backing, so it is validated
+          # against the chunk-implied count before expansion to bound the allocation.
+          if count != expected do
+            raise ArgumentError,
+                  "stsc/stsz mismatch: chunks describe #{expected} samples but stsz has #{count}"
+          end
+
           List.duplicate(sample_size, count)
         end
 
@@ -130,32 +149,35 @@ defmodule ISOMedia.SampleTable do
     for <<first_chunk::32, spc::32, _sdi::32 <- rest>>, do: {first_chunk, spc}
   end
 
-  # Per-chunk samples-per-chunk for chunks 1..chunk_count (entries are runs).
+  # Per-chunk samples-per-chunk for chunks 1..chunk_count. `stsc` entries are runs
+  # `{first_chunk, samples_per_chunk}`; the spc for chunk c is that of the last run
+  # whose first_chunk <= c. Walking chunks and runs in lockstep is O(chunks + runs).
+  defp expand_stsc(_entries, 0), do: []
+
   defp expand_stsc(entries, chunk_count) do
     sorted = Enum.sort_by(entries, &elem(&1, 0))
 
-    Enum.map(1..chunk_count//1, fn c ->
-      case sorted |> Enum.take_while(fn {fc, _} -> fc <= c end) |> List.last() do
-        {_fc, spc} -> spc
-        nil -> raise ArgumentError, "stsc: no run covers chunk #{c}"
-      end
-    end)
+    unless match?([{1, _} | _], sorted) do
+      raise ArgumentError, "stsc: no run covers chunk 1"
+    end
+
+    {acc, _runs, _spc} =
+      Enum.reduce(1..chunk_count//1, {[], sorted, 0}, fn c, {acc, runs, spc} ->
+        {spc, runs} = advance_stsc(runs, c, spc)
+        {[spc | acc], runs, spc}
+      end)
+
+    Enum.reverse(acc)
   end
+
+  defp advance_stsc([{fc, spc} | rest], c, _cur) when fc <= c, do: advance_stsc(rest, c, spc)
+  defp advance_stsc(runs, _c, cur), do: {cur, runs}
 
   defp decode_durations(stbl, sample_count) do
     box = dig(stbl, ["stts"]) || raise ArgumentError, "stbl is missing stts"
     {_v, _f, <<_count::32, rest::binary>>} = FullBox.parse(box.data)
     deltas = for <<n::32, delta::32 <- rest>>, do: {n, delta}
-    per_sample = Enum.flat_map(deltas, fn {n, d} -> List.duplicate(d, n) end)
-
-    if length(per_sample) != sample_count,
-      do:
-        raise(
-          ArgumentError,
-          "stts describes #{length(per_sample)} samples, expected #{sample_count}"
-        )
-
-    per_sample
+    expand_runs(deltas, sample_count, "stts")
   end
 
   defp cumulative(durations) do
@@ -177,15 +199,31 @@ defmodule ISOMedia.SampleTable do
             _ -> for <<n::32, off::32 <- rest>>, do: {n, off}
           end
 
-        offsets = Enum.flat_map(entries, fn {n, off} -> List.duplicate(off, n) end)
+        expand_runs(entries, sample_count, "ctts")
+    end
+  end
 
-        if length(offsets) != sample_count do
-          raise ArgumentError,
-                "ctts describes #{length(offsets)} samples, expected #{sample_count}"
+  # Run-length expand `[{count, value}]` to a flat list of exactly `expected` values.
+  # Accumulates the running total and raises *before* duplicating once it would exceed
+  # `expected`, so a hostile run-length (up to 2^32-1) can never drive the allocation
+  # past the chunk-bounded sample count.
+  defp expand_runs(entries, expected, label) do
+    {rev, total} =
+      Enum.reduce(entries, {[], 0}, fn {n, value}, {acc, total} ->
+        total = total + n
+
+        if total > expected do
+          raise ArgumentError, "#{label} describes more than #{expected} samples"
         end
 
-        offsets
+        {[List.duplicate(value, n) | acc], total}
+      end)
+
+    if total != expected do
+      raise ArgumentError, "#{label} describes #{total} samples, expected #{expected}"
     end
+
+    rev |> Enum.reverse() |> List.flatten()
   end
 
   defp sync_set(stbl) do
