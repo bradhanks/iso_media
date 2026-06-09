@@ -69,8 +69,8 @@ defmodule ISOMedia.Extract do
         16 + total
 
     co_kind = if co64_bound > @uint32_max, do: :co64, else: :stco
-    mdat_mode = if 8 + total > @uint32_max, do: :large, else: :compact
-    mdat_header = if mdat_mode == :large, do: 16, else: 8
+    mdat_mode = Box.size_mode_for_body(total)
+    mdat_header = Box.header_base(mdat_mode)
 
     # Size moov with dummy offsets of the chosen kind, then place real offsets.
     moov0 = rebuild_moov(boxes, trak, offset_box(co_kind, zeros))

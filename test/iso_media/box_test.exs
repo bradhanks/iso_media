@@ -202,4 +202,20 @@ defmodule ISOMedia.BoxTest do
       end
     end
   end
+
+  describe "size encoding helpers" do
+    test "size_mode_for_body picks :compact until the 32-bit size field overflows" do
+      assert Box.size_mode_for_body(0) == :compact
+      # total = 8 + body; the largest compact total is 0xFFFFFFFF.
+      assert Box.size_mode_for_body(0xFFFFFFFF - 8) == :compact
+      assert Box.size_mode_for_body(0xFFFFFFFF - 7) == :large
+      assert Box.size_mode_for_body(0x1_0000_0000) == :large
+    end
+
+    test "header_base maps each size_mode to its header byte length" do
+      assert Box.header_base(:compact) == 8
+      assert Box.header_base(:large) == 16
+      assert Box.header_base(:eof) == 8
+    end
+  end
 end

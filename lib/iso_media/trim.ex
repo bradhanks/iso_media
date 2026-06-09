@@ -53,7 +53,8 @@ defmodule ISOMedia.Trim do
       |> Enum.sort_by(& &1.offset)
 
     total = Enum.sum(Enum.map(tagged, & &1.length))
-    {mdat_mode, mdat_header} = if 8 + total > @uint32_max, do: {:large, 16}, else: {:compact, 8}
+    mdat_mode = Box.size_mode_for_body(total)
+    mdat_header = Box.header_base(mdat_mode)
 
     runs_per_track =
       Map.new(Enum.with_index(selections), fn {sel, ti} -> {ti, length(sel.runs)} end)

@@ -165,8 +165,13 @@ defmodule ISOMedia.Fragment do
       |> Enum.reject(fn {_m, run} -> run == [] end)
 
     moof0 = build_moof(seq, Enum.map(active, fn {m, run} -> {m, run, 0} end))
-    # 8 = compact mdat header (size::32 + type::32)
-    payload_start = Layout.box_size(moof0) + 8
+
+    # The mdat's size_mode follows from its payload size (the placement total is
+    # independent of the header), so the moof-relative data_offsets below are measured
+    # against the right header width even for an oversized fragment.
+    payload_size = Enum.sum(Enum.map(active, fn {_m, run} -> Enum.sum(Enum.map(run, & &1.size)) end))
+    mdat_mode = Box.size_mode_for_body(payload_size)
+    payload_start = Layout.box_size(moof0) + Box.header_base(mdat_mode)
 
     {placed, _} =
       Enum.map_reduce(active, payload_start, fn {m, run}, pos ->
@@ -180,7 +185,7 @@ defmodule ISOMedia.Fragment do
         Enum.map(run, fn smp -> MdatSource.segment(mdats, smp.offset, smp.size) end)
       end)
 
-    {moof, %Box{type: "mdat", size_mode: :compact, data: segments}}
+    {moof, %Box{type: "mdat", size_mode: mdat_mode, data: segments}}
   end
 
   defp build_moof(seq, trafs_spec) do

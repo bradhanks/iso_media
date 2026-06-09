@@ -77,8 +77,18 @@ defmodule ISOMedia.Serializer do
     encode_header(box, body_len) <> u
   end
 
-  # compact: total size = 8 (header) + body
+  # compact: total size = 8 (header) + body. Refuse to emit a truncated 32-bit size
+  # field — a `:compact` box whose body overflows must be built as `:large` instead
+  # (`<<x::32>>` would silently wrap, corrupting the file). The check reuses the one
+  # compact↔large decision in `Box`, so it can never disagree with how builders stamp
+  # synthesized boxes.
   defp encode_header(%Box{type: type, size_mode: :compact}, body_len) do
+    if Box.size_mode_for_body(body_len) != :compact do
+      raise ArgumentError,
+            "box #{inspect(type)} has a #{body_len}-byte body that overflows the 32-bit " <>
+              "compact size field; build it with size_mode: :large (largesize)"
+    end
+
     <<8 + body_len::32, type::binary>>
   end
 

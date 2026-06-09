@@ -47,6 +47,35 @@ defmodule ISOMedia.SerializerTest do
     assert_raise ArgumentError, fn -> ISOMedia.Serializer.serialize([bad]) end
   end
 
+  describe "32-bit size field overflow" do
+    # A FileSlice lets us assert on the encoded size header for a >4 GB payload without
+    # ever allocating the bytes — Layout/header encoding only read the slice's length.
+    @big 0x1_0000_0001
+
+    test "a :large box whose body exceeds 4 GB encodes a largesize header" do
+      box = %ISOMedia.Box{
+        type: "mdat",
+        size_mode: :large,
+        data: %ISOMedia.FileSlice{path: "/dev/null", offset: 0, length: @big}
+      }
+
+      assert <<1::32, "mdat", largesize::64>> = Serializer.header_bytes(box)
+      assert largesize == 16 + @big
+    end
+
+    test "the same oversized payload mislabeled :compact raises instead of truncating" do
+      box = %ISOMedia.Box{
+        type: "mdat",
+        size_mode: :compact,
+        data: %ISOMedia.FileSlice{path: "/dev/null", offset: 0, length: @big}
+      }
+
+      assert_raise ArgumentError, ~r/overflows the 32-bit compact size field/, fn ->
+        Serializer.header_bytes(box)
+      end
+    end
+  end
+
   test "to_iodata returns iodata equal in bytes to serialize/1" do
     boxes = [
       %ISOMedia.Box{type: "free", data: <<1, 2, 3>>},

@@ -44,7 +44,8 @@ defmodule ISOMedia.ProgressiveBuild do
       end)
 
     total = Enum.sum(Enum.map(tagged, & &1.length))
-    {mdat_mode, mdat_header} = if 8 + total > @uint32_max, do: {:large, 16}, else: {:compact, 8}
+    mdat_mode = Box.size_mode_for_body(total)
+    mdat_header = Box.header_base(mdat_mode)
 
     runs_per_track =
       Map.new(0..(track_count - 1)//1, fn ti -> {ti, Enum.count(tagged, &(&1.track_i == ti))} end)

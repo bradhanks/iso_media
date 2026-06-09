@@ -10,14 +10,7 @@ defmodule ISOMedia.Layout do
 
   @doc "Byte length of a box's header (size+type, +8 for largesize, +16 for uuid)."
   def header_size(%Box{size_mode: mode, uuid: uuid}) do
-    base =
-      case mode do
-        :compact -> 8
-        :large -> 16
-        :eof -> 8
-      end
-
-    base + if(uuid, do: 16, else: 0)
+    Box.header_base(mode) + if(uuid, do: 16, else: 0)
   end
 
   @doc "Total serialized byte length of a box (header + uuid + payload/children)."

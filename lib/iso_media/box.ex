@@ -82,6 +82,31 @@ defmodule ISOMedia.Box do
     end
   end
 
+  # --- size encoding ---
+
+  # The largest value the 32-bit compact `size` field can hold. A box whose total
+  # serialized length exceeds this must use the 64-bit `largesize` form (`:large`).
+  @uint32_max 0xFFFFFFFF
+
+  @doc """
+  The `size_mode` a freshly built box needs to encode a body of `body_size` bytes
+  (where `body_size` counts the `uuid` bytes plus the payload/children, i.e. everything
+  after the 8-byte size+type header). Returns `:large` when the compact 32-bit `size`
+  field would overflow, otherwise `:compact`. This is the single source of truth for the
+  compact↔large decision — builders use it to stamp synthesized boxes, and the serializer
+  uses it to refuse to emit a truncated size field.
+  """
+  @spec size_mode_for_body(non_neg_integer()) :: :compact | :large
+  def size_mode_for_body(body_size) when is_integer(body_size) and body_size >= 0 do
+    if 8 + body_size > @uint32_max, do: :large, else: :compact
+  end
+
+  @doc "Byte length of the size+type header for a `size_mode` (before any uuid): 8 or 16."
+  @spec header_base(:compact | :large | :eof) :: 8 | 16
+  def header_base(:compact), do: 8
+  def header_base(:large), do: 16
+  def header_base(:eof), do: 8
+
   @doc "Return the first box matching the type-path, or `nil`."
   def find(boxes, path) when is_list(boxes), do: boxes |> find_all(path) |> List.first()
 
