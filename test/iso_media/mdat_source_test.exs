@@ -43,6 +43,16 @@ defmodule ISOMedia.MdatSourceTest do
       assert mdat.source_offset == 184
       assert mdat.source_size == 20
     end
+
+    test "handles :eof size_mode (8-byte header, same as compact)" do
+      segments = [<<1, 2, 3>>]
+      # payload_start 100 => box starts 8 bytes earlier (eof header is 8); size = 8 + 3
+      mdat = MdatSource.synthesized_mdat(segments, :eof, 100)
+
+      assert mdat.size_mode == :eof
+      assert mdat.source_offset == 92
+      assert mdat.source_size == 11
+    end
   end
 
   describe "segment/3 leaves" do
