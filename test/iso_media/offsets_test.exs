@@ -311,7 +311,9 @@ defmodule ISOMedia.OffsetsTest do
     test "promotes stco to co64 on a synthesized tree and samples still resolve" do
       {synth, tid} = synth_track()
       base = ISOMedia.serialize(synth)
-      expected = Enum.map(ISOMedia.samples(synth, tid), fn s -> :binary.part(base, s.offset, s.size) end)
+
+      expected =
+        Enum.map(ISOMedia.samples(synth, tid), fn s -> :binary.part(base, s.offset, s.size) end)
 
       # Threshold 1 forces promotion: every real chunk offset exceeds it.
       fixed = ISOMedia.Offsets.fix_chunk_offsets(synth, co64_threshold: 1)
