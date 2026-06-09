@@ -133,13 +133,11 @@ defmodule ISOMedia.HTTP do
   end
 
   defp brands(tree) do
-    case Box.find(tree, ~w(ftyp)) do
-      nil ->
-        []
-
-      box ->
-        ft = FileType.decode(box)
-        [ft.major_brand | ft.compatible_brands]
+    with box when not is_nil(box) <- Box.find(tree, ~w(ftyp)),
+         %FileType{} = ft <- safe(fn -> FileType.decode(box) end) do
+      [ft.major_brand | ft.compatible_brands]
+    else
+      _ -> []
     end
   end
 
@@ -147,7 +145,20 @@ defmodule ISOMedia.HTTP do
     tree
     |> all_boxes()
     |> Enum.filter(&(&1.type == "hdlr"))
-    |> Enum.map(&Handler.decode(&1).handler_type)
+    |> Enum.flat_map(fn box ->
+      case safe(fn -> Handler.decode(box).handler_type end) do
+        nil -> []
+        type -> [type]
+      end
+    end)
+  end
+
+  # Decode helpers run against untrusted input; a malformed box degrades to "absent"
+  # so content_type/1 stays total (falls through to application/mp4).
+  defp safe(fun) do
+    fun.()
+  rescue
+    _ -> nil
   end
 
   defp all_boxes(boxes) do
