@@ -17,8 +17,9 @@ defmodule ISOMedia do
       progressive), inverses of each other.
 
   `trim`, `extract_track`, `concat`, `fragment`, and `defragment` outputs can be chained
-  in memory (no disk round-trip); `faststart/1`/`fix_chunk_offsets/1` require an original
-  parsed `mdat` and raise on a synthesized one.
+  in memory (no disk round-trip), including through `faststart/1`/`fix_chunk_offsets/1`,
+  which also handle synthesized (segment-list) `mdat`s — a no-op when the `mdat` has not
+  moved, a uniform chunk-offset remap when it has.
 
       iex> {:ok, boxes} = ISOMedia.parse(<<8::32, "free">>)
       iex> ISOMedia.serialize(boxes)
