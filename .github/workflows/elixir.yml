@@ -15,18 +15,18 @@ permissions:
   contents: read
 
 jobs:
-  build:
-
-    name: Build and test
+  # Format/credo/dialyzer/coverage are formatter- and tool-version-specific, so they
+  # run once on the canonical dev version (the version the repo is formatted with).
+  checks:
+    name: Checks (format · credo · dialyzer · coverage)
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v4
     - name: Set up Elixir
-      # v1 (not the old v1.16.0 SHA) so it supports current Elixir/OTP + ubuntu-24.
-      uses: erlef/setup-beam@v1
+      # SHA-pinned for supply-chain safety; trailing comment tracks the human tag.
+      uses: erlef/setup-beam@fc68ffb90438ef2936bbb3251622353b3dcb2f93 # v1.24.0
       with:
-        elixir-version: '1.19' # match the repo's formatter (CI was stale at 1.15)
+        elixir-version: '1.19' # match the repo's formatter
         otp-version: '27'
     - name: Restore dependencies cache
       uses: actions/cache@v3
@@ -36,7 +36,7 @@ jobs:
         restore-keys: ${{ runner.os }}-mix-
     - name: Install dependencies
       run: mix deps.get
-    - name: Run checks (format, compile --warnings-as-errors, credo --strict, coverage)
+    - name: Checks (format, compile --warnings-as-errors, credo --strict, coverage)
       run: mix check
     - name: Restore Dialyzer PLT cache
       uses: actions/cache@v3
@@ -46,3 +46,41 @@ jobs:
         restore-keys: ${{ runner.os }}-plt-elixir1.19-otp27-
     - name: Dialyzer
       run: mix dialyzer
+
+  # The library itself must run on every supported Elixir/OTP combination, so the
+  # test suite runs across the matrix. (No format-check here — that's version-specific
+  # and handled by `checks`.)
+  test:
+    name: Test (Elixir ${{ matrix.elixir }} / OTP ${{ matrix.otp }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - elixir: '1.15'
+            otp: '26'
+          - elixir: '1.16'
+            otp: '26'
+          - elixir: '1.17'
+            otp: '27'
+          - elixir: '1.18'
+            otp: '27'
+          - elixir: '1.19'
+            otp: '28'
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Elixir
+      uses: erlef/setup-beam@fc68ffb90438ef2936bbb3251622353b3dcb2f93 # v1.24.0
+      with:
+        elixir-version: ${{ matrix.elixir }}
+        otp-version: ${{ matrix.otp }}
+    - name: Restore dependencies cache
+      uses: actions/cache@v3
+      with:
+        path: deps
+        key: ${{ runner.os }}-otp${{ matrix.otp }}-elixir${{ matrix.elixir }}-mix-${{ hashFiles('**/mix.lock') }}
+        restore-keys: ${{ runner.os }}-otp${{ matrix.otp }}-elixir${{ matrix.elixir }}-mix-
+    - name: Install dependencies
+      run: mix deps.get
+    - name: Run tests
+      run: mix test
