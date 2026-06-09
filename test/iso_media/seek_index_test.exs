@@ -148,4 +148,19 @@ defmodule ISOMedia.SeekIndexTest do
       assert_raise ArgumentError, fn -> SeekIndex.stream_range(idx, 0, -1) |> Enum.to_list() end
     end
   end
+
+  describe "ISOMedia delegations" do
+    test "seek_index/read_range/stream_range/content_length are reachable from ISOMedia" do
+      boxes = [%Box{type: "free", data: <<1, 2, 3, 4, 5, 6, 7, 8>>, size_mode: :compact}]
+      idx = ISOMedia.seek_index(boxes)
+
+      assert ISOMedia.content_length(idx) == byte_size(Serializer.serialize(boxes))
+      assert ISOMedia.read_range(idx, 0, 4) == :binary.part(Serializer.serialize(boxes), 0, 4)
+
+      streamed =
+        idx |> ISOMedia.stream_range(0, ISOMedia.content_length(idx), 4) |> Enum.into(<<>>, & &1)
+
+      assert streamed == Serializer.serialize(boxes)
+    end
+  end
 end

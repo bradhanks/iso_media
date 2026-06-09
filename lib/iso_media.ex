@@ -120,6 +120,24 @@ defmodule ISOMedia do
   @spec faststart(tree()) :: tree()
   def faststart(boxes), do: ISOMedia.Offsets.faststart(boxes)
 
+  @doc "Build a `ISOMedia.SeekIndex` for random-access reads over a tree. See `ISOMedia.SeekIndex.build/1`."
+  @spec seek_index(tree() | ISOMedia.Box.t()) :: ISOMedia.SeekIndex.t()
+  def seek_index(boxes), do: ISOMedia.SeekIndex.build(boxes)
+
+  @doc "Read bytes `[offset, offset+length)` of a tree's serialization. See `ISOMedia.SeekIndex.read_range/3`."
+  @spec read_range(ISOMedia.SeekIndex.t(), non_neg_integer(), non_neg_integer()) :: binary()
+  def read_range(index, offset, length), do: ISOMedia.SeekIndex.read_range(index, offset, length)
+
+  @doc "Lazily stream bytes `[offset, offset+length)` of a tree's serialization. See `ISOMedia.SeekIndex.stream_range/4`."
+  @spec stream_range(ISOMedia.SeekIndex.t(), non_neg_integer(), non_neg_integer(), pos_integer()) ::
+          Enumerable.t()
+  def stream_range(index, offset, length, chunk_size \\ 65_536),
+    do: ISOMedia.SeekIndex.stream_range(index, offset, length, chunk_size)
+
+  @doc "Total serialized size of the indexed tree (HTTP `Content-Length`). See `ISOMedia.SeekIndex.content_length/1`."
+  @spec content_length(ISOMedia.SeekIndex.t()) :: non_neg_integer()
+  def content_length(index), do: ISOMedia.SeekIndex.content_length(index)
+
   @doc """
   Read a file and parse it. Pass `lazy: true` to keep large leaf payloads
   (≥ `:lazy_threshold`, default 1 MB) as `ISOMedia.FileSlice` references instead of
