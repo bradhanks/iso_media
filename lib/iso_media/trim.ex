@@ -89,7 +89,7 @@ defmodule ISOMedia.Trim do
 
     moov_final = assemble_moov(moov, selections, offsets_by_track, co_kind, movie_ts)
     segments = Enum.map(placed, fn run -> MdatSource.segment(mdats, run.offset, run.length) end)
-    mdat = %Box{type: "mdat", data: segments, size_mode: mdat_mode}
+    mdat = MdatSource.synthesized_mdat(segments, mdat_mode, mdat_payload_start)
 
     [ftyp, moov_final, mdat]
   end

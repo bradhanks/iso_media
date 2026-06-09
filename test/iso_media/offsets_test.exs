@@ -52,6 +52,17 @@ defmodule ISOMedia.OffsetsTest do
     |> Map.fetch!(:offsets)
   end
 
+  # A synthesized progressive tree [ftyp, moov, mdat] from the real fixture, via
+  # extract_track (its mdat is a segment list with no parsed source position).
+  defp synth_track do
+    original = File.read!(Path.join([__DIR__, "..", "fixtures", "sample.mp4"]))
+    {:ok, boxes} = ISOMedia.parse(original)
+    [tid | _] = ISOMedia.track_ids(boxes)
+    synth = ISOMedia.extract_track(boxes, tid)
+    [synth_tid | _] = ISOMedia.track_ids(synth)
+    {synth, synth_tid}
+  end
+
   test "no-op: fixing an unmodified tree leaves offsets unchanged and serializes identically" do
     %{boxes: boxes} = build([<<1, 2>>, <<3, 4, 5>>])
     bin = ISOMedia.serialize(boxes)
@@ -259,6 +270,42 @@ defmodule ISOMedia.OffsetsTest do
       assert new_b == off_b + 12
       assert binary_part(out, new_a, byte_size(a)) == a
       assert binary_part(out, new_b, byte_size(b)) == b
+    end
+  end
+
+  describe "synthesized mdat (in-memory fix/faststart)" do
+    test "fix_chunk_offsets is a no-op on a freshly synthesized tree" do
+      {synth, _tid} = synth_track()
+      fixed = ISOMedia.fix_chunk_offsets(synth)
+      assert ISOMedia.serialize(fixed) == ISOMedia.serialize(synth)
+    end
+
+    test "faststart is a no-op on a synthesized [ftyp, moov, mdat] tree" do
+      {synth, _tid} = synth_track()
+      assert ISOMedia.serialize(ISOMedia.faststart(synth)) == ISOMedia.serialize(synth)
+    end
+
+    test "fix_chunk_offsets remaps every sample to its correct bytes after the mdat moves" do
+      {synth, tid} = synth_track()
+      before_bin = ISOMedia.serialize(synth)
+
+      expected =
+        Enum.map(ISOMedia.samples(synth, tid), fn s ->
+          :binary.part(before_bin, s.offset, s.size)
+        end)
+
+      # free box total size = 8 header + 4 data = 12; inserting before mdat shifts it down.
+      moved = List.insert_at(synth, 2, %Box{type: "free", data: <<0, 0, 0, 0>>})
+      fixed = ISOMedia.fix_chunk_offsets(moved)
+      after_bin = ISOMedia.serialize(fixed)
+      new_samples = ISOMedia.samples(fixed, tid)
+
+      assert length(new_samples) == length(expected)
+
+      Enum.zip(expected, new_samples)
+      |> Enum.each(fn {bytes, s} ->
+        assert :binary.part(after_bin, s.offset, s.size) == bytes
+      end)
     end
   end
 end
