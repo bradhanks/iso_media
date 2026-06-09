@@ -82,6 +82,50 @@ defmodule ISOMedia.Box do
     end
   end
 
+  # --- size encoding ---
+
+  # The largest value the 32-bit compact `size` field can hold. A box whose total
+  # serialized length exceeds this must use the 64-bit `largesize` form (`:large`).
+  @uint32_max 0xFFFFFFFF
+
+  @doc """
+  The `size_mode` a freshly built box needs to encode a body of `body_size` bytes
+  (where `body_size` counts the `uuid` bytes plus the payload/children, i.e. everything
+  after the 8-byte size+type header). Returns `:large` when the compact 32-bit `size`
+  field would overflow, otherwise `:compact`. This is the single source of truth for the
+  compact↔large decision — builders use it to stamp synthesized boxes, and the serializer
+  uses it to refuse to emit a truncated size field.
+  """
+  @spec size_mode_for_body(non_neg_integer()) :: :compact | :large
+  def size_mode_for_body(body_size) when is_integer(body_size) and body_size >= 0 do
+    if 8 + body_size > @uint32_max, do: :large, else: :compact
+  end
+
+  @doc "Byte length of the size+type header for a `size_mode` (before any uuid): 8 or 16."
+  @spec header_base(:compact | :large | :eof) :: 8 | 16
+  def header_base(:compact), do: 8
+  def header_base(:large), do: 16
+  def header_base(:eof), do: 8
+
+  @doc """
+  The first box of `type` directly in `boxes` (a list of sibling boxes), or `nil`.
+  The flat-list counterpart to `find/2`'s single-step path; pass `box.children` to look
+  inside a container.
+  """
+  def child(boxes, type) when is_list(boxes), do: Enum.find(boxes, &(&1.type == type))
+
+  @doc "Every box of `type` directly in `boxes`, in order (e.g. `child(moov.children, \"trak\")`)."
+  def children(boxes, type) when is_list(boxes), do: Enum.filter(boxes, &(&1.type == type))
+
+  @doc """
+  Like `child/2` but raises `ArgumentError` when no box of `type` is present. `context`
+  prefixes the message (e.g. `child!(boxes, "moov", "faststart")` → "faststart: no moov box").
+  """
+  def child!(boxes, type, context \\ nil) when is_list(boxes) do
+    child(boxes, type) ||
+      raise ArgumentError, "#{if context, do: "#{context}: "}no #{type} box"
+  end
+
   @doc "Return the first box matching the type-path, or `nil`."
   def find(boxes, path) when is_list(boxes), do: boxes |> find_all(path) |> List.first()
 
@@ -129,6 +173,22 @@ defmodule ISOMedia.Box do
   end
 
   @doc """
+  Insert `new_boxes` (a list) into the sibling list `boxes` immediately after the first
+  box of `type`. If no such box is present, they go at the front. Used to slot `trak`s in
+  after `mvhd`, or a fresh `edts` after `tkhd`.
+  """
+  def insert_after(boxes, type, new_boxes) when is_list(boxes) and is_list(new_boxes) do
+    at =
+      case Enum.find_index(boxes, &(&1.type == type)) do
+        nil -> 0
+        idx -> idx + 1
+      end
+
+    {pre, post} = Enum.split(boxes, at)
+    pre ++ new_boxes ++ post
+  end
+
+  @doc """
   Insert `new_box` into the children of the container found at `path`.
   `at` is `:start`, `:end`, or a zero-based integer index.
   """
@@ -157,20 +217,9 @@ defmodule ISOMedia.Box do
   end
 
   @doc """
-  Return a leaf box's payload bytes, reading the file if it's a `FileSlice`.
-  Returns `nil` for a container.
+  Return a leaf box's payload bytes, reading the file if it's a `FileSlice` (or a
+  segment list). Returns `nil` for a container.
   """
-  def read_data(%__MODULE__{data: %ISOMedia.FileSlice{} = slice}),
-    do: ISOMedia.FileSlice.read(slice)
-
-  def read_data(%__MODULE__{data: parts}) when is_list(parts) do
-    parts
-    |> Enum.map(fn
-      %ISOMedia.FileSlice{} = s -> ISOMedia.FileSlice.read(s)
-      bin when is_binary(bin) -> bin
-    end)
-    |> IO.iodata_to_binary()
-  end
-
-  def read_data(%__MODULE__{data: data}), do: data
+  def read_data(%__MODULE__{data: nil}), do: nil
+  def read_data(%__MODULE__{data: data}), do: ISOMedia.Payload.read(data)
 end

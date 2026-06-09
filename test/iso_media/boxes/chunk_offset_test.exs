@@ -34,4 +34,10 @@ defmodule ISOMedia.Boxes.ChunkOffsetTest do
     %Box{data: <<_v, _f::binary-size(3), count::32, _rest::binary>>} = ChunkOffset.encode(co)
     assert count == 4
   end
+
+  test "kind_for/1 picks co64 once an offset exceeds the 32-bit stco field" do
+    assert ChunkOffset.kind_for(0) == :stco
+    assert ChunkOffset.kind_for(0xFFFFFFFF) == :stco
+    assert ChunkOffset.kind_for(0xFFFFFFFF + 1) == :co64
+  end
 end

@@ -7,6 +7,8 @@ defmodule ISOMedia.FileSlice do
   or streamed on demand; nothing here holds an open file handle.
   """
 
+  alias ISOMedia.IO.Raw
+
   defstruct [:path, :offset, :length]
 
   @type t :: %__MODULE__{
@@ -18,19 +20,7 @@ defmodule ISOMedia.FileSlice do
   @doc "Read the slice's bytes into a binary (opens, preads, closes)."
   def read(%__MODULE__{path: path, offset: offset, length: length}) do
     File.open!(path, [:read, :binary, :raw], fn io ->
-      case :file.pread(io, offset, length) do
-        {:ok, data} when byte_size(data) == length ->
-          data
-
-        {:ok, data} ->
-          raise "FileSlice.read: short read at #{offset} of #{path}: wanted #{length}, got #{byte_size(data)}"
-
-        :eof ->
-          raise "FileSlice.read: unexpected EOF reading #{length} bytes at #{offset} of #{path}"
-
-        {:error, reason} ->
-          raise "FileSlice.read: #{:file.format_error(reason)} reading #{length} bytes at #{offset} of #{path}"
-      end
+      Raw.pread!(io, offset, length, "FileSlice.read of #{path}")
     end)
   end
 
@@ -43,22 +33,7 @@ defmodule ISOMedia.FileSlice do
   def read_range(%__MODULE__{path: path, offset: offset, length: length}, rel, len)
       when is_integer(rel) and rel >= 0 and is_integer(len) and len >= 0 and rel + len <= length do
     File.open!(path, [:read, :binary, :raw], fn io ->
-      case :file.pread(io, offset + rel, len) do
-        {:ok, data} when byte_size(data) == len ->
-          data
-
-        {:ok, data} ->
-          raise "FileSlice.read_range: short read at #{offset + rel} of #{path}: wanted #{len}, got #{byte_size(data)}"
-
-        :eof when len == 0 ->
-          <<>>
-
-        :eof ->
-          raise "FileSlice.read_range: unexpected EOF reading #{len} bytes at #{offset + rel} of #{path}"
-
-        {:error, reason} ->
-          raise "FileSlice.read_range: #{:file.format_error(reason)} reading #{len} bytes at #{offset + rel} of #{path}"
-      end
+      Raw.pread!(io, offset + rel, len, "FileSlice.read_range of #{path}")
     end)
   end
 
@@ -81,25 +56,9 @@ defmodule ISOMedia.FileSlice do
 
   defp stream_chunks(src, dest, path, offset, remaining, chunk) do
     n = min(remaining, chunk)
-
-    case :file.pread(src, offset, n) do
-      {:ok, data} when byte_size(data) == n ->
-        case :file.write(dest, data) do
-          :ok ->
-            stream_chunks(src, dest, path, offset + n, remaining - n, chunk)
-
-          {:error, reason} ->
-            raise "FileSlice.stream: write failed: #{:file.format_error(reason)}"
-        end
-
-      {:ok, data} ->
-        raise "FileSlice.stream: short read at #{offset} of #{path}: wanted #{n}, got #{byte_size(data)}"
-
-      :eof ->
-        raise "FileSlice.stream: unexpected EOF at #{offset} of #{path}"
-
-      {:error, reason} ->
-        raise "FileSlice.stream: #{:file.format_error(reason)} at #{offset} of #{path}"
-    end
+    label = "FileSlice.stream of #{path}"
+    data = Raw.pread!(src, offset, n, label)
+    Raw.write!(dest, data, label)
+    stream_chunks(src, dest, path, offset + n, remaining - n, chunk)
   end
 end

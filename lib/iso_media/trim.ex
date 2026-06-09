@@ -12,14 +12,12 @@ defmodule ISOMedia.Trim do
   alias ISOMedia.{Box, BoxPath, Layout, MdatSource, SampleTable}
   alias ISOMedia.Boxes.{ChunkOffset, EditList, MediaHeader, MovieHeader, TrackHeader}
 
-  @uint32_max 0xFFFFFFFF
-
   @doc "Trim every track to `[start_sec, end_sec)`. Returns a new box tree."
   def trim(boxes, start_sec, end_sec) do
     if end_sec <= start_sec, do: raise(ArgumentError, "trim: end_sec must be > start_sec")
 
-    ftyp = Enum.find(boxes, &(&1.type == "ftyp")) || raise ArgumentError, "file has no ftyp"
-    moov = Enum.find(boxes, &(&1.type == "moov")) || raise ArgumentError, "file has no moov"
+    ftyp = Box.child(boxes, "ftyp") || raise ArgumentError, "file has no ftyp"
+    moov = Box.child(boxes, "moov") || raise ArgumentError, "file has no moov"
     mdats = MdatSource.collect(boxes)
 
     movie_ts =
@@ -30,7 +28,7 @@ defmodule ISOMedia.Trim do
 
     selections =
       moov.children
-      |> Enum.filter(&(&1.type == "trak"))
+      |> Box.children("trak")
       |> Enum.map(fn trak -> select_track(trak, start_sec, end_sec) end)
 
     # Tag each kept chunk-run with its track index and original offset, then sort
@@ -53,7 +51,8 @@ defmodule ISOMedia.Trim do
       |> Enum.sort_by(& &1.offset)
 
     total = Enum.sum(Enum.map(tagged, & &1.length))
-    {mdat_mode, mdat_header} = if 8 + total > @uint32_max, do: {:large, 16}, else: {:compact, 8}
+    mdat_mode = Box.size_mode_for_body(total)
+    mdat_header = Box.header_base(mdat_mode)
 
     runs_per_track =
       Map.new(Enum.with_index(selections), fn {sel, ti} -> {ti, length(sel.runs)} end)
@@ -66,7 +65,7 @@ defmodule ISOMedia.Trim do
         Layout.box_size(assemble_moov(moov, selections, dummy.(), :co64, movie_ts)) +
         16 + total
 
-    co_kind = if bound > @uint32_max, do: :co64, else: :stco
+    co_kind = ChunkOffset.kind_for(bound)
 
     moov0 = assemble_moov(moov, selections, dummy.(), co_kind, movie_ts)
     mdat_payload_start = Layout.box_size(ftyp) + Layout.box_size(moov0) + mdat_header
@@ -154,7 +153,7 @@ defmodule ISOMedia.Trim do
         other -> other
       end)
 
-    %{moov | children: insert_traks(children, trimmed)}
+    %{moov | children: Box.insert_after(children, "mvhd", trimmed)}
   end
 
   defp build_trimmed_trak(sel, stco_offsets, co_kind, movie_ts) do
@@ -216,18 +215,8 @@ defmodule ISOMedia.Trim do
   # Drop any inherited `edts` (the timeline is re-based), then insert the fresh one
   # (if any) immediately after `tkhd`.
   defp put_edts(trak, edts) do
-    children = Enum.reject(trak.children, &(&1.type == "edts"))
-
-    children =
-      if edts do
-        idx = Enum.find_index(children, &(&1.type == "tkhd"))
-        at = if idx, do: idx + 1, else: 0
-        {pre, post} = Enum.split(children, at)
-        pre ++ [edts] ++ post
-      else
-        children
-      end
-
+    children = Box.remove(trak.children, ["edts"])
+    children = if edts, do: Box.insert_after(children, "tkhd", [edts]), else: children
     %{trak | children: children}
   end
 
@@ -274,15 +263,7 @@ defmodule ISOMedia.Trim do
   defp opt(nil), do: []
   defp opt(box), do: [box]
 
-  defp drop_traks(children), do: Enum.reject(children, &(&1.type == "trak"))
-
-  # Re-insert trimmed traks where the first trak was (after mvhd, before udta etc.).
-  defp insert_traks(children, traks) do
-    idx = Enum.find_index(children, &(&1.type == "mvhd"))
-    at = if idx, do: idx + 1, else: 0
-    {pre, post} = Enum.split(children, at)
-    pre ++ traks ++ post
-  end
+  defp drop_traks(children), do: Box.remove(children, ["trak"])
 
   defp track_id(trak), do: TrackHeader.decode(BoxPath.dig(trak, ["tkhd"])).track_id
 end

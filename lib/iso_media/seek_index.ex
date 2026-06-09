@@ -9,7 +9,8 @@ defmodule ISOMedia.SeekIndex do
   the range touches. Build once, query many times. The index is opaque.
   """
 
-  alias ISOMedia.{Box, FileSlice, Serializer}
+  alias ISOMedia.{Box, FileSlice, Payload, Serializer}
+  alias ISOMedia.IO.Raw
 
   defstruct [:segments, :count, :byte_size]
 
@@ -137,7 +138,7 @@ defmodule ISOMedia.SeekIndex do
 
       {:slice, fs} ->
         {io, state} = ensure_open(state, fs)
-        {[pread!(io, fs.offset + rel, n)], %{state | pos: take_hi}}
+        {[Raw.pread!(io, fs.offset + rel, n, "SeekIndex.stream_range")], %{state | pos: take_hi}}
     end
   end
 
@@ -157,25 +158,6 @@ defmodule ISOMedia.SeekIndex do
     %{state | fd: nil}
   end
 
-  defp pread!(io, at, n) do
-    case :file.pread(io, at, n) do
-      {:ok, data} when byte_size(data) == n ->
-        data
-
-      :eof when n == 0 ->
-        <<>>
-
-      :eof ->
-        raise "SeekIndex.stream_range: unexpected EOF reading #{n} bytes at #{at}"
-
-      {:ok, data} ->
-        raise "SeekIndex.stream_range: short read at #{at}: wanted #{n}, got #{byte_size(data)}"
-
-      {:error, reason} ->
-        raise "SeekIndex.stream_range: #{:file.format_error(reason)} at #{at}"
-    end
-  end
-
   # --- build walk: record physical runs in the exact order serialize/1 emits them ---
 
   defp walk(boxes, off, acc) do
@@ -191,26 +173,17 @@ defmodule ISOMedia.SeekIndex do
   # container: header only, then recurse into children
   defp walk_payload(%Box{data: nil, children: children}, off, acc), do: walk(children, off, acc)
 
-  defp walk_payload(%Box{data: %FileSlice{length: len} = fs}, off, acc),
-    do: {emit(acc, off, len, {:slice, fs}), off + len}
-
-  defp walk_payload(%Box{data: parts}, off, acc) when is_list(parts),
-    do: walk_segments(parts, off, acc)
-
-  defp walk_payload(%Box{data: data}, off, acc) when is_binary(data),
-    do: {emit(acc, off, byte_size(data), {:bytes, data}), off + byte_size(data)}
-
-  defp walk_segments(parts, off, acc) do
-    Enum.reduce(parts, {acc, off}, fn part, {a, o} -> walk_seg(part, o, a) end)
+  # leaf: flatten the payload into its physical leaves (Payload owns the segment-list
+  # recursion), then tag each with a provider and lay it out at an absolute offset.
+  defp walk_payload(%Box{data: data}, off, acc) do
+    Enum.reduce(Payload.flatten(data), {acc, off}, fn leaf, {a, o} ->
+      size = Payload.size(leaf)
+      {emit(a, o, size, provider(leaf)), o + size}
+    end)
   end
 
-  defp walk_seg(%FileSlice{length: len} = fs, off, acc),
-    do: {emit(acc, off, len, {:slice, fs}), off + len}
-
-  defp walk_seg(bin, off, acc) when is_binary(bin),
-    do: {emit(acc, off, byte_size(bin), {:bytes, bin}), off + byte_size(bin)}
-
-  defp walk_seg(parts, off, acc) when is_list(parts), do: walk_segments(parts, off, acc)
+  defp provider(%FileSlice{} = fs), do: {:slice, fs}
+  defp provider(bin) when is_binary(bin), do: {:bytes, bin}
 
   # Zero-size runs (empty leaves) are NOT recorded: keeping every segment size > 0 makes
   # abs_offsets strictly increasing and contiguous, so the splice loop always advances.

@@ -11,4 +11,9 @@ defmodule ISOMedia.FullBoxTest do
     assert bin == <<1, 0, 0, 3, 10, 20>>
     assert {1, <<0, 0, 3>>, <<10, 20>>} = FullBox.parse(bin)
   end
+
+  test "encode_data/3 is encode/3 already collapsed to a binary" do
+    assert FullBox.encode_data(1, <<0, 0, 3>>, <<10, 20>>) ==
+             IO.iodata_to_binary(FullBox.encode(1, <<0, 0, 3>>, <<10, 20>>))
+  end
 end
