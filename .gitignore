@@ -27,3 +27,6 @@ iso_media-*.tar
 
 # macOS
 .DS_Store
+
+# Dialyzer PLTs
+/priv/plts/

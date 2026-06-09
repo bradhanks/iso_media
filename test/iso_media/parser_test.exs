@@ -105,7 +105,9 @@ defmodule ISOMedia.ParserTest do
     # `:binary.referenced_byte_size/1` returns the size of the underlying refc
     # binary a sub-binary points into, or the binary's own size if it is a
     # standalone heap binary. A retained sub-binary of a large source therefore
-    # reports the *source* size; a copied field reports its own (tiny) size.
+    # reports the *source* size; a copied field reports a small size — its exact
+    # value is OTP-internal (heap-binary accounting differs across OTP releases),
+    # so we assert only that it is far below the source size, never equal to it.
 
     test "parsed box `type` does not pin the source binary" do
       # A >64-byte payload forces `source` to be an off-heap refc binary, so a
@@ -116,7 +118,7 @@ defmodule ISOMedia.ParserTest do
 
       assert {:ok, [box]} = Parser.parse(source)
       assert box.type == "mdat"
-      assert :binary.referenced_byte_size(box.type) == 4
+      assert :binary.referenced_byte_size(box.type) < byte_size(source)
     end
 
     test "parsed box `uuid` does not pin the source binary" do
@@ -126,7 +128,7 @@ defmodule ISOMedia.ParserTest do
 
       assert {:ok, [box]} = Parser.parse(source)
       assert box.uuid == uuid
-      assert :binary.referenced_byte_size(box.uuid) == 16
+      assert :binary.referenced_byte_size(box.uuid) < byte_size(source)
     end
 
     test "copying preserves the byte-exact round-trip" do

@@ -1,6 +1,6 @@
 defmodule ISOMedia.SampleTableTest do
   use ExUnit.Case
-  alias ISOMedia.{SampleTable, Sample}
+  alias ISOMedia.{Sample, SampleTable}
 
   defp leaf(type, data), do: <<8 + byte_size(data)::32, type::binary, data::binary>>
   defp container(type, inner), do: <<8 + byte_size(inner)::32, type::binary, inner::binary>>

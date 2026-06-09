@@ -2,7 +2,7 @@ defmodule ISOMedia.RoundtripPropertyTest do
   use ExUnit.Case
   use ExUnitProperties
 
-  alias ISOMedia.{Box, Serializer, Parser}
+  alias ISOMedia.{Box, Parser, Serializer}
 
   # A printable 4-char type that is NOT a known container, so the parser keeps
   # it as a leaf and round-trips deterministically.

@@ -18,7 +18,7 @@ defmodule ISOMedia.Manifest do
 
   @doc "Comma-joined RFC 6381 codec string for every track, e.g. `avc1.64000a,mp4a.40.2`."
   @spec codecs([ISOMedia.Box.t()]) :: String.t()
-  def codecs(boxes), do: track_infos(boxes) |> Enum.map(& &1.codec) |> Enum.join(",")
+  def codecs(boxes), do: track_infos(boxes) |> Enum.map_join(",", & &1.codec)
 
   @doc "The video track's `{width, height}`, or `nil` when there is no video track."
   @spec video_dimensions([ISOMedia.Box.t()]) :: {pos_integer(), pos_integer()} | nil

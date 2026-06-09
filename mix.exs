@@ -12,12 +12,27 @@ defmodule IsoMedia.MixProject do
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       deps: deps(),
+      aliases: aliases(),
+      test_coverage: [tool: ExCoveralls],
+      dialyzer: [plt_local_path: "priv/plts", plt_add_apps: [:ex_unit, :mix]],
       name: "ISOMedia",
       description: description(),
       package: package(),
       source_url: @source_url,
       homepage_url: @source_url,
       docs: docs()
+    ]
+  end
+
+  def cli do
+    [
+      preferred_envs: [
+        check: :test,
+        coveralls: :test,
+        "coveralls.html": :test,
+        "coveralls.json": :test,
+        "coveralls.detail": :test
+      ]
     ]
   end
 
@@ -38,7 +53,24 @@ defmodule IsoMedia.MixProject do
   defp deps do
     [
       {:stream_data, "~> 1.1", only: :test},
-      {:ex_doc, "~> 0.34", only: :dev, runtime: false}
+      {:ex_doc, "~> 0.34", only: :dev, runtime: false},
+      # Dev/test quality tooling — none ship at runtime (the library stays zero-dep).
+      {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
+      {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
+      {:excoveralls, "~> 0.18", only: :test}
+    ]
+  end
+
+  defp aliases do
+    [
+      # `mix check` — the full quality gate (excludes dialyzer; run `mix dialyzer`
+      # separately since its first PLT build is slow).
+      check: [
+        "format --check-formatted",
+        "compile --warnings-as-errors",
+        "credo --strict",
+        "coveralls"
+      ]
     ]
   end
 
