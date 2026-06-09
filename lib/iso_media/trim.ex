@@ -12,8 +12,6 @@ defmodule ISOMedia.Trim do
   alias ISOMedia.{Box, BoxPath, Layout, MdatSource, SampleTable}
   alias ISOMedia.Boxes.{ChunkOffset, EditList, MediaHeader, MovieHeader, TrackHeader}
 
-  @uint32_max 0xFFFFFFFF
-
   @doc "Trim every track to `[start_sec, end_sec)`. Returns a new box tree."
   def trim(boxes, start_sec, end_sec) do
     if end_sec <= start_sec, do: raise(ArgumentError, "trim: end_sec must be > start_sec")
@@ -67,7 +65,7 @@ defmodule ISOMedia.Trim do
         Layout.box_size(assemble_moov(moov, selections, dummy.(), :co64, movie_ts)) +
         16 + total
 
-    co_kind = if bound > @uint32_max, do: :co64, else: :stco
+    co_kind = ChunkOffset.kind_for(bound)
 
     moov0 = assemble_moov(moov, selections, dummy.(), co_kind, movie_ts)
     mdat_payload_start = Layout.box_size(ftyp) + Layout.box_size(moov0) + mdat_header

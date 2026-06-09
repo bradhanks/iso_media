@@ -9,8 +9,6 @@ defmodule ISOMedia.Extract do
   alias ISOMedia.{Box, BoxPath, Layout, MdatSource, SampleTable}
   alias ISOMedia.Boxes.{ChunkOffset, TrackHeader}
 
-  @uint32_max 0xFFFFFFFF
-
   @doc "List every track's `track_id`, in document order."
   def track_ids(boxes) do
     boxes
@@ -68,7 +66,7 @@ defmodule ISOMedia.Extract do
       Layout.box_size(ftyp) + Layout.box_size(rebuild_moov(boxes, trak, offset_box(:co64, zeros))) +
         16 + total
 
-    co_kind = if co64_bound > @uint32_max, do: :co64, else: :stco
+    co_kind = ChunkOffset.kind_for(co64_bound)
     mdat_mode = Box.size_mode_for_body(total)
     mdat_header = Box.header_base(mdat_mode)
 

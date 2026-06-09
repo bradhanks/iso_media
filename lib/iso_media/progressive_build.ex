@@ -8,8 +8,6 @@ defmodule ISOMedia.ProgressiveBuild do
   alias ISOMedia.{Box, BoxPath, Layout, MdatSource, SampleTable, Timescale}
   alias ISOMedia.Boxes.{ChunkOffset, MediaHeader, MovieHeader, TrackHeader}
 
-  @uint32_max 0xFFFFFFFF
-
   @doc """
   `inputs_data` is a list of `%{samples: [[%Sample{}] per track], mdats: collect/1 records}`.
   `base_moov` supplies the trak skeletons and non-trak children (its `trak`s' `stbl` is
@@ -59,7 +57,7 @@ defmodule ISOMedia.ProgressiveBuild do
         ) +
         16 + total
 
-    co_kind = if bound > @uint32_max, do: :co64, else: :stco
+    co_kind = ChunkOffset.kind_for(bound)
 
     moov0 = assemble_moov(base_moov, inputs_data, track_count, dummy.(), co_kind, movie_ts)
     mdat_payload_start = Layout.box_size(ftyp) + Layout.box_size(moov0) + mdat_header

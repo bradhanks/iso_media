@@ -57,6 +57,6 @@ defmodule ISOMedia.Boxes.TrackHeader do
   defp split(1, <<c::64, m::64, id::32, _res::32, d::64, rest::binary>>), do: {c, m, id, d, rest}
 
   defp wrap(h, body) do
-    %Box{type: "tkhd", data: IO.iodata_to_binary(FullBox.encode(h.version, h.flags, body))}
+    %Box{type: "tkhd", data: FullBox.encode_data(h.version, h.flags, body)}
   end
 end

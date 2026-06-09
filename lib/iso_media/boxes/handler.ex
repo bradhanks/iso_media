@@ -49,7 +49,7 @@ defmodule ISOMedia.Boxes.Handler do
   @doc "Encode a `%Handler{}` back into an `hdlr` box."
   def encode(%__MODULE__{} = h) do
     body = [<<0::32>>, h.handler_type, <<0::32, 0::32, 0::32>>, h.name, h.name_suffix]
-    data = IO.iodata_to_binary(FullBox.encode(h.version, h.flags, body))
+    data = FullBox.encode_data(h.version, h.flags, body)
     %Box{type: "hdlr", data: data}
   end
 end
