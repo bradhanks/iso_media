@@ -5,8 +5,8 @@ defmodule ISOMedia.ProgressiveBuild do
   Preserves interleave (runs sorted by original offset for the byte layout) while keeping
   logical `{input, chunk}` order for each track's `stco`.
   """
-  alias ISOMedia.{Box, BoxPath, Layout, MdatSource, SampleTable, Timescale}
-  alias ISOMedia.Boxes.{ChunkOffset, MediaHeader, MovieHeader, TrackHeader}
+  alias ISOMedia.{Box, BoxPath, Layout, MdatSource, SampleTable, Timescale, Trak}
+  alias ISOMedia.Boxes.ChunkOffset
 
   @doc """
   `inputs_data` is a list of `%{samples: [[%Sample{}] per track], mdats: collect/1 records}`.
@@ -29,9 +29,10 @@ defmodule ISOMedia.ProgressiveBuild do
           |> Enum.with_index()
           |> Enum.map(fn {run, chunk_i} ->
             %{
-              input_i: input_i,
               track_i: ti,
-              chunk_i: chunk_i,
+              # stco order keeps each track's chunks in {input, chunk} sequence even
+              # though the byte layout (offset order) interleaves the inputs.
+              sort_key: {input_i, chunk_i},
               mdats: d.mdats,
               offset: hd(run).offset,
               length: Enum.sum(Enum.map(run, & &1.size))
@@ -41,6 +42,22 @@ defmodule ISOMedia.ProgressiveBuild do
         |> Enum.sort_by(& &1.offset)
       end)
 
+    place(ftyp, tagged, track_count, fn offsets_by_track, co_kind ->
+      assemble_moov(base_moov, inputs_data, track_count, offsets_by_track, co_kind, movie_ts)
+    end)
+  end
+
+  @doc """
+  The shared progressive placement skeleton, used by `assemble/4` (Concat/Defragment) and
+  `ISOMedia.Trim`. `tagged` is the chunk-runs to lay out — each a map with `:track_i`,
+  `:sort_key` (the per-track stco ordering), `:mdats`, `:offset`, `:length` — already sorted
+  by original offset (interleave order). `assemble_moov` is `fn offsets_by_track, co_kind ->
+  moov_box`; it is called with dummy offsets to measure the layout (deciding stco↔co64 and
+  the mdat start), then once more with the real offsets. Returns `[ftyp, moov, mdat]`.
+  """
+  @spec place(Box.t(), [map()], non_neg_integer(), (map(), :stco | :co64 -> Box.t())) ::
+          [Box.t()]
+  def place(ftyp, tagged, track_count, assemble_moov) do
     total = Enum.sum(Enum.map(tagged, & &1.length))
     mdat_mode = Box.size_mode_for_body(total)
     mdat_header = Box.header_base(mdat_mode)
@@ -48,18 +65,15 @@ defmodule ISOMedia.ProgressiveBuild do
     runs_per_track =
       Map.new(0..(track_count - 1)//1, fn ti -> {ti, Enum.count(tagged, &(&1.track_i == ti))} end)
 
-    dummy = fn -> Map.new(runs_per_track, fn {ti, n} -> {ti, List.duplicate(0, n)} end) end
+    dummy = Map.new(runs_per_track, fn {ti, n} -> {ti, List.duplicate(0, n)} end)
 
+    # Decide co64 vs stco from a conservative upper bound (co64 tables + 16-byte header).
     bound =
-      Layout.box_size(ftyp) +
-        Layout.box_size(
-          assemble_moov(base_moov, inputs_data, track_count, dummy.(), :co64, movie_ts)
-        ) +
-        16 + total
+      Layout.box_size(ftyp) + Layout.box_size(assemble_moov.(dummy, :co64)) + 16 + total
 
     co_kind = ChunkOffset.kind_for(bound)
 
-    moov0 = assemble_moov(base_moov, inputs_data, track_count, dummy.(), co_kind, movie_ts)
+    moov0 = assemble_moov.(dummy, co_kind)
     mdat_payload_start = Layout.box_size(ftyp) + Layout.box_size(moov0) + mdat_header
 
     {placed, _} =
@@ -72,14 +86,13 @@ defmodule ISOMedia.ProgressiveBuild do
         offs =
           placed
           |> Enum.filter(&(&1.track_i == ti))
-          |> Enum.sort_by(&{&1.input_i, &1.chunk_i})
+          |> Enum.sort_by(& &1.sort_key)
           |> Enum.map(& &1.new_offset)
 
         {ti, offs}
       end)
 
-    moov_final =
-      assemble_moov(base_moov, inputs_data, track_count, offsets_by_track, co_kind, movie_ts)
+    moov_final = assemble_moov.(offsets_by_track, co_kind)
 
     segments =
       Enum.map(placed, fn run -> MdatSource.segment(run.mdats, run.offset, run.length) end)
@@ -110,7 +123,7 @@ defmodule ISOMedia.ProgressiveBuild do
           run_lengths,
           Map.fetch!(offsets_by_track, ti),
           co_kind,
-          track_timescale(base),
+          Trak.timescale(base),
           movie_ts
         )
       end
@@ -121,7 +134,7 @@ defmodule ISOMedia.ProgressiveBuild do
 
         Timescale.scale(
           Enum.sum(Enum.map(samples, & &1.duration)),
-          track_timescale(Enum.at(base_traks, ti)),
+          Trak.timescale(Enum.at(base_traks, ti)),
           movie_ts
         )
       end
@@ -131,7 +144,7 @@ defmodule ISOMedia.ProgressiveBuild do
       base_moov.children
       |> Box.remove(["trak"])
       |> Enum.map(fn
-        %Box{type: "mvhd"} = mvhd -> set_mvhd_duration(mvhd, movie_dur)
+        %Box{type: "mvhd"} = mvhd -> Trak.set_movie_duration(mvhd, movie_dur)
         other -> other
       end)
 
@@ -165,10 +178,10 @@ defmodule ISOMedia.ProgressiveBuild do
     base
     |> put_stbl(stbl_children)
     |> drop_edts()
-    |> BoxPath.update_descendant(~w(mdia mdhd), &set_mdhd_duration(&1, track_dur))
+    |> BoxPath.update_descendant(~w(mdia mdhd), &Trak.set_media_duration(&1, track_dur))
     |> BoxPath.update_descendant(
       ["tkhd"],
-      &set_tkhd_duration(&1, Timescale.scale(track_dur, track_ts, movie_ts))
+      &Trak.set_track_duration(&1, Timescale.scale(track_dur, track_ts, movie_ts))
     )
   end
 
@@ -180,7 +193,6 @@ defmodule ISOMedia.ProgressiveBuild do
   end
 
   defp traks(moov), do: Box.children(moov.children, "trak")
-  defp track_timescale(trak), do: MediaHeader.decode(BoxPath.dig(trak, ~w(mdia mdhd))).timescale
 
   defp opt(nil), do: []
   defp opt(box), do: [box]
@@ -191,20 +203,5 @@ defmodule ISOMedia.ProgressiveBuild do
     BoxPath.update_descendant(trak, ~w(mdia minf stbl), fn stbl ->
       %{stbl | children: stbl_children}
     end)
-  end
-
-  defp set_mdhd_duration(mdhd, dur) do
-    h = MediaHeader.decode(mdhd)
-    MediaHeader.encode(%{h | duration: dur})
-  end
-
-  defp set_tkhd_duration(tkhd, dur) do
-    h = TrackHeader.decode(tkhd)
-    TrackHeader.encode(%{h | duration: dur})
-  end
-
-  defp set_mvhd_duration(mvhd, dur) do
-    h = MovieHeader.decode(mvhd)
-    MovieHeader.encode(%{h | duration: dur})
   end
 end

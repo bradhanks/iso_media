@@ -5,8 +5,7 @@ defmodule ISOMedia.Defragment do
   `FragmentIndex`; the output is assembled by `ISOMedia.ProgressiveBuild`, so the
   `mdat` is a recursive segment list referencing each fragment's bytes (memory-safe).
   """
-  alias ISOMedia.{Box, BoxPath, FragmentIndex, MdatSource, ProgressiveBuild}
-  alias ISOMedia.Boxes.{MovieHeader, TrackHeader}
+  alias ISOMedia.{Box, FragmentIndex, MdatSource, ProgressiveBuild, Trak}
 
   @doc "Defragment one parsed fragmented tree into a progressive tree."
   def defragment(boxes) do
@@ -18,20 +17,13 @@ defmodule ISOMedia.Defragment do
     moov = Box.child(boxes, "moov") || raise ArgumentError, "defragment: no moov"
 
     base_traks = Box.children(moov.children, "trak")
-    track_ids = Enum.map(base_traks, &track_id_of/1)
+    track_ids = Enum.map(base_traks, &Trak.id/1)
     per_track = Enum.map(track_ids, &FragmentIndex.samples(boxes, &1))
-
-    movie_ts =
-      case BoxPath.dig(moov, ["mvhd"]) do
-        %Box{} = mvhd -> MovieHeader.decode(mvhd).timescale
-        nil -> 1
-      end
+    movie_ts = Trak.movie_timescale(moov)
 
     base_moov = %{moov | children: Box.remove(moov.children, ["mvex"])}
     inputs_data = [%{samples: per_track, mdats: MdatSource.collect(boxes)}]
 
     ProgressiveBuild.assemble(ftyp, base_moov, inputs_data, movie_ts)
   end
-
-  defp track_id_of(trak), do: TrackHeader.decode(BoxPath.dig(trak, ["tkhd"])).track_id
 end

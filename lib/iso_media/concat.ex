@@ -10,8 +10,7 @@ defmodule ISOMedia.Concat do
   order, preserving its interleave). Source edit lists are ignored.
   """
 
-  alias ISOMedia.{Box, BoxPath, MdatSource, ProgressiveBuild, SampleTable}
-  alias ISOMedia.Boxes.{MediaHeader, MovieHeader}
+  alias ISOMedia.{Box, BoxPath, MdatSource, ProgressiveBuild, SampleTable, Trak}
 
   @doc "Concatenate a list of parsed trees into one. Returns a new box tree."
   def concat([]), do: raise(ArgumentError, "concat: empty input list")
@@ -26,7 +25,7 @@ defmodule ISOMedia.Concat do
     first_moov =
       Box.child(first, "moov") || raise ArgumentError, "first input has no moov"
 
-    movie_ts = movie_timescale(first_moov)
+    movie_ts = Trak.movie_timescale(first_moov)
 
     inputs_data =
       Enum.map(inputs, fn boxes ->
@@ -52,7 +51,7 @@ defmodule ISOMedia.Concat do
 
     for ti <- 0..(count - 1)//1 do
       ref_stsd = stsd_data(Enum.at(ftraks, ti))
-      ref_ts = track_timescale(Enum.at(ftraks, ti))
+      ref_ts = Trak.timescale(Enum.at(ftraks, ti))
 
       Enum.each(rest, fn boxes ->
         t = Enum.at(traks(moov_of(boxes)), ti)
@@ -64,7 +63,7 @@ defmodule ISOMedia.Concat do
               "concat: track #{ti + 1} stsd differs between inputs (incompatible codec config)"
             )
 
-        if track_timescale(t) != ref_ts,
+        if Trak.timescale(t) != ref_ts,
           do: raise(ArgumentError, "concat: track #{ti + 1} timescale differs between inputs")
       end)
     end
@@ -81,13 +80,4 @@ defmodule ISOMedia.Concat do
     do:
       (BoxPath.dig(trak, ~w(mdia minf stbl stsd)) ||
          raise(ArgumentError, "track missing stsd")).data
-
-  defp track_timescale(trak), do: MediaHeader.decode(BoxPath.dig(trak, ~w(mdia mdhd))).timescale
-
-  defp movie_timescale(moov) do
-    case BoxPath.dig(moov, ["mvhd"]) do
-      %Box{} = mvhd -> MovieHeader.decode(mvhd).timescale
-      nil -> 1
-    end
-  end
 end

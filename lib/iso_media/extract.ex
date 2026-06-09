@@ -6,21 +6,21 @@ defmodule ISOMedia.Extract do
   `extract_track/2` (added later) produces a new single-track tree.
   """
 
-  alias ISOMedia.{Box, BoxPath, Layout, MdatSource, SampleTable}
-  alias ISOMedia.Boxes.{ChunkOffset, TrackHeader}
+  alias ISOMedia.{Box, BoxPath, Layout, MdatSource, SampleTable, Trak}
+  alias ISOMedia.Boxes.ChunkOffset
 
   @doc "List every track's `track_id`, in document order."
   def track_ids(boxes) do
     boxes
     |> traks()
-    |> Enum.map(&track_id_of/1)
+    |> Enum.map(&Trak.id/1)
   end
 
   @doc "Find the `trak` box whose `tkhd` track_id matches, or `nil`."
   def find_trak(boxes, track_id) do
     boxes
     |> traks()
-    |> Enum.find(fn trak -> track_id_of(trak) == track_id end)
+    |> Enum.find(fn trak -> Trak.id(trak) == track_id end)
   end
 
   defp traks(boxes) do
@@ -28,11 +28,6 @@ defmodule ISOMedia.Extract do
       nil -> []
       moov -> Box.children(moov.children, "trak")
     end
-  end
-
-  defp track_id_of(%Box{} = trak) do
-    tkhd = Box.find([trak], ~w(trak tkhd)) || raise ArgumentError, "trak is missing tkhd"
-    TrackHeader.decode(tkhd).track_id
   end
 
   @doc """
@@ -91,11 +86,11 @@ defmodule ISOMedia.Extract do
   defp rebuild_moov(boxes, trak, new_offset_box) do
     moov = Box.child(boxes, "moov")
     kept = replace_offset_box(trak, new_offset_box)
-    keep_id = track_id_of(trak)
+    keep_id = Trak.id(trak)
 
     children =
       Enum.flat_map(moov.children, fn
-        %Box{type: "trak"} = t -> if track_id_of(t) == keep_id, do: [kept], else: []
+        %Box{type: "trak"} = t -> if Trak.id(t) == keep_id, do: [kept], else: []
         other -> [other]
       end)
 

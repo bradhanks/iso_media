@@ -6,16 +6,14 @@ defmodule ISOMedia.Fragment do
   segment-list `mdat`), memory-safe. The inverse of `ISOMedia.Defragment`.
   """
 
-  alias ISOMedia.{Box, BoxPath, Layout, MdatSource, SampleTable, Timescale}
+  alias ISOMedia.{Box, BoxPath, Layout, MdatSource, SampleTable, Timescale, Trak}
 
   alias ISOMedia.Boxes.{
     ChunkOffset,
     Handler,
-    MediaHeader,
     TrackExtends,
     TrackFragmentDecodeTime,
     TrackFragmentHeader,
-    TrackHeader,
     TrackRun
   }
 
@@ -33,11 +31,11 @@ defmodule ISOMedia.Fragment do
       moov.children
       |> Box.children("trak")
       |> Enum.map(fn trak ->
-        tid = TrackHeader.decode(BoxPath.dig(trak, ["tkhd"])).track_id
+        tid = Trak.id(trak)
 
         %{
           track_id: tid,
-          timescale: MediaHeader.decode(BoxPath.dig(trak, ~w(mdia mdhd))).timescale,
+          timescale: Trak.timescale(trak),
           handler: Handler.decode(BoxPath.dig(trak, ~w(mdia hdlr))).handler_type,
           samples: ISOMedia.samples(boxes, tid),
           trak: trak

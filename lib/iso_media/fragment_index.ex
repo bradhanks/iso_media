@@ -6,15 +6,13 @@ defmodule ISOMedia.FragmentIndex do
   resolves per-sample duration/size/flags. `chunk_index` is a per-`trun` counter.
   """
   import Bitwise
-  alias ISOMedia.{Box, BoxPath, Extract, Layout, Sample}
+  alias ISOMedia.{Box, BoxPath, Extract, Layout, Sample, Trak}
 
   alias ISOMedia.Boxes.{
     Handler,
-    MediaHeader,
     TrackExtends,
     TrackFragmentDecodeTime,
     TrackFragmentHeader,
-    TrackHeader,
     TrackRun
   }
 
@@ -192,14 +190,13 @@ defmodule ISOMedia.FragmentIndex do
     |> Box.children("trak")
     |> Enum.find_value(fn trak ->
       if Handler.decode(BoxPath.dig(trak, ~w(mdia hdlr))).handler_type == "vide" do
-        TrackHeader.decode(BoxPath.dig(trak, ["tkhd"])).track_id
+        Trak.id(trak)
       end
     end)
   end
 
   defp track_timescale(boxes, track_id) do
-    trak = Extract.find_trak(boxes, track_id)
-    MediaHeader.decode(BoxPath.dig(trak, ~w(mdia mdhd))).timescale
+    Trak.timescale(Extract.find_trak(boxes, track_id))
   end
 
   defp child(%Box{children: children}, type), do: Box.child(children, type)
