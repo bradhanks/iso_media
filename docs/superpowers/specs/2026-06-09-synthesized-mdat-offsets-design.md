@@ -76,7 +76,8 @@ written against. `payload_start` is the absolute byte offset of the mdat payload
 the offsets were computed for (what the builder already used to bake them). The stamp lets
 `Offsets.fix_chunk_offsets/1` remap the table if the mdat later moves.
 """
-@spec synthesized_mdat([segment], Box.size_mode(), non_neg_integer()) :: Box.t()
+@spec synthesized_mdat([binary | FileSlice.t() | list], :compact | :large | :eof, non_neg_integer()) ::
+        Box.t()
 def synthesized_mdat(segments, size_mode, payload_start) do
   box = %Box{type: "mdat", data: segments, size_mode: size_mode}
   %{box | source_offset: payload_start - Layout.header_size(box),
