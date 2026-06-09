@@ -11,6 +11,7 @@ defmodule ISOMedia.Offsets do
   idempotent and lets repeated edit→fix cycles compose.
   """
 
+  alias ISOMedia.Box
   alias ISOMedia.Boxes.ChunkOffset
   alias ISOMedia.Layout
 
@@ -31,7 +32,7 @@ defmodule ISOMedia.Offsets do
   """
   def fix_chunk_offsets(boxes, opts \\ []) when is_list(boxes) do
     threshold = Keyword.get(opts, :co64_threshold, @uint32_max)
-    mdats = Enum.filter(boxes, &(&1.type == "mdat"))
+    mdats = Box.children(boxes, "mdat")
     check_integrity!(mdats)
     originals = collect_tables(boxes)
 
@@ -49,8 +50,8 @@ defmodule ISOMedia.Offsets do
   chunk offsets. Returns the tree unchanged if it has no `moov` or no `mdat`.
   """
   def faststart(boxes, opts \\ []) when is_list(boxes) do
-    has_moov = Enum.any?(boxes, &(&1.type == "moov"))
-    has_mdat = Enum.any?(boxes, &(&1.type == "mdat"))
+    has_moov = (Box.child(boxes, "moov") != nil)
+    has_mdat = (Box.child(boxes, "mdat") != nil)
 
     if has_moov and has_mdat do
       boxes |> move_moov_first() |> fix_chunk_offsets(opts)
@@ -62,8 +63,8 @@ defmodule ISOMedia.Offsets do
   # --- faststart rearrangement ---
 
   defp move_moov_first(boxes) do
-    moov = Enum.find(boxes, &(&1.type == "moov"))
-    without = Enum.reject(boxes, &(&1.type == "moov"))
+    moov = Box.child(boxes, "moov")
+    without = Box.remove(boxes, ["moov"])
     {leading_ftyp, rest} = Enum.split_while(without, &(&1.type == "ftyp"))
     leading_ftyp ++ [moov] ++ rest
   end

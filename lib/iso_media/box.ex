@@ -107,6 +107,25 @@ defmodule ISOMedia.Box do
   def header_base(:large), do: 16
   def header_base(:eof), do: 8
 
+  @doc """
+  The first box of `type` directly in `boxes` (a list of sibling boxes), or `nil`.
+  The flat-list counterpart to `find/2`'s single-step path; pass `box.children` to look
+  inside a container.
+  """
+  def child(boxes, type) when is_list(boxes), do: Enum.find(boxes, &(&1.type == type))
+
+  @doc "Every box of `type` directly in `boxes`, in order (e.g. `child(moov.children, \"trak\")`)."
+  def children(boxes, type) when is_list(boxes), do: Enum.filter(boxes, &(&1.type == type))
+
+  @doc """
+  Like `child/2` but raises `ArgumentError` when no box of `type` is present. `context`
+  prefixes the message (e.g. `child!(boxes, "moov", "faststart")` → "faststart: no moov box").
+  """
+  def child!(boxes, type, context \\ nil) when is_list(boxes) do
+    child(boxes, type) ||
+      raise ArgumentError, "#{if context, do: "#{context}: "}no #{type} box"
+  end
+
   @doc "Return the first box matching the type-path, or `nil`."
   def find(boxes, path) when is_list(boxes), do: boxes |> find_all(path) |> List.first()
 
@@ -151,6 +170,22 @@ defmodule ISOMedia.Box do
         box
       end
     end)
+  end
+
+  @doc """
+  Insert `new_boxes` (a list) into the sibling list `boxes` immediately after the first
+  box of `type`. If no such box is present, they go at the front. Used to slot `trak`s in
+  after `mvhd`, or a fresh `edts` after `tkhd`.
+  """
+  def insert_after(boxes, type, new_boxes) when is_list(boxes) and is_list(new_boxes) do
+    at =
+      case Enum.find_index(boxes, &(&1.type == type)) do
+        nil -> 0
+        idx -> idx + 1
+      end
+
+    {pre, post} = Enum.split(boxes, at)
+    pre ++ new_boxes ++ post
   end
 
   @doc """

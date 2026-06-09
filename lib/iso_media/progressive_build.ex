@@ -131,13 +131,13 @@ defmodule ISOMedia.ProgressiveBuild do
 
     children =
       base_moov.children
-      |> Enum.reject(&(&1.type == "trak"))
+      |> Box.remove(["trak"])
       |> Enum.map(fn
         %Box{type: "mvhd"} = mvhd -> set_mvhd_duration(mvhd, movie_dur)
         other -> other
       end)
 
-    %{base_moov | children: insert_traks(children, joined)}
+    %{base_moov | children: Box.insert_after(children, "mvhd", joined)}
   end
 
   defp build_joined_trak(base, samples, run_lengths, stco_offsets, co_kind, track_ts, movie_ts) do
@@ -181,13 +181,13 @@ defmodule ISOMedia.ProgressiveBuild do
     |> Enum.map(&elem(&1, 1))
   end
 
-  defp traks(moov), do: Enum.filter(moov.children, &(&1.type == "trak"))
+  defp traks(moov), do: Box.children(moov.children, "trak")
   defp track_timescale(trak), do: MediaHeader.decode(BoxPath.dig(trak, ~w(mdia mdhd))).timescale
 
   defp opt(nil), do: []
   defp opt(box), do: [box]
 
-  defp drop_edts(trak), do: %{trak | children: Enum.reject(trak.children, &(&1.type == "edts"))}
+  defp drop_edts(trak), do: %{trak | children: Box.remove(trak.children, ["edts"])}
 
   defp put_stbl(trak, stbl_children) do
     BoxPath.update_descendant(trak, ~w(mdia minf stbl), fn stbl ->
@@ -210,10 +210,4 @@ defmodule ISOMedia.ProgressiveBuild do
     MovieHeader.encode(%{h | duration: dur})
   end
 
-  defp insert_traks(children, traks) do
-    idx = Enum.find_index(children, &(&1.type == "mvhd"))
-    at = if idx, do: idx + 1, else: 0
-    {pre, post} = Enum.split(children, at)
-    pre ++ traks ++ post
-  end
 end

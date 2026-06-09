@@ -26,9 +26,9 @@ defmodule ISOMedia.Extract do
   end
 
   defp traks(boxes) do
-    case Enum.find(boxes, &(&1.type == "moov")) do
+    case Box.child(boxes, "moov") do
       nil -> []
-      moov -> Enum.filter(moov.children, &(&1.type == "trak"))
+      moov -> Box.children(moov.children, "trak")
     end
   end
 
@@ -44,7 +44,7 @@ defmodule ISOMedia.Extract do
   """
   def extract_track(boxes, track_id) do
     trak = find_trak(boxes, track_id) || raise ArgumentError, "no track with track_id #{track_id}"
-    ftyp = Enum.find(boxes, &(&1.type == "ftyp")) || raise ArgumentError, "file has no ftyp"
+    ftyp = Box.child(boxes, "ftyp") || raise ArgumentError, "file has no ftyp"
     mdats = MdatSource.collect(boxes)
 
     runs =
@@ -91,7 +91,7 @@ defmodule ISOMedia.Extract do
   end
 
   defp rebuild_moov(boxes, trak, new_offset_box) do
-    moov = Enum.find(boxes, &(&1.type == "moov"))
+    moov = Box.child(boxes, "moov")
     kept = replace_offset_box(trak, new_offset_box)
     keep_id = track_id_of(trak)
 

@@ -21,16 +21,16 @@ defmodule ISOMedia.Concat do
     check_compatibility!(inputs)
 
     ftyp =
-      Enum.find(first, &(&1.type == "ftyp")) || raise ArgumentError, "first input has no ftyp"
+      Box.child(first, "ftyp") || raise ArgumentError, "first input has no ftyp"
 
     first_moov =
-      Enum.find(first, &(&1.type == "moov")) || raise ArgumentError, "first input has no moov"
+      Box.child(first, "moov") || raise ArgumentError, "first input has no moov"
 
     movie_ts = movie_timescale(first_moov)
 
     inputs_data =
       Enum.map(inputs, fn boxes ->
-        moov = Enum.find(boxes, &(&1.type == "moov"))
+        moov = Box.child(boxes, "moov")
         tks = traks(moov)
         %{samples: Enum.map(tks, &SampleTable.build/1), mdats: MdatSource.collect(boxes)}
       end)
@@ -73,9 +73,9 @@ defmodule ISOMedia.Concat do
   # --- small helpers (shared with the compatibility checks) ---
 
   defp moov_of(boxes),
-    do: Enum.find(boxes, &(&1.type == "moov")) || raise(ArgumentError, "input has no moov")
+    do: Box.child(boxes, "moov") || raise(ArgumentError, "input has no moov")
 
-  defp traks(moov), do: Enum.filter(moov.children, &(&1.type == "trak"))
+  defp traks(moov), do: Box.children(moov.children, "trak")
 
   defp stsd_data(trak),
     do:

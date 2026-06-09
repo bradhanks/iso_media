@@ -18,8 +18,8 @@ defmodule ISOMedia.Trim do
   def trim(boxes, start_sec, end_sec) do
     if end_sec <= start_sec, do: raise(ArgumentError, "trim: end_sec must be > start_sec")
 
-    ftyp = Enum.find(boxes, &(&1.type == "ftyp")) || raise ArgumentError, "file has no ftyp"
-    moov = Enum.find(boxes, &(&1.type == "moov")) || raise ArgumentError, "file has no moov"
+    ftyp = Box.child(boxes, "ftyp") || raise ArgumentError, "file has no ftyp"
+    moov = Box.child(boxes, "moov") || raise ArgumentError, "file has no moov"
     mdats = MdatSource.collect(boxes)
 
     movie_ts =
@@ -30,7 +30,7 @@ defmodule ISOMedia.Trim do
 
     selections =
       moov.children
-      |> Enum.filter(&(&1.type == "trak"))
+      |> Box.children("trak")
       |> Enum.map(fn trak -> select_track(trak, start_sec, end_sec) end)
 
     # Tag each kept chunk-run with its track index and original offset, then sort
@@ -155,7 +155,7 @@ defmodule ISOMedia.Trim do
         other -> other
       end)
 
-    %{moov | children: insert_traks(children, trimmed)}
+    %{moov | children: Box.insert_after(children, "mvhd", trimmed)}
   end
 
   defp build_trimmed_trak(sel, stco_offsets, co_kind, movie_ts) do
@@ -217,18 +217,8 @@ defmodule ISOMedia.Trim do
   # Drop any inherited `edts` (the timeline is re-based), then insert the fresh one
   # (if any) immediately after `tkhd`.
   defp put_edts(trak, edts) do
-    children = Enum.reject(trak.children, &(&1.type == "edts"))
-
-    children =
-      if edts do
-        idx = Enum.find_index(children, &(&1.type == "tkhd"))
-        at = if idx, do: idx + 1, else: 0
-        {pre, post} = Enum.split(children, at)
-        pre ++ [edts] ++ post
-      else
-        children
-      end
-
+    children = Box.remove(trak.children, ["edts"])
+    children = if edts, do: Box.insert_after(children, "tkhd", [edts]), else: children
     %{trak | children: children}
   end
 
@@ -275,15 +265,7 @@ defmodule ISOMedia.Trim do
   defp opt(nil), do: []
   defp opt(box), do: [box]
 
-  defp drop_traks(children), do: Enum.reject(children, &(&1.type == "trak"))
-
-  # Re-insert trimmed traks where the first trak was (after mvhd, before udta etc.).
-  defp insert_traks(children, traks) do
-    idx = Enum.find_index(children, &(&1.type == "mvhd"))
-    at = if idx, do: idx + 1, else: 0
-    {pre, post} = Enum.split(children, at)
-    pre ++ traks ++ post
-  end
+  defp drop_traks(children), do: Box.remove(children, ["trak"])
 
   defp track_id(trak), do: TrackHeader.decode(BoxPath.dig(trak, ["tkhd"])).track_id
 end

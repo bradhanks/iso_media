@@ -25,13 +25,13 @@ defmodule ISOMedia.Fragment do
   @spec fragment(ISOMedia.tree(), keyword()) :: ISOMedia.tree()
   def fragment(boxes, opts \\ []) do
     target_sec = Keyword.get(opts, :target_duration, 2.0)
-    ftyp = Enum.find(boxes, &(&1.type == "ftyp")) || raise ArgumentError, "fragment: no ftyp"
-    moov = Enum.find(boxes, &(&1.type == "moov")) || raise ArgumentError, "fragment: no moov"
+    ftyp = Box.child(boxes, "ftyp") || raise ArgumentError, "fragment: no ftyp"
+    moov = Box.child(boxes, "moov") || raise ArgumentError, "fragment: no moov"
     mdats = MdatSource.collect(boxes)
 
     metas =
       moov.children
-      |> Enum.filter(&(&1.type == "trak"))
+      |> Box.children("trak")
       |> Enum.map(fn trak ->
         tid = TrackHeader.decode(BoxPath.dig(trak, ["tkhd"])).track_id
 
@@ -74,7 +74,7 @@ defmodule ISOMedia.Fragment do
   end
 
   defp build_init_moov(moov, metas) do
-    mvhd = Enum.find(moov.children, &(&1.type == "mvhd"))
+    mvhd = Box.child(moov.children, "mvhd")
 
     trex_boxes =
       Enum.map(metas, fn m ->
