@@ -3,9 +3,9 @@ defmodule ISOMedia.Serializer do
 
   alias ISOMedia.Box
   alias ISOMedia.FileSlice
+  alias ISOMedia.IO.Raw
   alias ISOMedia.Layout
   alias ISOMedia.Payload
-  alias ISOMedia.IO.Raw
 
   @doc "Serialize a box or list of boxes to a binary (materializes any FileSlice payloads)."
   def serialize(boxes), do: boxes |> materialize() |> to_iodata() |> IO.iodata_to_binary()

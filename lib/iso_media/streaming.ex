@@ -22,7 +22,7 @@ defmodule ISOMedia.Streaming do
       |> ISOMedia.Streaming.write_hls(dir)
   """
 
-  alias ISOMedia.{DASH, HLS, Segment, SeekIndex}
+  alias ISOMedia.{DASH, HLS, SeekIndex, Segment}
 
   @type tree :: [ISOMedia.Box.t()]
 
