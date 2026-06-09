@@ -148,11 +148,19 @@ last segment ends at `byte_size`.
 Walks the tree mirroring `Serializer.stream/3` / `to_iodata/1`, but **records** physical runs
 instead of writing them. It threads a running absolute offset and accumulates segments:
 
-- **Box header** (size + type, plus `largesize`/`uuid`/full-box version-flags where present) —
-  recorded as `{:bytes, header_binary}` using the exact same header encoding the serializer
-  emits, sized by `Layout.header_size/1`. Headers are small and held inline.
-- **Container box** (`data: nil`, `children`) — emit its header segment, then recurse into
-  children in order. No payload segment.
+- **Box header + `uuid`** — one `{:bytes, header_binary}` segment whose bytes are
+  `encode_header(box, body_len) <> (box.uuid || <<>>)` and whose size equals
+  `Layout.header_size/1` (which *includes* the 16 uuid bytes — `layout.ex:20`). This matters:
+  the serializer's `encode_header/2` emits **only** size+type (+largesize); the 16 uuid bytes of
+  an extended-type box are written **separately, between header and payload** (`stream_box`
+  emits `encode_header` → `uuid` → payload). So the header provider must concatenate the uuid
+  bytes after `encode_header`, or a `uuid` box's index is 16 bytes short and the byte-exact
+  invariant breaks. The result is `IO.iodata_to_binary`-flattened to a concrete binary (the
+  `read_provider` `{:bytes, _}` path does `:binary.part/3`, which needs a binary, not iodata).
+  Note: a FullBox's version/flags are **not** here — they live in the box's payload `data`, so
+  they're carried by the `{:bytes, data}` leaf provider below, not the header.
+- **Container box** (`data: nil`, `children`) — emit its header segment (header + uuid, as
+  above), then recurse into children in order. No payload segment.
 - **Leaf, in-memory binary** (`data` is a `binary`) — `{:bytes, data}`. (Large in-memory leaves
   are rare in practice; they live in the index as-is. `FileSlice` is the memory-safe path.)
 - **Leaf, `FileSlice`** — `{:slice, fs}`. The bytes stay on disk.
@@ -310,8 +318,12 @@ clamp to get right. `serialize/1` is the trusted oracle, so this is directly pro
 - Range exactly on a header/payload boundary.
 - Range entirely inside one `FileSlice` — the hot path: one `pread`, zero waste.
 - Range crossing a recursive segment-list `mdat` (synthesized by `trim`/`fragment`/`concat`).
-- `largesize` (64-bit) and `uuid` extended-type headers — sizes already correct via
-  `Layout.header_size/1`; header bytes emitted by the serializer's encoder.
+- `largesize` (64-bit) headers — sizes correct via `Layout.header_size/1`; bytes from the
+  serializer's `encode_header`.
+- `uuid` extended-type boxes — the header provider concatenates the 16 uuid bytes after
+  `encode_header` (they are *not* in `encode_header`'s output — see §4.2), so size *and* bytes
+  match `serialize/1`. **A uuid fixture must be in the property-test matrix (§7)** or this path
+  goes unexercised.
 - Empty tree / `content_length == 0`.
 - Negative / non-integer `offset` or `length` → `ArgumentError` at the public guard (never
   reaches `clamp_range`/`bsearch`).
@@ -323,8 +335,10 @@ errors surface immediately.
 
 - **Property test** — random `(offset, length)` (including out-of-range, zero-length, exact
   boundaries) over a fixture matrix: parsed files, lazy-read (`read(path, lazy: true)`) trees,
-  and synthesized trees from `trim` / `fragment` / `concat` / `faststart`. Assert byte-equality
-  with the `:binary.part` oracle and `content_length` equality.
+  synthesized trees from `trim` / `fragment` / `concat` / `faststart`, **and at least one tree
+  containing a `uuid` extended-type box** (exercises the header+uuid provider — §4.2; without it
+  the uuid path is untested). Assert byte-equality with the `:binary.part` oracle and
+  `content_length` equality.
 - **Memory-safety test** — `stream_range/4` over a large `FileSlice`-backed range reads only the
   touched bytes (assert via chunk count and that no full materialization occurs); confirm fd
   cleanup on early `Enum.take` / halt.
@@ -368,10 +382,13 @@ belt-and-suspenders backstop.
   `content_length/1`, private `clamp_range/3` + tuple bsearch + splice).
 - **New fn:** `FileSlice.read_range/3`.
 - **Expose (DRY):** `Serializer.encode_header/2` is currently **private** (`serializer.ex:69`).
-  §4.2 reuses it to emit header bytes — so promote it to a public `Serializer.header_bytes/1`
-  (computing `body_len` from `Layout.box_size - Layout.header_size` internally). Without this,
-  `SeekIndex` would duplicate the 3-clause `:compact`/`:large`/`:eof` encoder, violating the
-  single-source-of-truth discipline §4.2 claims.
+  §4.2 reuses it — so promote a public `Serializer.header_bytes/1` that returns the **full
+  pre-payload bytes**: `encode_header(box, body_len) <> (box.uuid || <<>>)`, computing
+  `body_len = byte_size(uuid) + (Layout.box_size(box) - Layout.header_size(box))` exactly as
+  `stream_box` does (`serializer.ex:103`). Its byte size then equals `Layout.header_size(box)`
+  by construction (uuid included). Without this, `SeekIndex` would duplicate the 3-clause
+  `:compact`/`:large`/`:eof` encoder **and** re-derive the uuid placement — violating the
+  single-source-of-truth discipline and re-introducing the §4.2 uuid bug independently.
 - **Edit:** `lib/iso_media.ex` — delegations `seek_index/1`, `read_range/3`, `stream_range/4`,
   `content_length/1`.
 - **Reuse (unchanged):** `Layout.header_size/box_size/segment_size`, the (now public) serializer
