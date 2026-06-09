@@ -18,7 +18,9 @@ jobs:
   build:
 
     name: Build and test
-    runs-on: ubuntu-latest
+    # Pinned to 22.04: erlef/setup-beam@v1.16.0 can't map GitHub's ubuntu-24 image
+    # (fails at "Set up Elixir"). Revisit with a newer setup-beam to move back to -latest.
+    runs-on: ubuntu-22.04
 
     steps:
     - uses: actions/checkout@v4
