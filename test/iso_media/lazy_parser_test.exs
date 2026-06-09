@@ -70,4 +70,45 @@ defmodule ISOMedia.LazyParserTest do
     # round-trips byte-for-byte (the size-0 box re-emits size field 0)
     assert ISOMedia.Serializer.serialize(boxes) == bin
   end
+
+  describe "lazy parsing rejects a malformed box size like the eager parser" do
+    # Lazy and eager must agree: a box that lies about its size is rejected at parse
+    # time, not turned into a FileSlice past EOF that only fails mid-stream.
+    # `lazy_threshold: 0` forces every leaf onto the FileSlice path — the unprotected one.
+    defp write_tmp(bin) do
+      path =
+        Path.join(System.tmp_dir!(), "iso_lazy_bad_#{System.unique_integer([:positive])}.mp4")
+
+      File.write!(path, bin)
+      on_exit(fn -> File.rm(path) end)
+      path
+    end
+
+    test "a leaf declaring more bytes than the file holds" do
+      # box claims size 100 (92-byte payload) but only 4 payload bytes exist
+      bin = <<100::32, "free", 1, 2, 3, 4>>
+      assert {:error, _} = ISOMedia.parse(bin)
+      assert {:error, _} = LazyParser.parse_file(write_tmp(bin), lazy_threshold: 0)
+    end
+
+    test "a leaf whose declared size is smaller than its header" do
+      bin = <<5::32, "free", 1, 2, 3>>
+      assert {:error, _} = ISOMedia.parse(bin)
+      assert {:error, _} = LazyParser.parse_file(write_tmp(bin), lazy_threshold: 0)
+    end
+
+    test "a largesize box whose 64-bit size extends past the file" do
+      # size==1 → 64-bit largesize follows; claims 10_000 bytes, file has far fewer
+      bin = <<1::32, "free", 10_000::64, 1, 2, 3, 4>>
+      assert {:error, _} = ISOMedia.parse(bin)
+      assert {:error, _} = LazyParser.parse_file(write_tmp(bin), lazy_threshold: 0)
+    end
+
+    test "a valid file still parses lazily (no false positive)" do
+      bin = leaf("free", :binary.copy(<<7>>, 100))
+
+      assert {:ok, [%Box{type: "free"}]} =
+               LazyParser.parse_file(write_tmp(bin), lazy_threshold: 0)
+    end
+  end
 end
