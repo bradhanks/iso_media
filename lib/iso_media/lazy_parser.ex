@@ -47,6 +47,7 @@ defmodule ISOMedia.LazyParser do
     <<size::32, type::binary-size(4)>> = Raw.pread!(io, pos, 8, "LazyParser")
     {size_mode, header_len, total_size} = resolve_size(io, pos, size, file_size)
     uuid_len = if type == "uuid", do: 16, else: 0
+    validate_box!(pos, header_len, uuid_len, total_size, file_size)
     payload_length = total_size - header_len - uuid_len
 
     box =
@@ -95,6 +96,26 @@ defmodule ISOMedia.LazyParser do
       source_offset: pos,
       source_size: c.total_size
     }
+  end
+
+  # A leaf at/above the threshold becomes a FileSlice and is never read, so — unlike the
+  # eager parser and the reparse path, where an over-long read makes `pread!` raise — a
+  # box that lies about its size would otherwise yield a slice past EOF (over-reporting
+  # Content-Length, then raising mid-stream). Enforce the same bounds the eager binary
+  # match enforces: the header fits and the box fits within the file.
+  defp validate_box!(pos, header_len, uuid_len, total_size, file_size) do
+    cond do
+      total_size < header_len + uuid_len ->
+        raise "LazyParser: box at #{pos} declares size #{total_size}, " <>
+                "smaller than its #{header_len + uuid_len}-byte header"
+
+      pos + total_size > file_size ->
+        raise "LazyParser: box at #{pos} declares size #{total_size}, " <>
+                "extending past end of file (#{file_size} bytes)"
+
+      true ->
+        :ok
+    end
   end
 
   defp resolve_size(_io, pos, 0, file_size), do: {:eof, 8, file_size - pos}
