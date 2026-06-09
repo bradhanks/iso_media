@@ -60,6 +60,27 @@ defmodule ISOMedia.HTTP.ConditionalTest do
     test "no conditions => proceed" do
       assert Conditional.evaluate(req([]), @res) == :proceed
     end
+
+    test "If-None-Match comma list where a later tag matches => not_modified" do
+      assert Conditional.evaluate(req(if_none_match: ~s("x", "v1")), @res) == :not_modified
+    end
+
+    test "If-Match comma list: one tag matches => proceed; none match => precondition_failed" do
+      assert Conditional.evaluate(req(if_match: ~s("x", "v1")), @res) == :proceed
+      assert Conditional.evaluate(req(if_match: ~s("x", "y")), @res) == :precondition_failed
+    end
+
+    test "If-Unmodified-Since with nil last_modified cannot fire => proceed" do
+      res = %{@res | last_modified: nil}
+
+      assert Conditional.evaluate(req(if_unmodified_since: "Mon, 01 Jan 2024 11:00:00 GMT"), res) ==
+               :proceed
+    end
+
+    test "malformed date in a condition is ignored (proceeds)" do
+      assert Conditional.evaluate(req(if_modified_since: "not-a-date"), @res) == :proceed
+      assert Conditional.evaluate(req(if_unmodified_since: "not-a-date"), @res) == :proceed
+    end
   end
 
   describe "if_range_satisfied?/2" do
@@ -79,6 +100,15 @@ defmodule ISOMedia.HTTP.ConditionalTest do
     test "date If-Range satisfied when not modified since" do
       assert Conditional.if_range_satisfied?(req(if_range: "Mon, 01 Jan 2024 12:00:00 GMT"), @res)
       refute Conditional.if_range_satisfied?(req(if_range: "Mon, 01 Jan 2024 11:00:00 GMT"), @res)
+    end
+
+    test "date If-Range with nil last_modified is not satisfied" do
+      res = %{@res | last_modified: nil}
+      refute Conditional.if_range_satisfied?(req(if_range: "Mon, 01 Jan 2024 12:00:00 GMT"), res)
+    end
+
+    test "malformed date If-Range is not satisfied" do
+      refute Conditional.if_range_satisfied?(req(if_range: "garbage"), @res)
     end
   end
 end
