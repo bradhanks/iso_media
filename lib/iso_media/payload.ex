@@ -18,6 +18,7 @@ defmodule ISOMedia.Payload do
   """
 
   alias ISOMedia.FileSlice
+  alias ISOMedia.IO.Raw
 
   @typedoc "A single segment: in-memory bytes, an on-disk slice, or a nested segment list."
   @type segment :: binary() | FileSlice.t() | [segment()]
@@ -53,7 +54,7 @@ defmodule ISOMedia.Payload do
   """
   @spec stream(t(), :file.io_device(), pos_integer()) :: :ok
   def stream(%FileSlice{} = slice, io, chunk), do: FileSlice.stream(slice, io, chunk)
-  def stream(bin, io, _chunk) when is_binary(bin), do: write!(io, bin)
+  def stream(bin, io, _chunk) when is_binary(bin), do: Raw.write!(io, bin, "Payload.stream")
   def stream(parts, io, chunk) when is_list(parts), do: Enum.each(parts, &stream(&1, io, chunk))
 
   @doc """
@@ -100,11 +101,4 @@ defmodule ISOMedia.Payload do
   def slice_paths(%FileSlice{path: path}), do: [path]
   def slice_paths(bin) when is_binary(bin), do: []
   def slice_paths(parts) when is_list(parts), do: Enum.flat_map(parts, &slice_paths/1)
-
-  defp write!(io, data) do
-    case :file.write(io, data) do
-      :ok -> :ok
-      {:error, reason} -> raise "Payload.stream: write failed: #{:file.format_error(reason)}"
-    end
-  end
 end

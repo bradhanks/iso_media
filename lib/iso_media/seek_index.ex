@@ -10,6 +10,7 @@ defmodule ISOMedia.SeekIndex do
   """
 
   alias ISOMedia.{Box, FileSlice, Payload, Serializer}
+  alias ISOMedia.IO.Raw
 
   defstruct [:segments, :count, :byte_size]
 
@@ -128,7 +129,7 @@ defmodule ISOMedia.SeekIndex do
 
       {:slice, fs} ->
         {io, state} = ensure_open(state, fs)
-        {[pread!(io, fs.offset + rel, n)], %{state | pos: take_hi}}
+        {[Raw.pread!(io, fs.offset + rel, n, "SeekIndex.stream_range")], %{state | pos: take_hi}}
     end
   end
 
@@ -146,25 +147,6 @@ defmodule ISOMedia.SeekIndex do
   defp close_fd(%{fd: {_fs, io}} = state) do
     File.close(io)
     %{state | fd: nil}
-  end
-
-  defp pread!(io, at, n) do
-    case :file.pread(io, at, n) do
-      {:ok, data} when byte_size(data) == n ->
-        data
-
-      :eof when n == 0 ->
-        <<>>
-
-      :eof ->
-        raise "SeekIndex.stream_range: unexpected EOF reading #{n} bytes at #{at}"
-
-      {:ok, data} ->
-        raise "SeekIndex.stream_range: short read at #{at}: wanted #{n}, got #{byte_size(data)}"
-
-      {:error, reason} ->
-        raise "SeekIndex.stream_range: #{:file.format_error(reason)} at #{at}"
-    end
   end
 
   # --- build walk: record physical runs in the exact order serialize/1 emits them ---

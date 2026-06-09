@@ -5,6 +5,7 @@ defmodule ISOMedia.Serializer do
   alias ISOMedia.FileSlice
   alias ISOMedia.Layout
   alias ISOMedia.Payload
+  alias ISOMedia.IO.Raw
 
   @doc "Serialize a box or list of boxes to a binary (materializes any FileSlice payloads)."
   def serialize(boxes), do: boxes |> materialize() |> to_iodata() |> IO.iodata_to_binary()
@@ -109,8 +110,8 @@ defmodule ISOMedia.Serializer do
     uuid = box.uuid || <<>>
     # body = uuid ++ payload; body length is derivable from Layout without reading.
     body_len = byte_size(uuid) + (Layout.box_size(box) - Layout.header_size(box))
-    write!(io, encode_header(box, body_len))
-    write!(io, uuid)
+    Raw.write!(io, encode_header(box, body_len), "Serializer.stream")
+    Raw.write!(io, uuid, "Serializer.stream")
     stream_payload(box, io, chunk_size)
   end
 
@@ -118,11 +119,4 @@ defmodule ISOMedia.Serializer do
     do: Enum.each(children, &stream_box(&1, io, chunk))
 
   defp stream_payload(%Box{data: data}, io, chunk), do: Payload.stream(data, io, chunk)
-
-  defp write!(io, data) do
-    case :file.write(io, data) do
-      :ok -> :ok
-      {:error, reason} -> raise "Serializer.stream: write failed: #{:file.format_error(reason)}"
-    end
-  end
 end
