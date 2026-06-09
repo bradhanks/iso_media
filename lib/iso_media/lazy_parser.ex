@@ -55,17 +55,17 @@ defmodule ISOMedia.LazyParser do
           reparse(io, pos, total_size, heuristic)
 
         payload_length >= threshold ->
-          file_slice_box(
-            io,
-            path,
-            type,
-            size_mode,
-            pos,
-            header_len,
-            uuid_len,
-            payload_length,
-            total_size
-          )
+          file_slice_box(%{
+            io: io,
+            path: path,
+            type: type,
+            size_mode: size_mode,
+            pos: pos,
+            header_len: header_len,
+            uuid_len: uuid_len,
+            payload_length: payload_length,
+            total_size: total_size
+          })
 
         true ->
           reparse(io, pos, total_size, heuristic)
@@ -82,28 +82,18 @@ defmodule ISOMedia.LazyParser do
     box
   end
 
-  defp file_slice_box(
-         io,
-         path,
-         type,
-         size_mode,
-         pos,
-         header_len,
-         uuid_len,
-         payload_length,
-         total_size
-       ) do
+  defp file_slice_box(%{io: io, pos: pos, header_len: header_len, uuid_len: uuid_len} = c) do
     uuid = if uuid_len == 16, do: Raw.pread!(io, pos + header_len, 16, "LazyParser"), else: nil
     payload_offset = pos + header_len + uuid_len
 
     %Box{
-      type: type,
-      data: %FileSlice{path: path, offset: payload_offset, length: payload_length},
+      type: c.type,
+      data: %FileSlice{path: c.path, offset: payload_offset, length: c.payload_length},
       children: [],
       uuid: uuid,
-      size_mode: size_mode,
+      size_mode: c.size_mode,
       source_offset: pos,
-      source_size: total_size
+      source_size: c.total_size
     }
   end
 

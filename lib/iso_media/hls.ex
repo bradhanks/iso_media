@@ -56,16 +56,18 @@ defmodule ISOMedia.HLS do
   (`opts[:media_uri]`, default `media.m3u8`), and — via `ISOMedia.write_segments/3` — `init.mp4`
   + `seg-N.m4s`. Returns `{:ok, [master, media | segment_paths]}`.
   """
-  @spec write_hls(Path.t(), [ISOMedia.Box.t()], keyword()) :: {:ok, [Path.t()]}
+  @spec write_hls(Path.t(), [ISOMedia.Box.t()], keyword()) ::
+          {:ok, [Path.t()]} | {:error, term()}
   def write_hls(dir, boxes, opts \\ []) do
     File.mkdir_p!(dir)
     master_path = Path.join(dir, "master.m3u8")
     media_path = Path.join(dir, Keyword.get(opts, :media_uri, "media.m3u8"))
 
-    File.write!(master_path, master_playlist(boxes, opts))
-    File.write!(media_path, media_playlist(boxes, opts))
-    {:ok, segment_paths} = ISOMedia.write_segments(dir, boxes, opts)
-    {:ok, [master_path, media_path | segment_paths]}
+    with :ok <- File.write(master_path, master_playlist(boxes, opts)),
+         :ok <- File.write(media_path, media_playlist(boxes, opts)),
+         {:ok, segment_paths} <- ISOMedia.write_segments(dir, boxes, opts) do
+      {:ok, [master_path, media_path | segment_paths]}
+    end
   end
 
   defp seconds(%{duration_ts: d, timescale: ts}), do: d / ts

@@ -6,7 +6,7 @@ defmodule ISOMedia.Codec do
   """
   import Bitwise
 
-  alias ISOMedia.{Box, BoxPath, TrackInfo}
+  alias ISOMedia.{Box, BoxPath, Parser, TrackInfo}
   alias ISOMedia.Boxes.{MediaHeader, TrackHeader}
 
   @spec decode_language(<<_::16>>) :: String.t()
@@ -38,16 +38,14 @@ defmodule ISOMedia.Codec do
     do: {bsl(acc, 7) + val, rest}
 
   @spec find_sub_box(binary(), binary()) :: binary()
-  @doc "Return the payload of the first child box of `type` within a byte slice of boxes."
-  def find_sub_box(<<size::32, type::binary-size(4), rest::binary>>, target)
-      when size >= 8 and byte_size(rest) >= size - 8 do
-    payload_len = size - 8
-    <<payload::binary-size(payload_len), more::binary>> = rest
-    if type == target, do: payload, else: find_sub_box(more, target)
-  end
-
-  def find_sub_box(_bin, target) do
-    raise ArgumentError, "track_info: sub-box #{target} not found"
+  @doc """
+  Return the payload of the first child box of `type` within a byte slice of boxes.
+  Parses the slice through `ISOMedia.Parser` so compact and largesize children are both
+  handled, then requires the box via `Box.child!/3`.
+  """
+  def find_sub_box(bin, target) do
+    {:ok, boxes} = Parser.parse(bin)
+    Box.child!(boxes, target, "track_info").data
   end
 
   @spec info(ISOMedia.Box.t()) :: ISOMedia.TrackInfo.t()
@@ -176,7 +174,7 @@ defmodule ISOMedia.Codec do
     {oti, aot, _rate} = parse_esds(esds)
     "mp4a." <> String.downcase(Integer.to_string(oti, 16)) <> "." <> Integer.to_string(aot)
   rescue
-    _ -> "mp4a.40.2"
+    _ in [MatchError, FunctionClauseError, ArgumentError] -> "mp4a.40.2"
   end
 
   @doc "Sample rate (Hz) from an `esds` AudioSpecificConfig, or `fallback` if unavailable."
@@ -185,7 +183,7 @@ defmodule ISOMedia.Codec do
     {_oti, _aot, rate} = parse_esds(esds)
     rate || fallback
   rescue
-    _ -> fallback
+    _ in [MatchError, FunctionClauseError, ArgumentError] -> fallback
   end
 
   defp parse_esds(<<_v::8, _f::24, descriptors::binary>>), do: parse_es_descriptor(descriptors)

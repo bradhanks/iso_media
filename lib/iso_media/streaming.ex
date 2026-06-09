@@ -11,18 +11,20 @@ defmodule ISOMedia.Streaming do
     * **DASH** — `dash_manifest/2`, `write_dash/3`.
     * **HTTP byte-range serving** — `seek_index/1`, `read_range/3`, `stream_range/4`,
       `content_length/1`, for answering `Range` requests over a tree's serialization
-      without materializing it.
+      without materializing it; plus the RFC 7233/7232 plan layer (`http_resource/2`,
+      `http_from_headers/2`, `http_serve/2`, `http_body_stream/2`, `http_body_iodata/1`,
+      `etag/2`, `content_type/1`).
 
   This is the one place that knows which implementation module (`Segment`, `HLS`,
-  `DASH`, `SeekIndex`) backs each delivery operation; the convenience wrappers on
-  `ISOMedia` delegate here. A typical pipeline:
+  `DASH`, `SeekIndex`, `HTTP`) backs each delivery operation; the convenience wrappers
+  on `ISOMedia` delegate here. A typical pipeline:
 
       boxes
       |> ISOMedia.fragment()
       |> ISOMedia.Streaming.write_hls(dir)
   """
 
-  alias ISOMedia.{DASH, HLS, SeekIndex, Segment}
+  alias ISOMedia.{DASH, HLS, HTTP, SeekIndex, Segment}
 
   @type tree :: [ISOMedia.Box.t()]
 
@@ -47,7 +49,7 @@ defmodule ISOMedia.Streaming do
   def hls_master_playlist(boxes, opts \\ []), do: HLS.master_playlist(boxes, opts)
 
   @doc "Write a full HLS bundle (playlists + segments) into `dir`. See `ISOMedia.HLS.write_hls/3`."
-  @spec write_hls(Path.t(), tree(), keyword()) :: {:ok, [Path.t()]}
+  @spec write_hls(Path.t(), tree(), keyword()) :: {:ok, [Path.t()]} | {:error, term()}
   def write_hls(dir, boxes, opts \\ []), do: HLS.write_hls(dir, boxes, opts)
 
   # --- DASH ---
@@ -57,7 +59,7 @@ defmodule ISOMedia.Streaming do
   def dash_manifest(boxes, opts \\ []), do: DASH.manifest(boxes, opts)
 
   @doc "Write a full DASH bundle (MPD + segments) into `dir`. See `ISOMedia.DASH.write_dash/3`."
-  @spec write_dash(Path.t(), tree(), keyword()) :: {:ok, [Path.t()]}
+  @spec write_dash(Path.t(), tree(), keyword()) :: {:ok, [Path.t()]} | {:error, term()}
   def write_dash(dir, boxes, opts \\ []), do: DASH.write_dash(dir, boxes, opts)
 
   # --- HTTP byte-range serving ---
@@ -79,4 +81,35 @@ defmodule ISOMedia.Streaming do
   @doc "Total serialized size of the indexed tree (HTTP `Content-Length`). See `ISOMedia.SeekIndex.content_length/1`."
   @spec content_length(ISOMedia.SeekIndex.t()) :: non_neg_integer()
   def content_length(index), do: SeekIndex.content_length(index)
+
+  # --- HTTP semantics (Range / conditional serving) ---
+
+  @doc "Build a cacheable HTTP `%Resource{}`. See `ISOMedia.HTTP.resource/2`."
+  @spec http_resource(tree() | ISOMedia.SeekIndex.t(), keyword()) :: HTTP.Resource.t()
+  def http_resource(tree, opts \\ []), do: HTTP.resource(tree, opts)
+
+  @doc "Normalize headers + method into a `%ISOMedia.HTTP.Request{}`. See `ISOMedia.HTTP.from_headers/2`."
+  @spec http_from_headers([{binary(), binary()}] | map(), atom() | binary()) :: HTTP.Request.t()
+  def http_from_headers(headers, method), do: HTTP.from_headers(headers, method)
+
+  @doc "Produce an HTTP response plan. See `ISOMedia.HTTP.serve/2`."
+  @spec http_serve(HTTP.Resource.t(), HTTP.Request.t()) :: HTTP.Response.t()
+  def http_serve(resource, request), do: HTTP.serve(resource, request)
+
+  @doc "Lazily stream a response body. See `ISOMedia.HTTP.body_stream/2`."
+  @spec http_body_stream(HTTP.Response.t(), pos_integer()) :: Enumerable.t()
+  def http_body_stream(response, chunk_size \\ 65_536),
+    do: HTTP.body_stream(response, chunk_size)
+
+  @doc "Materialize a response body as iodata. See `ISOMedia.HTTP.body_iodata/1`."
+  @spec http_body_iodata(HTTP.Response.t()) :: iodata()
+  def http_body_iodata(response), do: HTTP.body_iodata(response)
+
+  @doc "Content fingerprint of a tree's serialization. See `ISOMedia.HTTP.etag/2`."
+  @spec etag(tree() | ISOMedia.SeekIndex.t() | ISOMedia.Box.t(), keyword()) :: binary()
+  def etag(tree, opts \\ []), do: HTTP.etag(tree, opts)
+
+  @doc "Derive a media Content-Type. See `ISOMedia.HTTP.content_type/1`."
+  @spec content_type(tree() | ISOMedia.Box.t()) :: binary()
+  def content_type(tree), do: HTTP.content_type(tree)
 end

@@ -6,16 +6,14 @@ defmodule ISOMedia.Fragment do
   segment-list `mdat`), memory-safe. The inverse of `ISOMedia.Defragment`.
   """
 
-  alias ISOMedia.{Box, BoxPath, Layout, MdatSource, SampleTable, Timescale}
+  alias ISOMedia.{Box, BoxPath, Layout, MdatSource, SampleTable, Timescale, Trak}
 
   alias ISOMedia.Boxes.{
     ChunkOffset,
     Handler,
-    MediaHeader,
     TrackExtends,
     TrackFragmentDecodeTime,
     TrackFragmentHeader,
-    TrackHeader,
     TrackRun
   }
 
@@ -25,19 +23,19 @@ defmodule ISOMedia.Fragment do
   @spec fragment(ISOMedia.tree(), keyword()) :: ISOMedia.tree()
   def fragment(boxes, opts \\ []) do
     target_sec = Keyword.get(opts, :target_duration, 2.0)
-    ftyp = Box.child(boxes, "ftyp") || raise ArgumentError, "fragment: no ftyp"
-    moov = Box.child(boxes, "moov") || raise ArgumentError, "fragment: no moov"
+    ftyp = Box.child!(boxes, "ftyp", "fragment")
+    moov = Box.child!(boxes, "moov", "fragment")
     mdats = MdatSource.collect(boxes)
 
     metas =
       moov.children
       |> Box.children("trak")
       |> Enum.map(fn trak ->
-        tid = TrackHeader.decode(BoxPath.dig(trak, ["tkhd"])).track_id
+        tid = Trak.id(trak)
 
         %{
           track_id: tid,
-          timescale: MediaHeader.decode(BoxPath.dig(trak, ~w(mdia mdhd))).timescale,
+          timescale: Trak.timescale(trak),
           handler: Handler.decode(BoxPath.dig(trak, ~w(mdia hdlr))).handler_type,
           samples: ISOMedia.samples(boxes, tid),
           trak: trak
@@ -105,8 +103,7 @@ defmodule ISOMedia.Fragment do
       ChunkOffset.encode(%ChunkOffset{kind: :stco, version: 0, flags: <<0, 0, 0>>, offsets: []})
     ]
 
-    trak
-    |> Map.update!(:children, &Enum.reject(&1, fn c -> c.type == "edts" end))
+    %{trak | children: Box.remove(trak.children, ["edts"])}
     |> BoxPath.update_descendant(~w(mdia minf stbl), fn stbl -> %{stbl | children: empty} end)
   end
 
@@ -139,17 +136,26 @@ defmodule ISOMedia.Fragment do
   fragmenting remains lossless.
   """
   @spec windows([ISOMedia.Sample.t()], [non_neg_integer()]) :: [[ISOMedia.Sample.t()]]
+  def windows(_samples, []), do: []
+
   def windows(samples, boundaries) do
-    boundaries
-    |> Enum.with_index()
-    |> Enum.map(fn {b, i} ->
-      next = Enum.at(boundaries, i + 1)
-      # The first window is open-ended on the low end: any samples before the first
-      # boundary (e.g. leading non-sync frames) must be kept so fragmenting is lossless.
-      Enum.filter(samples, fn s ->
-        (i == 0 or s.dts >= b) and (next == nil or s.dts < next)
+    # Samples are dts-ordered, so one left-to-right pass suffices: peel off the prefix
+    # below each boundary's upper edge. The first window's lower edge is open (leading
+    # samples before boundaries[0] stay in it); each later window's lower edge is implied
+    # by what the previous split already consumed. O(boundaries + samples).
+    uppers = tl(boundaries) ++ [nil]
+
+    {rev, _rest} =
+      Enum.reduce(uppers, {[], samples}, fn
+        nil, {acc, rest} ->
+          {[rest | acc], []}
+
+        upper, {acc, rest} ->
+          {window, rest} = Enum.split_while(rest, &(&1.dts < upper))
+          {[window | acc], rest}
       end)
-    end)
+
+    Enum.reverse(rev)
   end
 
   @doc false

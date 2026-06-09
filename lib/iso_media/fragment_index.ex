@@ -6,15 +6,13 @@ defmodule ISOMedia.FragmentIndex do
   resolves per-sample duration/size/flags. `chunk_index` is a per-`trun` counter.
   """
   import Bitwise
-  alias ISOMedia.{Box, BoxPath, Extract, Layout, Sample}
+  alias ISOMedia.{Box, BoxPath, Extract, Layout, Payload, Sample, Trak}
 
   alias ISOMedia.Boxes.{
     Handler,
-    MediaHeader,
     TrackExtends,
     TrackFragmentDecodeTime,
     TrackFragmentHeader,
-    TrackHeader,
     TrackRun
   }
 
@@ -43,6 +41,11 @@ defmodule ISOMedia.FragmentIndex do
     moofs = Box.children(boxes, "moof")
     mdats = Box.children(boxes, "mdat")
 
+    if length(moofs) != length(mdats) do
+      raise ArgumentError,
+            "fragment_spans: #{length(moofs)} moof but #{length(mdats)} mdat boxes (malformed)"
+    end
+
     moofs
     |> Enum.zip(mdats)
     |> Enum.map(fn {moof, mdat} ->
@@ -60,7 +63,7 @@ defmodule ISOMedia.FragmentIndex do
       %{
         duration_ts: duration_ts,
         timescale: track_timescale(boxes, tfhd.track_id),
-        bytes: Layout.box_size(mdat) - Layout.header_size(mdat)
+        bytes: Payload.size(mdat.data)
       }
     end)
   end
@@ -84,13 +87,10 @@ defmodule ISOMedia.FragmentIndex do
 
   # One %{moof, offset} per moof, offset stamped by the tree-local Layout walk.
   defp moof_layout(boxes) do
-    {recs, _end} =
-      Enum.flat_map_reduce(boxes, 0, fn box, off ->
-        rec = if box.type == "moof", do: [%{moof: box, offset: off}], else: []
-        {rec, off + Layout.box_size(box)}
-      end)
-
-    recs
+    boxes
+    |> Layout.top_level_layout()
+    |> Enum.filter(&(&1.box.type == "moof"))
+    |> Enum.map(fn %{box: moof, offset: offset} -> %{moof: moof, offset: offset} end)
   end
 
   defp index_traf(traf, moof_off, trex, {acc, sidx, cidx}) do
@@ -154,17 +154,14 @@ defmodule ISOMedia.FragmentIndex do
   end
 
   defp trex_for!(boxes, track_id) do
-    moov = Box.child(boxes, "moov") || raise ArgumentError, "fMP4: no moov"
-    mvex = Box.child(moov.children, "mvex") || raise ArgumentError, "fMP4: no mvex"
+    moov = Box.child!(boxes, "moov", "fMP4")
+    mvex = Box.child!(moov.children, "mvex", "fMP4")
 
-    box =
-      Enum.find(mvex.children, fn b ->
-        b.type == "trex" and TrackExtends.decode(b).track_id == track_id
-      end)
-
-    if box,
-      do: TrackExtends.decode(box),
-      else: raise(ArgumentError, "fMP4: no trex for track #{track_id}")
+    mvex.children
+    |> Box.children("trex")
+    |> Enum.map(&TrackExtends.decode/1)
+    |> Enum.find(&(&1.track_id == track_id)) ||
+      raise(ArgumentError, "fMP4: no trex for track #{track_id}")
   end
 
   defp traf_for(moof, track_id) do
@@ -192,14 +189,13 @@ defmodule ISOMedia.FragmentIndex do
     |> Box.children("trak")
     |> Enum.find_value(fn trak ->
       if Handler.decode(BoxPath.dig(trak, ~w(mdia hdlr))).handler_type == "vide" do
-        TrackHeader.decode(BoxPath.dig(trak, ["tkhd"])).track_id
+        Trak.id(trak)
       end
     end)
   end
 
   defp track_timescale(boxes, track_id) do
-    trak = Extract.find_trak(boxes, track_id)
-    MediaHeader.decode(BoxPath.dig(trak, ~w(mdia mdhd))).timescale
+    Trak.timescale(Extract.find_trak(boxes, track_id))
   end
 
   defp child(%Box{children: children}, type), do: Box.child(children, type)

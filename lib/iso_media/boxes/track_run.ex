@@ -27,12 +27,18 @@ defmodule ISOMedia.Boxes.TrackRun do
   @sample_flags 0x000400
   @sample_comp_offset 0x000800
 
+  # Ceiling for the zero-per-sample-width case, where `sample_count` has no byte
+  # backing in the box itself (all fields come from `trex` defaults). 10M samples is
+  # far beyond any real fragment; without this a 20-byte `trun` could claim 2^32-1.
+  @max_samples 10_000_000
+
   @doc "Decode a `trun` box."
   @spec decode(ISOMedia.Box.t()) :: t()
   def decode(%Box{type: "trun", data: data}) do
     {version, <<flags::24>>, <<sample_count::32, rest::binary>>} = FullBox.parse(data)
     {data_offset, rest} = take(rest, flags, @data_offset, :signed)
     {first_sample_flags, rest} = take(rest, flags, @first_sample_flags, :unsigned)
+    validate_sample_count!(rest, sample_count, flags)
     samples = decode_samples(rest, sample_count, version, flags, [])
 
     %__MODULE__{
@@ -42,6 +48,33 @@ defmodule ISOMedia.Boxes.TrackRun do
       first_sample_flags: first_sample_flags,
       samples: samples
     }
+  end
+
+  # Reject a sample_count the payload cannot back before looping. When per-sample
+  # fields are present, each sample consumes a fixed width, so the count is bounded by
+  # the remaining bytes. When no per-sample fields are set, samples consume zero bytes,
+  # so an explicit ceiling guards against an unbacked count.
+  defp validate_sample_count!(rest, sample_count, flags) do
+    width = sample_width(flags)
+
+    cond do
+      width > 0 and sample_count * width > byte_size(rest) ->
+        raise ArgumentError,
+              "trun: sample_count #{sample_count} exceeds available bytes (#{byte_size(rest)})"
+
+      width == 0 and sample_count > @max_samples ->
+        raise ArgumentError,
+              "trun: sample_count #{sample_count} exceeds the #{@max_samples} ceiling"
+
+      true ->
+        :ok
+    end
+  end
+
+  defp sample_width(flags) do
+    [@sample_duration, @sample_size, @sample_flags, @sample_comp_offset]
+    |> Enum.map(fn mask -> if (flags &&& mask) != 0, do: 4, else: 0 end)
+    |> Enum.sum()
   end
 
   defp decode_samples(_bin, 0, _v, _flags, acc), do: Enum.reverse(acc)

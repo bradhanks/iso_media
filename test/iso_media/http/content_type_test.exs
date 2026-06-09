@@ -65,8 +65,15 @@ defmodule ISOMedia.HTTP.ContentTypeTest do
     assert HTTP.content_type([moov_with(hdlr("vide"))]) == "video/mp4"
   end
 
-  test "heic brand without a pict handler falls through to video/mp4" do
-    assert HTTP.content_type([ftyp("heic", ["mif1"]), moov_with(hdlr("vide"))]) == "video/mp4"
+  test "real HEIF (heic brand, image data in an opaque top-level meta) => image/heic" do
+    # Real .heic files carry the pict handler inside a top-level `meta` box, which is not
+    # a registered container, so its hdlr is never reachable. The brand alone must suffice.
+    meta = %Box{type: "meta", data: <<0, 0, 0, 0, "hdlr", 0::32, "pict">>, size_mode: :compact}
+    assert HTTP.content_type([ftyp("heic", ["mif1"]), meta]) == "image/heic"
+  end
+
+  test "heic brand wins over a video handler (image sequence), like the avif branch" do
+    assert HTTP.content_type([ftyp("heic", ["mif1"]), moov_with(hdlr("vide"))]) == "image/heic"
   end
 
   test "malformed ftyp/hdlr degrade gracefully to application/mp4" do

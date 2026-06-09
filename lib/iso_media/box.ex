@@ -26,11 +26,16 @@ defmodule ISOMedia.Box do
           source_size: non_neg_integer() | nil
         }
 
+  @typedoc "A child-type navigation path, e.g. `~w(moov trak mdia)`."
+  @type path :: [String.t()]
+
   @doc "True when the box holds child boxes rather than a raw payload."
+  @spec container?(t()) :: boolean()
   def container?(%__MODULE__{data: nil}), do: true
   def container?(%__MODULE__{}), do: false
 
   @doc "True when the box holds a raw payload rather than children."
+  @spec leaf?(t()) :: boolean()
   def leaf?(%__MODULE__{data: nil}), do: false
   def leaf?(%__MODULE__{}), do: true
 
@@ -112,24 +117,29 @@ defmodule ISOMedia.Box do
   The flat-list counterpart to `find/2`'s single-step path; pass `box.children` to look
   inside a container.
   """
+  @spec child([t()], String.t()) :: t() | nil
   def child(boxes, type) when is_list(boxes), do: Enum.find(boxes, &(&1.type == type))
 
   @doc "Every box of `type` directly in `boxes`, in order (e.g. `child(moov.children, \"trak\")`)."
+  @spec children([t()], String.t()) :: [t()]
   def children(boxes, type) when is_list(boxes), do: Enum.filter(boxes, &(&1.type == type))
 
   @doc """
   Like `child/2` but raises `ArgumentError` when no box of `type` is present. `context`
   prefixes the message (e.g. `child!(boxes, "moov", "faststart")` → "faststart: no moov box").
   """
+  @spec child!([t()], String.t(), String.t() | nil) :: t()
   def child!(boxes, type, context \\ nil) when is_list(boxes) do
     child(boxes, type) ||
       raise ArgumentError, "#{if context, do: "#{context}: "}no #{type} box"
   end
 
   @doc "Return the first box matching the type-path, or `nil`."
+  @spec find([t()], path()) :: t() | nil
   def find(boxes, path) when is_list(boxes), do: boxes |> find_all(path) |> List.first()
 
   @doc "Return every box matching the type-path."
+  @spec find_all([t()], path()) :: [t()]
   def find_all(boxes, [type]) when is_list(boxes) do
     Enum.filter(boxes, &(&1.type == type))
   end
@@ -141,6 +151,7 @@ defmodule ISOMedia.Box do
   end
 
   @doc "Apply `fun` to every box matching the type-path; returns a new tree."
+  @spec update([t()], path(), (t() -> t())) :: [t()]
   def update(boxes, [type], fun) when is_list(boxes) do
     Enum.map(boxes, fn box ->
       if box.type == type, do: fun.(box), else: box
@@ -158,6 +169,7 @@ defmodule ISOMedia.Box do
   end
 
   @doc "Remove every box matching the type-path; returns a new tree."
+  @spec remove([t()], path()) :: [t()]
   def remove(boxes, [type]) when is_list(boxes) do
     Enum.reject(boxes, &(&1.type == type))
   end
@@ -177,6 +189,7 @@ defmodule ISOMedia.Box do
   box of `type`. If no such box is present, they go at the front. Used to slot `trak`s in
   after `mvhd`, or a fresh `edts` after `tkhd`.
   """
+  @spec insert_after([t()], String.t(), [t()]) :: [t()]
   def insert_after(boxes, type, new_boxes) when is_list(boxes) and is_list(new_boxes) do
     at =
       case Enum.find_index(boxes, &(&1.type == type)) do
@@ -192,6 +205,7 @@ defmodule ISOMedia.Box do
   Insert `new_box` into the children of the container found at `path`.
   `at` is `:start`, `:end`, or a zero-based integer index.
   """
+  @spec insert([t()], path(), t(), :start | :end | non_neg_integer()) :: [t()]
   def insert(boxes, path, new_box, at \\ :end) when is_list(boxes) do
     update(boxes, path, fn
       %__MODULE__{data: nil} = container ->
@@ -212,6 +226,7 @@ defmodule ISOMedia.Box do
   end
 
   @doc "Replace a box's payload, making it a leaf (drops any children)."
+  @spec replace_data(t(), binary()) :: t()
   def replace_data(%__MODULE__{} = box, binary) when is_binary(binary) do
     %{box | data: binary, children: []}
   end
@@ -220,6 +235,7 @@ defmodule ISOMedia.Box do
   Return a leaf box's payload bytes, reading the file if it's a `FileSlice` (or a
   segment list). Returns `nil` for a container.
   """
+  @spec read_data(t()) :: binary() | nil
   def read_data(%__MODULE__{data: nil}), do: nil
   def read_data(%__MODULE__{data: data}), do: ISOMedia.Payload.read(data)
 end

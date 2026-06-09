@@ -15,14 +15,15 @@ defmodule ISOMedia.HTTP do
 
   defmodule Resource do
     @moduledoc "Precomputed, cacheable per-representation state."
-    defstruct [:index, :etag, :last_modified, :content_type, :content_length]
+    defstruct [:index, :etag, :last_modified, :content_type, :content_length, extra_headers: []]
 
     @type t :: %__MODULE__{
             index: ISOMedia.SeekIndex.t(),
             etag: binary(),
             last_modified: :calendar.datetime() | nil,
             content_type: binary(),
-            content_length: non_neg_integer()
+            content_length: non_neg_integer(),
+            extra_headers: [{binary(), binary()}]
           }
   end
 
@@ -126,7 +127,7 @@ defmodule ISOMedia.HTTP do
       Box.find(tree, ~w(styp)) -> "video/iso.segment"
       "qt  " in brands -> "video/quicktime"
       Enum.any?(@avif_brands, &(&1 in brands)) -> "image/avif"
-      Enum.any?(@heif_brands, &(&1 in brands)) and "pict" in handlers -> "image/heic"
+      Enum.any?(@heif_brands, &(&1 in brands)) -> "image/heic"
       "vide" in handlers -> "video/mp4"
       "soun" in handlers -> "audio/mp4"
       true -> "application/mp4"
@@ -144,8 +145,7 @@ defmodule ISOMedia.HTTP do
 
   defp handler_types(tree) do
     tree
-    |> all_boxes()
-    |> Enum.filter(&(&1.type == "hdlr"))
+    |> Box.find_all(~w(moov trak mdia hdlr))
     |> Enum.flat_map(fn box ->
       case safe(fn -> Handler.decode(box).handler_type end) do
         nil -> []
@@ -155,15 +155,12 @@ defmodule ISOMedia.HTTP do
   end
 
   # Decode helpers run against untrusted input; a malformed box degrades to "absent"
-  # so content_type/1 stays total (falls through to application/mp4).
+  # so content_type/1 stays total (falls through to application/mp4). Only the
+  # malformed-input exceptions are absorbed — a real bug still surfaces.
   defp safe(fun) do
     fun.()
   rescue
-    _ -> nil
-  end
-
-  defp all_boxes(boxes) do
-    Enum.flat_map(boxes, fn %Box{children: kids} = b -> [b | all_boxes(kids || [])] end)
+    _ in [MatchError, FunctionClauseError, ArgumentError] -> nil
   end
 
   @doc """
@@ -187,8 +184,16 @@ defmodule ISOMedia.HTTP do
       etag: etag(idx, opts),
       last_modified: Keyword.get(opts, :last_modified),
       content_type: opts[:content_type] || derive_ct(tree, opts),
-      content_length: SeekIndex.content_length(idx)
+      content_length: SeekIndex.content_length(idx),
+      extra_headers: extra_headers(opts)
     }
+  end
+
+  # `:cache_control` is sugar for a `Cache-Control` header; `:extra_headers` is an
+  # explicit verbatim list. Both are emitted on every served response (see base_headers/1).
+  defp extra_headers(opts) do
+    cc = if v = opts[:cache_control], do: [{"cache-control", v}], else: []
+    cc ++ Keyword.get(opts, :extra_headers, [])
   end
 
   defp derive_ct(nil, _opts), do: "application/mp4"
@@ -218,8 +223,14 @@ defmodule ISOMedia.HTTP do
     }
   end
 
+  # Lowercase keys; per RFC 7230 §3.2.2, multiple instances of the same header field
+  # are equivalent to one comma-joined value, so duplicates are joined rather than
+  # last-wins-dropped (which would silently lose If-None-Match / Range values).
   defp normalize_headers(headers) do
-    Map.new(headers, fn {k, v} -> {String.downcase(to_string(k)), v} end)
+    Enum.reduce(headers, %{}, fn {k, v}, acc ->
+      key = String.downcase(to_string(k))
+      Map.update(acc, key, to_string(v), &(&1 <> ", " <> to_string(v)))
+    end)
   end
 
   defp normalize_method(m) when is_atom(m), do: normalize_method(Atom.to_string(m))
@@ -394,7 +405,7 @@ defmodule ISOMedia.HTTP do
 
   defp base_headers(res) do
     [{"accept-ranges", "bytes"}, {"etag", res.etag}, {"content-type", res.content_type}] ++
-      last_modified_header(res)
+      last_modified_header(res) ++ res.extra_headers
   end
 
   defp validator_headers(res), do: [{"etag", res.etag}] ++ last_modified_header(res)

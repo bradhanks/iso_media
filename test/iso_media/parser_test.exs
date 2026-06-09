@@ -20,6 +20,23 @@ defmodule ISOMedia.ParserTest do
     assert {:ok, []} = Parser.parse(<<>>)
   end
 
+  describe "malformed input is total (returns {:error, _}, never crashes)" do
+    # The parser is the untrusted-input boundary: every malformed binary must come back
+    # as an error tuple, not a raised exception that escapes parse/2.
+    for {name, bin} <- [
+          {"truncated header (< 8 bytes)", <<0, 1, 2>>},
+          {"size declares more bytes than present", <<100::32, "free", 1, 2>>},
+          {"size smaller than the 8-byte header", <<5::32, "free", 1, 2, 3>>},
+          {"largesize smaller than the 16-byte header", <<1::32, "uuid", 5::64, 1, 2>>},
+          {"truncated uuid extended type", <<20::32, "uuid", 1, 2, 3>>},
+          {"good box followed by trailing garbage", <<8::32, "free", 0, 1, 2>>}
+        ] do
+      test name do
+        assert {:error, _reason} = Parser.parse(unquote(bin))
+      end
+    end
+  end
+
   test "recurses into a known container box" do
     # moov(size 24) { mvhd(size 8, empty) ; free(size 8, empty) }
     inner = <<8::32, "mvhd", 8::32, "free">>
