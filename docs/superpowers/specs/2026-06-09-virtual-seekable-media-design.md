@@ -34,8 +34,13 @@ dependencies**.
 - `read_range/3` — pread-style random access returning a `binary`.
 - `stream_range/4` — a lazy, memory-safe `Stream` of chunks for large ranges, leak-safe under
   client disconnect.
-- `byte_size/1` — total output size (the `Content-Length` an HTTP layer needs), with no walk
-  of payload bytes.
+- `content_length/1` — total output size (the `Content-Length` an HTTP layer needs), with no
+  walk of payload bytes. (Named `content_length`, **not** `byte_size`, to avoid shadowing the
+  `Kernel.byte_size/1` BIF — see §4.6.)
+
+The **O(range) memory guarantee holds for `FileSlice`-backed (lazy-read) trees**; a tree
+carrying a large *in-memory* binary leaf has those bytes already resident, so the streaming
+origin's memory claim applies to `read(path, lazy: true)` inputs (the memory-safe path).
 - A defining invariant that makes the whole feature property-testable against the already
   trusted `serialize/1`.
 
@@ -57,7 +62,7 @@ All on `ISOMedia`, delegating to `ISOMedia.SeekIndex`:
 @spec seek_index(tree) :: SeekIndex.t()
 @spec read_range(SeekIndex.t(), offset :: non_neg_integer(), length :: non_neg_integer()) :: binary()
 @spec stream_range(SeekIndex.t(), offset :: non_neg_integer(), length :: non_neg_integer(), chunk_size :: pos_integer()) :: Enumerable.t()
-@spec byte_size(SeekIndex.t()) :: non_neg_integer()
+@spec content_length(SeekIndex.t()) :: non_neg_integer()
 ```
 
 `tree` is a `%Box{}` or `[%Box{}]` (same shapes `serialize/1` accepts). The index is opaque —
@@ -122,15 +127,32 @@ ordered segments into the O(1)-access representation.
 
 ### 4.3 `read_range/3` — clipping & splicing math
 
+**Canonical clamp** (one definition, reused by `read_range/3` *and* the §5 oracle so they can
+never drift). Given `offset, length >= 0` (API contract) and total `bs`:
+
+```
+clamp_range(offset, length, bs):
+  start  = min(offset, bs)                 # past-EOF collapses to bs
+  finish = min(offset + length, bs)        # exclusive; >= start since length >= 0
+  return {start, finish}                   # read window is [start, finish)
+```
+
+`read_range/3`:
+
 ```
 read_range(index, offset, length):
-  # 1. Clamp to the output bounds (HTTP-Range friendly: past-EOF returns the tail, not error)
-  start  = clamp(offset, 0, byte_size)
-  finish = clamp(offset + length, start, byte_size)   # exclusive
-  if finish == start: return ""
+  # 1. Clamp to output bounds (HTTP-Range friendly: past-EOF returns the tail, not an error)
+  {start, finish} = clamp_range(offset, length, content_length)
+  if finish == start: return ""           # empty window: empty tree, zero-len, or offset >= EOF
+
+  # --- PRECONDITION past this point: finish > start  =>  start < content_length
+  #     =>  count >= 1 and a valid segment index exists. bsearch is never called on
+  #     an empty tuple. (Empty tree has content_length == 0, so the guard above returns "".)
 
   # 2. Binary search the tuple for the segment containing `start`
   i = bsearch(segments, start)        # largest i with segments[i].abs_offset <= start
+                                      #   (well-defined: start < content_length and
+                                      #    segments[0].abs_offset == 0, so i in [0, count-1])
 
   # 3. Splice forward across segments until `finish`
   acc, pos = [], start
@@ -173,10 +195,13 @@ yields `chunk_size`-byte binaries across the clamped range. Because a long range
 normal completion — so a dropped video connection closes any open fd deterministically.
 
 Design: the stream is driven by the same clip-and-splice cursor as `read_range/3`, but yields
-one chunk per step instead of accumulating. For a run of bytes inside a single `FileSlice`, the
-resource opens that file **once** and preads successive chunks (no per-chunk open — avoids
-thousands of opens over a GB), closing it in `after_fun` when the run ends or the consumer
-halts. `{:bytes, _}` providers yield directly from memory with no fd.
+one chunk per step instead of accumulating. The `acc` threaded by `next_fun` **carries the
+currently-open io_device** (the fd for the `FileSlice` being read, or `nil` between slices), so
+`after_fun` can close whatever is open on halt/error/completion. For a run of bytes inside a
+single `FileSlice`, the resource opens that file **once** and preads successive chunks (no
+per-chunk open — avoids thousands of opens over a GB), and closes it both when the run ends
+(slice boundary) and on consumer halt. `{:bytes, _}` providers yield directly from memory with
+no fd.
 
 This matches the existing codebase split: `FileSlice.read/1` (one-shot, ephemeral) underlies
 `read_range/3`; `FileSlice.stream/3` (single callback-managed open) is the pattern
@@ -204,22 +229,34 @@ end
 The `rel + len <= length` guard makes out-of-bounds a contract violation, not a silent short
 read.
 
+### 4.6 Naming: `content_length/1`, not `byte_size/1`
+
+The public total-size accessor is `content_length/1`. Defining `def byte_size/1` on `ISOMedia`
+or `SeekIndex` would shadow the auto-imported `Kernel.byte_size/1`: every *unqualified*
+`byte_size(bin)` inside those modules would resolve to the local function instead of the BIF,
+silently breaking binary-size calls (e.g. the `byte_size(data) == len` guard in §4.5, and any
+size math in `read_range`). `content_length/1` avoids the shadow entirely and names the HTTP
+concept it serves (§8). The `SeekIndex` struct keeps its internal `:byte_size` field (a struct
+key, not a function, so no shadow); `content_length/1` simply returns it.
+
 ## 5. The defining invariant (test oracle)
 
-A new round-trip law, parallel to `serialize(parse(file)) == file`:
+A new round-trip law, parallel to `serialize(parse(file)) == file`. It is derived from the
+**same `clamp_range/3` as §4.3** so the oracle and the implementation cannot diverge:
 
-> For any tree `t`, with `idx = SeekIndex.build(t)` and `full = serialize(t)`:
-> for all `offset, length`:
+> For any tree `t`, with `idx = SeekIndex.build(t)` and `full = serialize(t)`,
+> `bs = Kernel.byte_size(full)`, and `{start, finish} = clamp_range(offset, length, bs)`:
+> for all `offset >= 0, length >= 0`:
 >
 > ```elixir
-> read_range(idx, offset, length) ==
->   :binary.part(full, min(offset, byte_size(full)),
->                       clamp(length, 0, byte_size(full) - min(offset, byte_size(full))))
+> read_range(idx, offset, length) == :binary.part(full, start, finish - start)
 > ```
 >
-> and `byte_size(idx) == byte_size(full)`, and `read_range(idx, 0, byte_size(idx)) == full`.
+> and `content_length(idx) == bs`, and `read_range(idx, 0, content_length(idx)) == full`.
 
-`serialize/1` is the trusted oracle, so this is directly property-testable.
+Because both sides take their window from the one `clamp_range/3` definition, there is a single
+clamp to get right. `serialize/1` is the trusted oracle, so this is directly property-testable.
+(Note the explicit `Kernel.byte_size/1` qualification — see §4.6.)
 
 ## 6. Edge cases
 
@@ -254,9 +291,10 @@ errors surface immediately.
 
 A README/guide section (no code compiled into the lib) showing the killer app: parse `Range`,
 build the index once (or per request), and stream the response — e.g. `Plug.Conn`
-`send_chunked/2` fed by `stream_range/4`, with `Content-Length` from `byte_size/1` and a
+`send_chunked/2` fed by `stream_range/4`, with `Content-Length` from `content_length/1` and a
 `206 Partial Content` `Content-Range`. Demonstrates a zero-dep streaming origin that can
-`faststart`/`trim`/`fragment` on the fly.
+`faststart`/`trim`/`fragment` on the fly. (The O(range) memory claim assumes `FileSlice`-backed
+lazy trees — see §2.)
 
 ## 9. Performance notes
 
@@ -271,12 +309,17 @@ build the index once (or per request), and stream the response — e.g. `Plug.Co
 ## 10. Module touch list
 
 - **New:** `lib/iso_media/seek_index.ex` (`build/1`, `read_range/3`, `stream_range/4`,
-  `byte_size/1`, private tuple bsearch + splice).
+  `content_length/1`, private `clamp_range/3` + tuple bsearch + splice).
 - **New fn:** `FileSlice.read_range/3`.
+- **Expose (DRY):** `Serializer.encode_header/2` is currently **private** (`serializer.ex:69`).
+  §4.2 reuses it to emit header bytes — so promote it to a public `Serializer.header_bytes/1`
+  (computing `body_len` from `Layout.box_size - Layout.header_size` internally). Without this,
+  `SeekIndex` would duplicate the 3-clause `:compact`/`:large`/`:eof` encoder, violating the
+  single-source-of-truth discipline §4.2 claims.
 - **Edit:** `lib/iso_media.ex` — delegations `seek_index/1`, `read_range/3`, `stream_range/4`,
-  `byte_size/1`.
-- **Reuse (unchanged):** `Layout.header_size/box_size/segment_size`, the serializer's header
-  encoder, `MdatSource` segment-resolution discipline.
+  `content_length/1`.
+- **Reuse (unchanged):** `Layout.header_size/box_size/segment_size`, the (now public) serializer
+  header encoder, `MdatSource` segment-resolution discipline.
 - **Tests:** `test/iso_media/seek_index_test.exs` (property + unit), fixtures reused from
   existing trim/fragment/concat tests.
 - **Docs:** README HTTP-integration section; CLAUDE.md module-map entry; ROADMAP "Shipped".
