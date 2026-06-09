@@ -139,6 +139,28 @@ defmodule ISOMedia do
   @spec content_length(ISOMedia.SeekIndex.t()) :: non_neg_integer()
   def content_length(index), do: ISOMedia.SeekIndex.content_length(index)
 
+  @doc "Build a cacheable HTTP `%Resource{}`. See `ISOMedia.HTTP.resource/2`."
+  def http_resource(tree, opts \\ []), do: ISOMedia.HTTP.resource(tree, opts)
+
+  @doc "Normalize headers + method into a `%Request{}`. See `ISOMedia.HTTP.from_headers/2`."
+  def http_from_headers(headers, method), do: ISOMedia.HTTP.from_headers(headers, method)
+
+  @doc "Produce an HTTP response plan. See `ISOMedia.HTTP.serve/2`."
+  def http_serve(resource, request), do: ISOMedia.HTTP.serve(resource, request)
+
+  @doc "Lazily stream a response body. See `ISOMedia.HTTP.body_stream/2`."
+  def http_body_stream(response, chunk_size \\ 65_536),
+    do: ISOMedia.HTTP.body_stream(response, chunk_size)
+
+  @doc "Materialize a response body as iodata. See `ISOMedia.HTTP.body_iodata/1`."
+  def http_body_iodata(response), do: ISOMedia.HTTP.body_iodata(response)
+
+  @doc "Content fingerprint of a tree's serialization. See `ISOMedia.HTTP.etag/2`."
+  def etag(tree, opts \\ []), do: ISOMedia.HTTP.etag(tree, opts)
+
+  @doc "Derive a media Content-Type. See `ISOMedia.HTTP.content_type/1`."
+  def content_type(tree), do: ISOMedia.HTTP.content_type(tree)
+
   @doc """
   Read a file and parse it. Pass `lazy: true` to keep large leaf payloads
   (≥ `:lazy_threshold`, default 1 MB) as `ISOMedia.FileSlice` references instead of
