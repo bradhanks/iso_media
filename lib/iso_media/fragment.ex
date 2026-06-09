@@ -23,8 +23,8 @@ defmodule ISOMedia.Fragment do
   @spec fragment(ISOMedia.tree(), keyword()) :: ISOMedia.tree()
   def fragment(boxes, opts \\ []) do
     target_sec = Keyword.get(opts, :target_duration, 2.0)
-    ftyp = Box.child(boxes, "ftyp") || raise ArgumentError, "fragment: no ftyp"
-    moov = Box.child(boxes, "moov") || raise ArgumentError, "fragment: no moov"
+    ftyp = Box.child!(boxes, "ftyp", "fragment")
+    moov = Box.child!(boxes, "moov", "fragment")
     mdats = MdatSource.collect(boxes)
 
     metas =
@@ -103,8 +103,7 @@ defmodule ISOMedia.Fragment do
       ChunkOffset.encode(%ChunkOffset{kind: :stco, version: 0, flags: <<0, 0, 0>>, offsets: []})
     ]
 
-    trak
-    |> Map.update!(:children, &Enum.reject(&1, fn c -> c.type == "edts" end))
+    %{trak | children: Box.remove(trak.children, ["edts"])}
     |> BoxPath.update_descendant(~w(mdia minf stbl), fn stbl -> %{stbl | children: empty} end)
   end
 

@@ -6,7 +6,7 @@ defmodule ISOMedia.FragmentIndex do
   resolves per-sample duration/size/flags. `chunk_index` is a per-`trun` counter.
   """
   import Bitwise
-  alias ISOMedia.{Box, BoxPath, Extract, Layout, Sample, Trak}
+  alias ISOMedia.{Box, BoxPath, Extract, Layout, Payload, Sample, Trak}
 
   alias ISOMedia.Boxes.{
     Handler,
@@ -58,7 +58,7 @@ defmodule ISOMedia.FragmentIndex do
       %{
         duration_ts: duration_ts,
         timescale: track_timescale(boxes, tfhd.track_id),
-        bytes: Layout.box_size(mdat) - Layout.header_size(mdat)
+        bytes: Payload.size(mdat.data)
       }
     end)
   end
@@ -82,13 +82,10 @@ defmodule ISOMedia.FragmentIndex do
 
   # One %{moof, offset} per moof, offset stamped by the tree-local Layout walk.
   defp moof_layout(boxes) do
-    {recs, _end} =
-      Enum.flat_map_reduce(boxes, 0, fn box, off ->
-        rec = if box.type == "moof", do: [%{moof: box, offset: off}], else: []
-        {rec, off + Layout.box_size(box)}
-      end)
-
-    recs
+    boxes
+    |> Layout.top_level_layout()
+    |> Enum.filter(&(&1.box.type == "moof"))
+    |> Enum.map(fn %{box: moof, offset: offset} -> %{moof: moof, offset: offset} end)
   end
 
   defp index_traf(traf, moof_off, trex, {acc, sidx, cidx}) do
@@ -152,17 +149,14 @@ defmodule ISOMedia.FragmentIndex do
   end
 
   defp trex_for!(boxes, track_id) do
-    moov = Box.child(boxes, "moov") || raise ArgumentError, "fMP4: no moov"
-    mvex = Box.child(moov.children, "mvex") || raise ArgumentError, "fMP4: no mvex"
+    moov = Box.child!(boxes, "moov", "fMP4")
+    mvex = Box.child!(moov.children, "mvex", "fMP4")
 
-    box =
-      Enum.find(mvex.children, fn b ->
-        b.type == "trex" and TrackExtends.decode(b).track_id == track_id
-      end)
-
-    if box,
-      do: TrackExtends.decode(box),
-      else: raise(ArgumentError, "fMP4: no trex for track #{track_id}")
+    mvex.children
+    |> Box.children("trex")
+    |> Enum.map(&TrackExtends.decode/1)
+    |> Enum.find(&(&1.track_id == track_id)) ||
+      raise(ArgumentError, "fMP4: no trex for track #{track_id}")
   end
 
   defp traf_for(moof, track_id) do

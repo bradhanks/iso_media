@@ -37,7 +37,7 @@ defmodule ISOMedia.Extract do
   """
   def extract_track(boxes, track_id) do
     trak = find_trak(boxes, track_id) || raise ArgumentError, "no track with track_id #{track_id}"
-    ftyp = Box.child(boxes, "ftyp") || raise ArgumentError, "file has no ftyp"
+    ftyp = Box.child!(boxes, "ftyp", "extract")
     mdats = MdatSource.collect(boxes)
 
     runs =

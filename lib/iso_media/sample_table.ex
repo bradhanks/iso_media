@@ -7,7 +7,7 @@ defmodule ISOMedia.SampleTable do
   `stss` (sync samples). Raises on `stz2` (unsupported) or a missing required table.
   """
 
-  alias ISOMedia.{Box, FullBox, Sample}
+  alias ISOMedia.{Box, BoxPath, FullBox, Sample}
   alias ISOMedia.Boxes.ChunkOffset
 
   # Sanity ceiling on a track's sample count. The chunk structure (`stco`/`stsc`) is
@@ -273,6 +273,5 @@ defmodule ISOMedia.SampleTable do
     Enum.reverse(rev)
   end
 
-  # Navigate a single box by child-type path (e.g. dig(trak, ~w(mdia minf stbl))).
-  defp dig(%Box{type: type} = box, path), do: Box.find([box], [type | path])
+  defp dig(box, path), do: BoxPath.dig(box, path)
 end

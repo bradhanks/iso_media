@@ -14,22 +14,12 @@ defmodule ISOMedia.MdatSource do
   written file — the basis for drift-free recursive resolution.
   """
   def collect(boxes) do
-    {records, _end_off} =
-      Enum.flat_map_reduce(boxes, 0, fn box, off ->
-        size = Layout.box_size(box)
-
-        records =
-          if box.type == "mdat" do
-            header = Layout.header_size(box)
-            [%{box: box, payload_start: off + header, payload_size: size - header}]
-          else
-            []
-          end
-
-        {records, off + size}
-      end)
-
-    records
+    boxes
+    |> Layout.top_level_layout()
+    |> Enum.filter(&(&1.box.type == "mdat"))
+    |> Enum.map(fn %{box: box, payload_offset: payload_start} ->
+      %{box: box, payload_start: payload_start, payload_size: Payload.size(box.data)}
+    end)
   end
 
   @doc """

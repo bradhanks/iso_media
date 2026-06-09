@@ -13,8 +13,8 @@ defmodule ISOMedia.Defragment do
       raise ArgumentError, "defragment: not a fragmented file (needs moov/mvex + moof)"
     end
 
-    ftyp = Box.child(boxes, "ftyp") || raise ArgumentError, "defragment: no ftyp"
-    moov = Box.child(boxes, "moov") || raise ArgumentError, "defragment: no moov"
+    ftyp = Box.child!(boxes, "ftyp", "defragment")
+    moov = Box.child!(boxes, "moov", "defragment")
 
     base_traks = Box.children(moov.children, "trak")
     track_ids = Enum.map(base_traks, &Trak.id/1)

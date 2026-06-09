@@ -19,12 +19,8 @@ defmodule ISOMedia.Concat do
   def concat([first | _] = inputs) do
     check_compatibility!(inputs)
 
-    ftyp =
-      Box.child(first, "ftyp") || raise ArgumentError, "first input has no ftyp"
-
-    first_moov =
-      Box.child(first, "moov") || raise ArgumentError, "first input has no moov"
-
+    ftyp = Box.child!(first, "ftyp", "concat")
+    first_moov = Box.child!(first, "moov", "concat")
     movie_ts = Trak.movie_timescale(first_moov)
 
     inputs_data =
@@ -71,8 +67,7 @@ defmodule ISOMedia.Concat do
 
   # --- small helpers (shared with the compatibility checks) ---
 
-  defp moov_of(boxes),
-    do: Box.child(boxes, "moov") || raise(ArgumentError, "input has no moov")
+  defp moov_of(boxes), do: Box.child!(boxes, "moov", "concat")
 
   defp traks(moov), do: Box.children(moov.children, "trak")
 

@@ -16,8 +16,8 @@ defmodule ISOMedia.Trim do
   def trim(boxes, start_sec, end_sec) do
     if end_sec <= start_sec, do: raise(ArgumentError, "trim: end_sec must be > start_sec")
 
-    ftyp = Box.child(boxes, "ftyp") || raise ArgumentError, "file has no ftyp"
-    moov = Box.child(boxes, "moov") || raise ArgumentError, "file has no moov"
+    ftyp = Box.child!(boxes, "ftyp", "trim")
+    moov = Box.child!(boxes, "moov", "trim")
     mdats = MdatSource.collect(boxes)
     movie_ts = Trak.movie_timescale(moov)
 
