@@ -32,6 +32,15 @@ defmodule ISOMedia.SeekIndex do
   def content_length(%__MODULE__{byte_size: bs}), do: bs
 
   @doc """
+  The ordered list of physical providers (`{:bytes, binary} | {:slice, FileSlice.t()}`) that
+  back the serialized output. The basis for a content fingerprint (`ISOMedia.HTTP.etag/2`)
+  without materializing payload bytes.
+  """
+  def providers(%__MODULE__{segments: segs}) do
+    segs |> Tuple.to_list() |> Enum.map(& &1.provider)
+  end
+
+  @doc """
   Return bytes `[offset, offset+length)` of the serialized output. Clamps to the output
   bounds (a read past EOF returns the available tail, not an error — HTTP-Range friendly).
   Raises `ArgumentError` on a negative or non-integer `offset`/`length` (the public boundary
