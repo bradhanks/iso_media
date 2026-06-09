@@ -140,25 +140,34 @@ defmodule ISOMedia do
   def content_length(index), do: ISOMedia.SeekIndex.content_length(index)
 
   @doc "Build a cacheable HTTP `%Resource{}`. See `ISOMedia.HTTP.resource/2`."
+  @spec http_resource(tree() | ISOMedia.SeekIndex.t(), keyword()) :: ISOMedia.HTTP.Resource.t()
   def http_resource(tree, opts \\ []), do: ISOMedia.HTTP.resource(tree, opts)
 
-  @doc "Normalize headers + method into a `%Request{}`. See `ISOMedia.HTTP.from_headers/2`."
+  @doc "Normalize headers + method into a `%ISOMedia.HTTP.Request{}`. See `ISOMedia.HTTP.from_headers/2`."
+  @spec http_from_headers([{binary(), binary()}] | map(), atom() | binary()) ::
+          ISOMedia.HTTP.Request.t()
   def http_from_headers(headers, method), do: ISOMedia.HTTP.from_headers(headers, method)
 
   @doc "Produce an HTTP response plan. See `ISOMedia.HTTP.serve/2`."
+  @spec http_serve(ISOMedia.HTTP.Resource.t(), ISOMedia.HTTP.Request.t()) ::
+          ISOMedia.HTTP.Response.t()
   def http_serve(resource, request), do: ISOMedia.HTTP.serve(resource, request)
 
   @doc "Lazily stream a response body. See `ISOMedia.HTTP.body_stream/2`."
+  @spec http_body_stream(ISOMedia.HTTP.Response.t(), pos_integer()) :: Enumerable.t()
   def http_body_stream(response, chunk_size \\ 65_536),
     do: ISOMedia.HTTP.body_stream(response, chunk_size)
 
   @doc "Materialize a response body as iodata. See `ISOMedia.HTTP.body_iodata/1`."
+  @spec http_body_iodata(ISOMedia.HTTP.Response.t()) :: iodata()
   def http_body_iodata(response), do: ISOMedia.HTTP.body_iodata(response)
 
   @doc "Content fingerprint of a tree's serialization. See `ISOMedia.HTTP.etag/2`."
+  @spec etag(tree() | ISOMedia.SeekIndex.t() | ISOMedia.Box.t(), keyword()) :: binary()
   def etag(tree, opts \\ []), do: ISOMedia.HTTP.etag(tree, opts)
 
   @doc "Derive a media Content-Type. See `ISOMedia.HTTP.content_type/1`."
+  @spec content_type(tree() | ISOMedia.Box.t()) :: binary()
   def content_type(tree), do: ISOMedia.HTTP.content_type(tree)
 
   @doc """
