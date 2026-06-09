@@ -38,6 +38,16 @@ defmodule ISOMedia.Payload do
   def read(parts) when is_list(parts), do: parts |> Enum.map(&read/1) |> IO.iodata_to_binary()
 
   @doc """
+  Flatten a payload into its ordered **physical leaves** — the `binary` and `FileSlice`
+  parts, with any nested segment lists expanded in place. Reads no bytes; this is the
+  shared expansion `ISOMedia.SeekIndex` layers absolute offsets and providers onto.
+  """
+  @spec flatten(t()) :: [binary() | FileSlice.t()]
+  def flatten(%FileSlice{} = slice), do: [slice]
+  def flatten(bin) when is_binary(bin), do: [bin]
+  def flatten(parts) when is_list(parts), do: Enum.flat_map(parts, &flatten/1)
+
+  @doc """
   Stream a payload to an already-open raw `io_device`, reading any `FileSlice` parts
   from disk in `chunk_size`-byte chunks so a multi-GB payload is never materialized.
   """
