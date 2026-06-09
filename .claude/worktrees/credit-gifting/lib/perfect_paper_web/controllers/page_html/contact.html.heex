@@ -1,0 +1,273 @@
+<Layouts.app flash={@flash} current_scope={@current_scope}>
+  <%!-- Page header --%>
+  <section class="ds-container pt-14 pb-10 lg:pt-20">
+    <div class="max-w-2xl">
+      <p class="ds-eyebrow inline-flex items-center gap-2 mb-4">
+        <span class="inline-block size-[7px] rounded-full bg-accent"></span> {gettext(
+          "Get in touch"
+        )}
+      </p>
+      <h1 class="font-display font-semibold tracking-[-0.025em] leading-[1.08] text-[clamp(2rem,3vw,3rem)] mb-4">
+        {gettext("We would love to hear from you.")}
+      </h1>
+      <p class="font-serif text-[1.075rem] leading-relaxed text-base-content/70 max-w-[34rem]">
+        {gettext(
+          "Whether you have a question about your review, a suggestion for a feature, or an inquiry about institutional access — our team reads every message."
+        )}
+      </p>
+    </div>
+  </section>
+
+  <%!-- Two-column body --%>
+  <section class="ds-container pb-16 lg:pb-24">
+    <div class="grid gap-8 lg:grid-cols-[1fr_400px] lg:gap-12 items-start">
+      <%!-- LEFT: contact form --%>
+      <div class="card bg-base-100 border border-base-300 shadow-sm">
+        <div class="card-body gap-6">
+          <div>
+            <h2 class="font-display font-semibold text-xl tracking-[-0.01em]">
+              {gettext("Send us a message")}
+            </h2>
+            <p class="font-serif text-sm text-base-content/60 mt-1">
+              {gettext("We aim to respond within one business day.")}
+            </p>
+          </div>
+
+          <form action="#" method="post" class="flex flex-col gap-5">
+            <div class="grid gap-5 sm:grid-cols-2">
+              <div class="form-control">
+                <label class="label" for="contact_name">
+                  <span class="label-text font-sans font-medium text-sm">
+                    {gettext("Full name")}
+                  </span>
+                </label>
+                <input
+                  id="contact_name"
+                  type="text"
+                  name="name"
+                  placeholder={gettext("Dr. Jane Smith")}
+                  class="input input-bordered w-full font-sans text-sm"
+                  required
+                />
+              </div>
+
+              <div class="form-control">
+                <label class="label" for="contact_email">
+                  <span class="label-text font-sans font-medium text-sm">
+                    {gettext("Email address")}
+                  </span>
+                </label>
+                <input
+                  id="contact_email"
+                  type="email"
+                  name="email"
+                  placeholder={gettext("you@university.edu")}
+                  class="input input-bordered w-full font-sans text-sm"
+                  required
+                />
+              </div>
+            </div>
+
+            <div class="form-control">
+              <label class="label" for="contact_institution">
+                <span class="label-text font-sans font-medium text-sm">
+                  {gettext("Institution")}
+                  <span class="text-base-content/40 font-normal ml-1">{gettext("optional")}</span>
+                </span>
+              </label>
+              <input
+                id="contact_institution"
+                type="text"
+                name="institution"
+                placeholder={gettext("University of Chicago")}
+                class="input input-bordered w-full font-sans text-sm"
+              />
+            </div>
+
+            <div class="form-control">
+              <label class="label" for="contact_subject">
+                <span class="label-text font-sans font-medium text-sm">{gettext("Subject")}</span>
+              </label>
+              <select
+                id="contact_subject"
+                name="subject"
+                class="select select-bordered w-full font-sans text-sm"
+              >
+                <option value="">{gettext("Select a topic…")}</option>
+                <option value="general">{gettext("General question")}</option>
+                <option value="review">{gettext("Question about my review")}</option>
+                <option value="institutional">{gettext("Institutional or bulk access")}</option>
+                <option value="journal">{gettext("Journal partnership")}</option>
+                <option value="bug">{gettext("Report a bug")}</option>
+                <option value="feature">{gettext("Feature suggestion")}</option>
+                <option value="billing">{gettext("Billing or credits")}</option>
+              </select>
+            </div>
+
+            <div class="form-control">
+              <label class="label" for="contact_message">
+                <span class="label-text font-sans font-medium text-sm">{gettext("Message")}</span>
+              </label>
+              <textarea
+                id="contact_message"
+                name="message"
+                rows="6"
+                placeholder={gettext("Tell us what's on your mind…")}
+                class="textarea textarea-bordered w-full font-serif text-sm leading-relaxed resize-y"
+                required
+              ></textarea>
+            </div>
+
+            <div class="flex items-center justify-between pt-1">
+              <p class="font-sans text-xs text-base-content/45">
+                {gettext("We will never share your details with third parties.")}
+              </p>
+              <button type="submit" class="btn btn-primary font-sans font-semibold px-7">
+                {gettext("Send message")}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <%!-- RIGHT: alternate contact paths --%>
+      <div class="flex flex-col gap-5">
+        <div class="card bg-base-100 border border-base-300 shadow-sm">
+          <div class="card-body gap-3">
+            <div class="flex items-start gap-3">
+              <div class="grid place-items-center size-9 rounded-lg bg-primary/10 text-primary shrink-0 mt-0.5">
+                <svg
+                  aria-hidden="true"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.7"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M3 8l9 6 9-6" /><rect x="2" y="6" width="20" height="13" rx="2" />
+                </svg>
+              </div>
+              <div>
+                <h3 class="font-display font-semibold text-base leading-snug">
+                  {gettext("General support")}
+                </h3>
+                <p class="font-serif text-sm text-base-content/65 leading-relaxed mt-1">
+                  {gettext(
+                    "Questions about reviews, billing, or your account — we are here to help."
+                  )}
+                </p>
+                <a
+                  href="mailto:support@perfectpaper.io"
+                  class="font-sans text-sm font-medium text-primary hover:underline mt-2 inline-block"
+                >
+                  support@perfectpaper.io
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card bg-base-100 border border-base-300 shadow-sm">
+          <div class="card-body gap-3">
+            <div class="flex items-start gap-3">
+              <div class="grid place-items-center size-9 rounded-lg bg-secondary/10 text-secondary shrink-0 mt-0.5">
+                <svg
+                  aria-hidden="true"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.7"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M4 19v-2a4 4 0 014-4h8a4 4 0 014 4v2" /><circle cx="12" cy="7" r="4" />
+                </svg>
+              </div>
+              <div>
+                <h3 class="font-display font-semibold text-base leading-snug">
+                  {gettext("For institutions")}
+                </h3>
+                <p class="font-serif text-sm text-base-content/65 leading-relaxed mt-1">
+                  {gettext(
+                    "Interested in campus-wide access or a departmental plan? We offer flexible arrangements for research groups and writing centres."
+                  )}
+                </p>
+                <a
+                  href="mailto:institutions@perfectpaper.io"
+                  class="font-sans text-sm font-medium text-primary hover:underline mt-2 inline-block"
+                >
+                  institutions@perfectpaper.io
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card bg-base-100 border border-base-300 shadow-sm">
+          <div class="card-body gap-3">
+            <div class="flex items-start gap-3">
+              <div class="grid place-items-center size-9 rounded-lg bg-secondary/10 text-secondary shrink-0 mt-0.5">
+                <svg
+                  aria-hidden="true"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.7"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6L12 2z" />
+                </svg>
+              </div>
+              <div>
+                <h3 class="font-display font-semibold text-base leading-snug">
+                  {gettext("For journals")}
+                </h3>
+                <p class="font-serif text-sm text-base-content/65 leading-relaxed mt-1">
+                  {gettext(
+                    "Exploring PerfectPaper as a pre-submission screening tool for your journal? We would love to discuss a pilot."
+                  )}
+                </p>
+                <a
+                  href="mailto:journals@perfectpaper.io"
+                  class="font-sans text-sm font-medium text-primary hover:underline mt-2 inline-block"
+                >
+                  journals@perfectpaper.io
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card bg-base-200 border border-base-300">
+          <div class="card-body gap-2">
+            <p class="font-sans text-xs font-semibold uppercase tracking-[0.14em] text-base-content/45">
+              {gettext("Response times")}
+            </p>
+            <dl class="divide-y divide-base-300 font-sans text-sm">
+              <div class="flex justify-between py-2">
+                <dt class="text-base-content/65">{gettext("General enquiries")}</dt>
+                <dd class="font-medium">{gettext("1 business day")}</dd>
+              </div>
+              <div class="flex justify-between py-2">
+                <dt class="text-base-content/65">{gettext("Institutional partnerships")}</dt>
+                <dd class="font-medium">{gettext("2–3 business days")}</dd>
+              </div>
+              <div class="flex justify-between py-2">
+                <dt class="text-base-content/65">{gettext("Journal pilots")}</dt>
+                <dd class="font-medium">{gettext("2–3 business days")}</dd>
+              </div>
+            </dl>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</Layouts.app>

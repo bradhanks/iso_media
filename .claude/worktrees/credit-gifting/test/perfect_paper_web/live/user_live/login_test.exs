@@ -1,0 +1,159 @@
+defmodule PerfectPaperWeb.UserLive.LoginTest do
+  use PerfectPaperWeb.ConnCase, async: true
+
+  import Phoenix.LiveViewTest
+  import PerfectPaper.AccountsFixtures
+
+  # The web-layer rate limiter is process-global ETS keyed by client IP. In an
+  # async file every test would otherwise resolve to the same IP and contend on
+  # one bucket, so give each test its own IP via x-forwarded-for.
+  setup %{conn: conn} do
+    ip = "203.0.113.#{System.unique_integer([:positive])}"
+    {:ok, conn: put_req_header(conn, "x-forwarded-for", ip)}
+  end
+
+  describe "login page" do
+    test "renders login page", %{conn: conn} do
+      {:ok, _lv, html} = live(conn, ~p"/users/log-in")
+
+      assert html =~ "Log in"
+      assert html =~ "Sign up"
+      assert html =~ "Send magic link"
+    end
+  end
+
+  describe "user login - magic link" do
+    test "sends magic link email when user exists", %{conn: conn} do
+      user = user_fixture()
+
+      {:ok, lv, _html} = live(conn, ~p"/users/log-in")
+
+      html =
+        form(lv, "#login_form_magic", user: %{email: user.email})
+        |> render_submit()
+
+      assert html =~ "Check your email"
+
+      assert PerfectPaper.Repo.get_by!(PerfectPaper.Accounts.UserToken, user_id: user.id).context ==
+               "login"
+    end
+
+    test "does not disclose if user is registered", %{conn: conn} do
+      {:ok, lv, _html} = live(conn, ~p"/users/log-in")
+
+      html =
+        form(lv, "#login_form_magic", user: %{email: "idonotexist@example.com"})
+        |> render_submit()
+
+      assert html =~ "Check your email"
+    end
+  end
+
+  describe "magic link UX" do
+    test "defaults to magic-link mode and can toggle to password", %{conn: conn} do
+      {:ok, lv, html} = live(conn, ~p"/users/log-in")
+
+      assert html =~ "Send magic link"
+
+      shown =
+        lv
+        |> element("button", "Use a password instead")
+        |> render_click()
+
+      assert shown =~ "Password"
+    end
+
+    test "magic-link submit for an existing user shows check-email state", %{conn: conn} do
+      user = user_fixture()
+      {:ok, lv, _html} = live(conn, ~p"/users/log-in")
+
+      html =
+        lv
+        |> form("#login_form_magic", user: %{email: user.email})
+        |> render_submit()
+
+      assert html =~ "Check your email"
+      assert html =~ user.email
+    end
+
+    test "magic-link submit for an unknown email shows the same state", %{conn: conn} do
+      {:ok, lv, _html} = live(conn, ~p"/users/log-in")
+
+      html =
+        lv
+        |> form("#login_form_magic", user: %{email: "nobody@example.com"})
+        |> render_submit()
+
+      assert html =~ "Check your email"
+      refute html =~ "Invalid"
+    end
+  end
+
+  describe "user login - password" do
+    test "redirects if user logs in with valid credentials", %{conn: conn} do
+      user = user_fixture() |> set_password()
+
+      {:ok, lv, _html} = live(conn, ~p"/users/log-in")
+
+      lv |> element("button", "Use a password instead") |> render_click()
+
+      form =
+        form(lv, "#login_form_password",
+          user: %{email: user.email, password: valid_user_password(), remember_me: true}
+        )
+
+      conn = submit_form(form, conn)
+
+      assert redirected_to(conn) == ~p"/new"
+    end
+
+    test "redirects to login page with a flash error if credentials are invalid", %{
+      conn: conn
+    } do
+      {:ok, lv, _html} = live(conn, ~p"/users/log-in")
+
+      lv |> element("button", "Use a password instead") |> render_click()
+
+      form =
+        form(lv, "#login_form_password", user: %{email: "test@email.com", password: "123456"})
+
+      render_submit(form, %{user: %{remember_me: true}})
+
+      conn = follow_trigger_action(form, conn)
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) == "Invalid email or password"
+      assert redirected_to(conn) == ~p"/users/log-in"
+    end
+  end
+
+  describe "login navigation" do
+    test "redirects to registration page when the Register button is clicked", %{conn: conn} do
+      {:ok, lv, _html} = live(conn, ~p"/users/log-in")
+
+      {:ok, _login_live, login_html} =
+        lv
+        |> element("main a", "Sign up")
+        |> render_click()
+        |> follow_redirect(conn, ~p"/users/register")
+
+      assert login_html =~ "Create your account"
+    end
+  end
+
+  describe "re-authentication (sudo mode)" do
+    setup %{conn: conn} do
+      user = user_fixture()
+      %{user: user, conn: log_in_user(conn, user)}
+    end
+
+    test "shows login page with email filled in", %{conn: conn, user: user} do
+      {:ok, _lv, html} = live(conn, ~p"/users/log-in")
+
+      assert html =~ "You need to reauthenticate"
+      refute html =~ "Register"
+      assert html =~ "Send magic link"
+
+      assert html =~
+               ~s(<input type="email" name="user[email]" id="login_form_magic_email" value="#{user.email}")
+    end
+  end
+end

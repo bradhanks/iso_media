@@ -115,5 +115,4 @@ defmodule ISOMedia.LazyParser do
   end
 
   defp resolve_size(_io, _pos, size, _file_size), do: {:compact, 8, size}
-
 end

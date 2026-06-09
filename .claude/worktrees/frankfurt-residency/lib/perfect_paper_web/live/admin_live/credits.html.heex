@@ -1,0 +1,58 @@
+<.app
+  title={gettext("Comp credits")}
+  flash={@flash}
+  current_scope={@current_scope}
+  max_width="max-w-2xl"
+>
+  <div class="space-y-8">
+    <header class="space-y-1">
+      <h1 class="ds-h2">{gettext("Comp credits")}</h1>
+      <p class="ds-p text-base-content/70">
+        {gettext(
+          "Grant goodwill credits to an account when something breaks or a customer is unhappy with results."
+        )}
+      </p>
+    </header>
+
+    <.form for={@lookup_form} id="lookup-form" phx-submit="lookup" class="flex items-end gap-2">
+      <div class="flex-1">
+        <.input field={@lookup_form[:email]} type="email" label={gettext("Account email")} />
+      </div>
+      <.button type="submit" class="btn-primary">{gettext("Look up")}</.button>
+    </.form>
+
+    <p :if={@lookup_error} class="text-sm text-error">{@lookup_error}</p>
+
+    <section
+      :if={@target_user}
+      class="space-y-6 rounded-box border border-base-300 p-6"
+    >
+      <div class="flex items-baseline justify-between">
+        <div>
+          <p class="ds-eyebrow">{gettext("Account")}</p>
+          <p class="font-medium">{@target_user.email}</p>
+        </div>
+        <div class="text-right">
+          <p class="ds-eyebrow">{gettext("Current balance")}</p>
+          <p class="font-display text-2xl">{@balance}</p>
+        </div>
+      </div>
+
+      <.form for={@grant_form} id="grant-form" phx-submit="grant" class="space-y-4">
+        <.input
+          field={@grant_form[:amount]}
+          type="number"
+          label={gettext("Credits to grant")}
+          min="1"
+        />
+        <.input
+          field={@grant_form[:reason]}
+          type="text"
+          label={gettext("Reason")}
+          placeholder={gettext("sorry for the outage")}
+        />
+        <.button type="submit" class="btn-primary">{gettext("Grant credits")}</.button>
+      </.form>
+    </section>
+  </div>
+</.app>

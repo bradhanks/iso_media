@@ -1,0 +1,263 @@
+<.app
+  active={:history}
+  title={@session.title || gettext("Manuscript review")}
+  flash={@flash}
+  current_scope={@current_scope}
+  credit_alert={@credit_alert}
+  low_credit_dismissed?={@low_credit_dismissed?}
+  current_workspace={@current_workspace}
+  workspaces={@workspaces}
+>
+  <div class="mx-auto max-w-3xl">
+    <div class="mb-6 flex items-center justify-between gap-4">
+      <h1 class="ds-h2">{@session.title || gettext("Manuscript review")}</h1>
+      <button class="btn btn-sm btn-outline" phx-click="toggle_visibility">
+        {if @session.is_public, do: gettext("Make private"), else: gettext("Share")}
+      </button>
+    </div>
+
+    <p :if={@session.overall_feedback} class="ds-lead mb-8">{@session.overall_feedback}</p>
+
+    <% {top_level, reply_map} = PerfectPaperWeb.HistoryLive.Show.group_comments(@session.comments) %>
+
+    <div :if={@session.comments == []} class="text-base-content/60 font-serif">
+      {gettext("No feedback on this manuscript yet.")}
+    </div>
+
+    <%!-- AI-generated top-level comments with their structured fields --%>
+    <.feedback_card
+      :for={comment <- Enum.filter(top_level, &(&1.author_type == :ai))}
+      id={"comment-#{comment.id}"}
+      title={comment.suggestion || gettext("Suggestion")}
+      quote={comment.original_text}
+      status={to_string(comment.status)}
+    >
+      <span id={"ai-badge-#{comment.id}"} class="badge badge-sm badge-outline">
+        {gettext("AI reviewer")}
+      </span>
+      {comment.explanation}
+
+      <%!-- Replies to this AI comment --%>
+      <div
+        :if={Map.has_key?(reply_map, comment.id)}
+        id={"replies-#{comment.id}"}
+        class="mt-4 space-y-3 border-l-2 border-base-300 pl-4"
+      >
+        <div
+          :for={reply <- Map.get(reply_map, comment.id, [])}
+          id={"comment-#{reply.id}"}
+          class="rounded-box border border-base-200 bg-base-100 p-3"
+          data-author-type="user"
+        >
+          <p class="ds-eyebrow mb-1">{PerfectPaperWeb.HistoryLive.Show.author_label(reply)}</p>
+          <p class="font-serif text-sm leading-relaxed text-base-content/80">{reply.body}</p>
+        </div>
+      </div>
+
+      <%!-- Reply form for this AI comment --%>
+      <div
+        :if={@can_comment? && @reply_to == comment.id}
+        id={"reply-form-#{comment.id}"}
+        class="mt-4"
+      >
+        <form phx-submit="add_comment" class="flex flex-col gap-2">
+          <input type="hidden" name="comment[parent_id]" value={comment.id} />
+          <textarea
+            name="comment[body]"
+            rows="2"
+            placeholder={gettext("Write a reply...")}
+            class="textarea textarea-bordered w-full text-sm font-serif"
+          ></textarea>
+          <div class="flex gap-2">
+            <button type="submit" class="btn btn-sm btn-primary">{gettext("Post reply")}</button>
+            <button type="button" class="btn btn-sm btn-ghost" phx-click="hide_reply_form">
+              {gettext("Cancel")}
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <:actions>
+        <button
+          :if={comment.status == :open}
+          class="btn btn-sm btn-outline"
+          phx-click="address"
+          phx-value-id={comment.id}
+        >
+          {gettext("Mark addressed")}
+        </button>
+        <button
+          :if={comment.status == :open}
+          class="btn btn-sm btn-ghost"
+          phx-click="dismiss"
+          phx-value-id={comment.id}
+        >
+          {gettext("Dismiss")}
+        </button>
+        <button
+          :if={comment.status != :open}
+          class="btn btn-sm btn-ghost"
+          phx-click="undo"
+          phx-value-id={comment.id}
+          phx-value-type={if comment.status == :dismissed, do: "dismiss", else: "address"}
+        >
+          {gettext("Undo")}
+        </button>
+        <button
+          :if={@can_comment? && @reply_to != comment.id}
+          class="btn btn-sm btn-ghost"
+          phx-click="show_reply_form"
+          phx-value-parent_id={comment.id}
+          id={"reply-#{comment.id}"}
+        >
+          {gettext("Reply")}
+        </button>
+      </:actions>
+    </.feedback_card>
+
+    <%!-- Human-authored top-level comments --%>
+    <div
+      :for={comment <- Enum.filter(top_level, &(&1.author_type == :user))}
+      id={"comment-#{comment.id}"}
+      class="rounded-box border border-base-300 bg-base-100 p-5 mb-3.5"
+      data-author-type="user"
+    >
+      <p class="ds-eyebrow mb-1">{PerfectPaperWeb.HistoryLive.Show.author_label(comment)}</p>
+      <p class="font-serif text-sm leading-relaxed text-base-content/80 mb-3">{comment.body}</p>
+
+      <%!-- Replies to this human comment --%>
+      <div
+        :if={Map.has_key?(reply_map, comment.id)}
+        id={"replies-#{comment.id}"}
+        class="mt-4 space-y-3 border-l-2 border-base-300 pl-4"
+      >
+        <div
+          :for={reply <- Map.get(reply_map, comment.id, [])}
+          id={"comment-#{reply.id}"}
+          class="rounded-box border border-base-200 bg-base-100 p-3"
+          data-author-type="user"
+        >
+          <p class="ds-eyebrow mb-1">{PerfectPaperWeb.HistoryLive.Show.author_label(reply)}</p>
+          <p class="font-serif text-sm leading-relaxed text-base-content/80">{reply.body}</p>
+        </div>
+      </div>
+
+      <%!-- Reply form for this human comment --%>
+      <div
+        :if={@can_comment? && @reply_to == comment.id}
+        id={"reply-form-#{comment.id}"}
+        class="mt-4"
+      >
+        <form phx-submit="add_comment" class="flex flex-col gap-2">
+          <input type="hidden" name="comment[parent_id]" value={comment.id} />
+          <textarea
+            name="comment[body]"
+            rows="2"
+            placeholder={gettext("Write a reply...")}
+            class="textarea textarea-bordered w-full text-sm font-serif"
+          ></textarea>
+          <div class="flex gap-2">
+            <button type="submit" class="btn btn-sm btn-primary">{gettext("Post reply")}</button>
+            <button type="button" class="btn btn-sm btn-ghost" phx-click="hide_reply_form">
+              {gettext("Cancel")}
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <div :if={@can_comment? && @reply_to != comment.id} class="flex gap-2 mt-2">
+        <button
+          class="btn btn-sm btn-ghost"
+          phx-click="show_reply_form"
+          phx-value-parent_id={comment.id}
+          id={"reply-#{comment.id}"}
+        >
+          {gettext("Reply")}
+        </button>
+      </div>
+    </div>
+
+    <%!-- Top-level comment composer --%>
+    <div
+      :if={@can_comment?}
+      id="comment-composer"
+      class="mt-8 rounded-box border border-base-300 bg-base-100 p-5"
+    >
+      <h2 class="ds-h3 mb-3">{gettext("Add a comment")}</h2>
+      <form phx-submit="add_comment" class="flex flex-col gap-3">
+        <input type="hidden" name="comment[parent_id]" value="" />
+        <textarea
+          name="comment[body]"
+          rows="3"
+          placeholder={gettext("Share your thoughts on this manuscript...")}
+          class="textarea textarea-bordered w-full font-serif"
+        ></textarea>
+        <div>
+          <button type="submit" class="btn btn-primary btn-sm">{gettext("Post comment")}</button>
+        </div>
+      </form>
+    </div>
+
+    <%!-- Collaborators panel — owners and admins only --%>
+    <div
+      :if={@can_share?}
+      id="collaborators-panel"
+      class="mt-8 rounded-box border border-base-300 bg-base-100 p-5"
+    >
+      <h2 class="ds-h3 mb-4">{gettext("Collaborators")}</h2>
+
+      <%!-- Invite form --%>
+      <div id="invite-form" class="mb-6">
+        <p class="ds-eyebrow mb-2">{gettext("Invite by email")}</p>
+        <form phx-submit="invite" class="flex flex-col gap-3 sm:flex-row sm:items-end">
+          <div class="flex-1">
+            <input
+              type="email"
+              name="invite[email]"
+              placeholder={gettext("colleague@example.com")}
+              class="input input-bordered w-full"
+              required
+            />
+          </div>
+          <div>
+            <select name="invite[role]" class="select select-bordered">
+              <option value="commenter" selected>{gettext("Commenter")}</option>
+              <option value="editor">{gettext("Editor")}</option>
+              <option value="viewer">{gettext("Viewer")}</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary btn-sm">{gettext("Invite")}</button>
+        </form>
+      </div>
+
+      <%!-- Current grants --%>
+      <div :if={@grants != []}>
+        <p class="ds-eyebrow mb-3">{gettext("Current collaborators")}</p>
+        <ul class="space-y-2">
+          <li
+            :for={grant <- @grants}
+            id={"grant-#{grant.subject_id}"}
+            class="flex items-center justify-between gap-4 rounded-box border border-base-200 bg-base-200/40 px-4 py-2"
+          >
+            <span class="font-serif text-sm text-base-content">
+              {grant.subject_id}
+            </span>
+            <span class="badge badge-outline badge-sm capitalize">{grant.role}</span>
+            <button
+              class="btn btn-ghost btn-xs text-error"
+              phx-click="revoke"
+              phx-value-user_id={grant.subject_id}
+              id={"revoke-#{grant.subject_id}"}
+            >
+              {gettext("Revoke")}
+            </button>
+          </li>
+        </ul>
+      </div>
+
+      <p :if={@grants == []} class="font-serif text-sm text-base-content/60">
+        {gettext("No collaborators yet. Invite someone above.")}
+      </p>
+    </div>
+  </div>
+</.app>

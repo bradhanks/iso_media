@@ -1,0 +1,80 @@
+<Layouts.app flash={@flash} current_scope={@current_scope}>
+  <.hero
+    primary_cta_href={~p"/users/register"}
+    secondary_cta_href="#how-it-works"
+    trusted_by={gettext("Built by NIH-funded cancer researchers")}
+  />
+
+  <.institution_logos />
+
+  <div id="how-it-works">
+    <.feature_grid />
+  </div>
+
+  <%!-- Pricing --%>
+  <section id="pricing" class="ds-container scroll-mt-20 py-16 lg:py-24">
+    <div class="mb-10 max-w-xl">
+      <p class="ds-eyebrow">
+        {gettext("Pricing")}
+      </p>
+      <h2 class="ds-h2 mt-2">{gettext("Plans that scale with your work")}</h2>
+    </div>
+    <PerfectPaperWeb.PricingComponents.pricing_table
+      plans={PerfectPaper.Billing.Prices.subscriptions()}
+      band={@pricing_band}
+      eu?={@pricing_eu?}
+      register_path={~p"/users/register"}
+    />
+  </section>
+
+  <%!-- FAQ --%>
+  <section id="faq" class="scroll-mt-20 border-t border-base-300 bg-base-200/40">
+    <div class="ds-container py-16 lg:py-24">
+      <div class="mb-10">
+        <p class="ds-eyebrow">
+          {gettext("FAQ")}
+        </p>
+        <h2 class="ds-h2 mt-2">{gettext("Common questions")}</h2>
+      </div>
+      <div class="max-w-3xl space-y-3">
+        <details
+          :for={{q, a} <- faqs()}
+          class="collapse collapse-arrow rounded-box border border-base-300 bg-base-100"
+        >
+          <summary class="collapse-title font-display text-lg font-semibold">{q}</summary>
+          <div class="collapse-content">
+            <p class="font-serif text-base-content/75">{a}</p>
+          </div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <%!-- Trust & privacy --%>
+  <section id="trust" class="ds-container scroll-mt-20 py-16 lg:py-24">
+    <p class="ds-eyebrow">
+      {gettext("Trust & privacy")}
+    </p>
+    <h2 class="ds-h2 mt-2 mb-4">{gettext("Your manuscript stays yours")}</h2>
+    <div class="max-w-3xl space-y-4 font-serif text-base-content/75">
+      <p>
+        {gettext("Your content is encrypted in transit and at rest, and is")} <strong>{gettext("never used to train models")}</strong>. {gettext(
+          "The paper is yours; it stays yours."
+        )}
+      </p>
+      <p>
+        {gettext(
+          "We retain your documents only as long as needed to produce your review, and you can delete a review and its source at any time."
+        )}
+      </p>
+      <p>
+        {gettext("Questions about security or data handling?")} <.link
+          navigate={~p"/contact"}
+          class="link link-primary"
+        >{gettext("Contact us")}</.link>.
+      </p>
+    </div>
+  </section>
+
+  <.cta_banner cta_href={~p"/users/register"} />
+</Layouts.app>

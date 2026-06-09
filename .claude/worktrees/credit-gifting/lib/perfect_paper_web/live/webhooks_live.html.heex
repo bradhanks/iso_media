@@ -1,0 +1,260 @@
+<.app
+  active={nil}
+  title={gettext("Webhooks")}
+  flash={@flash}
+  current_scope={@current_scope}
+  credit_alert={@credit_alert}
+  low_credit_dismissed?={@low_credit_dismissed?}
+  current_workspace={@current_workspace}
+  workspaces={@workspaces}
+>
+  <div class="mx-auto max-w-3xl">
+    <div class="mb-6 flex items-end justify-between">
+      <div>
+        <h1 class="ds-h2">{gettext("Webhooks")}</h1>
+        <p class="ds-lead mt-1 text-base-content/65">
+          {gettext("Receive real-time event notifications for %{org}.", org: @org.name)}
+        </p>
+      </div>
+    </div>
+
+    <%!-- ── Endpoint list ──────────────────────────────────────────────── --%>
+    <section id="endpoints-list" aria-label="Webhook endpoints">
+      <div :if={@endpoints == []} class="text-base-content/60 font-serif mb-6">
+        {gettext("No endpoints yet. Add one below to start receiving events.")}
+      </div>
+
+      <ul class="space-y-4 mb-8">
+        <li
+          :for={ep <- @endpoints}
+          id={"endpoint-#{ep.id}"}
+          class="card card-border bg-base-100"
+        >
+          <div class="card-body py-4">
+            <%!-- Row: URL + badges + delete --%>
+            <div class="flex items-start justify-between gap-4">
+              <div class="min-w-0 flex-1">
+                <p class="font-sans text-sm font-semibold break-all">{ep.url}</p>
+                <div
+                  :if={ep.description && ep.description != ""}
+                  class="mt-0.5 font-serif text-xs text-base-content/60"
+                >
+                  {ep.description}
+                </div>
+                <div class="mt-1.5 flex flex-wrap gap-1.5">
+                  <span
+                    :for={t <- ep.event_types}
+                    class="badge badge-outline badge-sm font-sans"
+                  >
+                    {t}
+                  </span>
+                  <span
+                    :if={ep.active}
+                    class="badge badge-success badge-soft badge-sm font-sans"
+                  >
+                    {gettext("Active")}
+                  </span>
+                  <span
+                    :if={not ep.active}
+                    class="badge badge-neutral badge-soft badge-sm font-sans"
+                  >
+                    {gettext("Inactive")}
+                  </span>
+                </div>
+              </div>
+              <button
+                type="button"
+                id={"endpoint-#{ep.id}-delete"}
+                class="btn btn-ghost btn-xs text-base-content/40 hover:text-error font-sans shrink-0"
+                phx-click="delete"
+                phx-value-id={ep.id}
+                data-confirm={gettext("Delete this endpoint permanently?")}
+              >
+                {gettext("Delete")}
+              </button>
+            </div>
+
+            <%!-- Delivery log toggle + log --%>
+            <div class="mt-3 border-t border-base-200 pt-3">
+              <button
+                type="button"
+                id={"endpoint-#{ep.id}-load-deliveries"}
+                class="btn btn-ghost btn-xs font-sans text-base-content/60"
+                phx-click="load_deliveries"
+                phx-value-id={ep.id}
+              >
+                {gettext("View delivery log")}
+              </button>
+
+              <div
+                :if={Map.has_key?(@deliveries, ep.id)}
+                id={"delivery-log-#{ep.id}"}
+              >
+                <div
+                  :if={@deliveries[ep.id] == []}
+                  class="mt-2 font-serif text-sm text-base-content/55"
+                >
+                  {gettext("No deliveries yet.")}
+                </div>
+
+                <ul
+                  :if={@deliveries[ep.id] != []}
+                  class="mt-2 divide-y divide-base-200"
+                >
+                  <li
+                    :for={d <- @deliveries[ep.id]}
+                    id={"delivery-#{d.id}"}
+                    class="flex items-center justify-between gap-3 py-2"
+                  >
+                    <div class="min-w-0 flex-1">
+                      <div class="flex flex-wrap items-center gap-2">
+                        <span class="font-sans text-xs font-semibold">{d.event_type}</span>
+                        <span
+                          :if={d.status == :delivered}
+                          class="badge badge-success badge-soft badge-xs font-sans"
+                        >
+                          {gettext("delivered")}
+                        </span>
+                        <span
+                          :if={d.status == :failed}
+                          class="badge badge-error badge-soft badge-xs font-sans"
+                        >
+                          {gettext("failed")}
+                        </span>
+                        <span
+                          :if={d.status == :pending}
+                          class="badge badge-warning badge-soft badge-xs font-sans"
+                        >
+                          {gettext("pending")}
+                        </span>
+                        <span
+                          :if={d.response_status}
+                          class="font-sans text-xs text-base-content/50"
+                        >
+                          HTTP {d.response_status}
+                        </span>
+                      </div>
+                      <div class="mt-0.5 font-sans text-[11px] text-base-content/45">
+                        {gettext("%{count} attempt(s)", count: d.attempts)} · {Calendar.strftime(
+                          d.inserted_at,
+                          "%Y-%m-%d %H:%M UTC"
+                        )}
+                      </div>
+                      <div
+                        :if={d.last_error && d.last_error != ""}
+                        class="mt-0.5 font-sans text-[11px] text-error/70 break-all"
+                      >
+                        {d.last_error}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      id={"redeliver-#{d.id}"}
+                      class="btn btn-ghost btn-xs font-sans text-base-content/50 hover:text-primary shrink-0"
+                      phx-click="redeliver"
+                      phx-value-id={d.id}
+                    >
+                      {gettext("Redeliver")}
+                    </button>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </li>
+      </ul>
+    </section>
+
+    <%!-- ── Create endpoint form ───────────────────────────────────────── --%>
+    <section aria-label="Add webhook endpoint">
+      <h2 class="ds-h3 mb-4">{gettext("Add endpoint")}</h2>
+
+      <form id="new-endpoint-form" phx-submit="create" class="card card-border bg-base-100">
+        <div class="card-body space-y-4">
+          <%!-- URL --%>
+          <div class="form-control">
+            <label class="label" for="endpoint-url">
+              <span class="label-text font-sans font-semibold">{gettext("URL")}</span>
+            </label>
+            <input
+              id="endpoint-url"
+              type="url"
+              name="endpoint[url]"
+              value={@form_url}
+              placeholder="https://example.com/webhook"
+              class={[
+                "input input-bordered w-full font-sans",
+                field_errors(@form_errors, :url) != [] && "input-error"
+              ]}
+              required
+            />
+            <p
+              :for={err <- field_errors(@form_errors, :url)}
+              class="mt-1 font-sans text-xs text-error"
+            >
+              {err}
+            </p>
+          </div>
+
+          <%!-- Event types --%>
+          <div class="form-control">
+            <label class="label" for="endpoint-event-types">
+              <span class="label-text font-sans font-semibold">{gettext("Event types")}</span>
+              <span class="label-text-alt font-sans text-base-content/50">
+                {gettext("Comma-separated")}
+              </span>
+            </label>
+            <input
+              id="endpoint-event-types"
+              type="text"
+              name="endpoint[event_types]"
+              value={Enum.join(@form_event_types, ", ")}
+              placeholder="session.completed, comment.addressed"
+              class={[
+                "input input-bordered w-full font-sans",
+                field_errors(@form_errors, :event_types) != [] && "input-error"
+              ]}
+            />
+            <p class="mt-1 font-sans text-xs text-base-content/50">
+              Available: {Enum.join(@event_types_options, ", ")}
+            </p>
+            <p
+              :for={err <- field_errors(@form_errors, :event_types)}
+              class="mt-1 font-sans text-xs text-error"
+            >
+              {err}
+            </p>
+          </div>
+
+          <%!-- Description --%>
+          <div class="form-control">
+            <label class="label" for="endpoint-description">
+              <span class="label-text font-sans font-semibold">{gettext("Description")}</span>
+              <span class="label-text-alt font-sans text-base-content/50">
+                {gettext("Optional")}
+              </span>
+            </label>
+            <input
+              id="endpoint-description"
+              type="text"
+              name="endpoint[description]"
+              value={@form_description}
+              placeholder="Production alerts"
+              class="input input-bordered w-full font-sans"
+            />
+          </div>
+
+          <div class="card-actions justify-end pt-2">
+            <button
+              id="submit-new-endpoint"
+              type="submit"
+              class="btn btn-primary font-sans font-semibold"
+            >
+              {gettext("Add endpoint")}
+            </button>
+          </div>
+        </div>
+      </form>
+    </section>
+  </div>
+</.app>

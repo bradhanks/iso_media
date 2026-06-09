@@ -1,0 +1,43 @@
+<div class="mx-auto max-w-2xl p-6">
+  <h1 class="ds-h2">{gettext("Directory provisioning (SCIM)")}</h1>
+  <p class="ds-p">
+    {gettext("Connect your identity provider to provision and deprovision members automatically.")}
+  </p>
+
+  <section class="mt-6 rounded-box border border-base-300 bg-base-100 p-4">
+    <h2 class="ds-h3">{gettext("SCIM base URL")}</h2>
+    <code id="scim-base-url" class="text-sm break-all">{scim_base_url()}</code>
+  </section>
+
+  <section class="mt-6 rounded-box border border-base-300 bg-base-100 p-4">
+    <h2 class="ds-h3">{gettext("Bearer token")}</h2>
+
+    <p :if={@token_row} id="scim-token-status" class="ds-p">
+      {gettext("A token is configured (last used: %{date}).",
+        date: @token_row.last_used_at || gettext("never")
+      )}
+    </p>
+    <p :if={is_nil(@token_row)} id="scim-token-status" class="ds-p">
+      {gettext("No token configured.")}
+    </p>
+
+    <div :if={@plaintext} id="scim-token-plaintext" class="mt-2 rounded bg-base-200 p-3">
+      <p class="text-sm">{gettext("Copy this token now — it will not be shown again:")}</p>
+      <code class="break-all">{@plaintext}</code>
+    </div>
+
+    <div class="mt-3 flex gap-2">
+      <button id="scim-generate-token" class="btn btn-primary" phx-click="generate">
+        {if @token_row, do: gettext("Rotate token"), else: gettext("Generate token")}
+      </button>
+      <button
+        :if={@token_row}
+        id="scim-revoke-token"
+        class="btn btn-ghost"
+        phx-click="revoke"
+      >
+        {gettext("Revoke")}
+      </button>
+    </div>
+  </section>
+</div>

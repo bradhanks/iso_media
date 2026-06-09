@@ -50,8 +50,8 @@ defmodule ISOMedia.Offsets do
   chunk offsets. Returns the tree unchanged if it has no `moov` or no `mdat`.
   """
   def faststart(boxes, opts \\ []) when is_list(boxes) do
-    has_moov = (Box.child(boxes, "moov") != nil)
-    has_mdat = (Box.child(boxes, "mdat") != nil)
+    has_moov = Box.child(boxes, "moov") != nil
+    has_mdat = Box.child(boxes, "mdat") != nil
 
     if has_moov and has_mdat do
       boxes |> move_moov_first() |> fix_chunk_offsets(opts)

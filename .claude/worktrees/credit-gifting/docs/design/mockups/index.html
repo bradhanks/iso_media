@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="en" data-theme="paper">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PerfectPaper — Document &amp; Feedback (Paper theme)</title>
+<link rel="icon" href="../../assets/perfectpaper-icon.svg" />
+<link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<style id="paper-inline">:root{color-scheme:light;
+--color-base-100:#fbf8f2;--color-base-200:#f4eee2;--color-base-300:#e9e0d0;--color-base-content:#211c18;
+--color-primary:#7a2e4e;--color-primary-content:#fbf8f2;--color-secondary:#1f5e58;--color-secondary-content:#fbf8f2;
+--color-accent:#c28a3a;--color-accent-content:#211c18;--color-neutral:#211c18;--color-neutral-content:#fbf8f2;
+--color-info:#2f6f8f;--color-info-content:#fbf8f2;--color-success:#5c7a45;--color-success-content:#fbf8f2;
+--color-warning:#c28a3a;--color-warning-content:#211c18;--color-error:#a3382f;--color-error-content:#fbf8f2;
+--color-taupe:#8c8377;--radius-selector:.25rem;--radius-field:.25rem;--radius-box:.375rem;
+--size-selector:.25rem;--size-field:.25rem;--border:1px;--depth:0;--noise:0;}</style>
+<link rel="stylesheet" href="../../brand-theme.css" />
+<link rel="stylesheet" href="../../fonts/fraunces.css" />
+<link rel="stylesheet" href="../../fonts/newsreader.css" />
+<link rel="stylesheet" href="../../fonts/outfit.css" />
+<style>
+  :root { --fr:"Fraunces",Georgia,serif; --nr:"Newsreader",Georgia,serif; --ot:"Outfit",system-ui,sans-serif; }
+  html,body { margin:0; height:100%; }
+  body { font-family:var(--ot); background:var(--color-base-200); color:var(--color-base-content); overflow:hidden; }
+  .fr{font-family:var(--fr)} .nr{font-family:var(--nr)} .ot{font-family:var(--ot)}
+  *::-webkit-scrollbar{width:9px;height:9px}
+  *::-webkit-scrollbar-thumb{background:color-mix(in oklab,var(--color-taupe) 45%,transparent);border-radius:9px;border:2px solid transparent;background-clip:content-box}
+  *::-webkit-scrollbar-track{background:transparent}
+
+  .app { display:flex; height:100vh; }
+
+  /* ---------------- SIDEBAR ---------------- */
+  .side { width:248px; flex:0 0 248px; background:var(--color-base-100); border-right:1px solid var(--color-base-300);
+    display:flex; flex-direction:column; transition:width .25s, flex-basis .25s; overflow:hidden; }
+  .app.collapsed .side { width:0; flex-basis:0; border:0; }
+  .side-top { display:flex; align-items:center; gap:9px; padding:16px 18px; }
+  .brand-mark { width:30px; height:30px; border-radius:8px; background:var(--color-primary); color:var(--color-primary-content);
+    display:grid; place-items:center; font-family:var(--fr); font-weight:600; font-size:18px; position:relative; }
+  .brand-mark .dot { position:absolute; width:4px; height:4px; border-radius:50%; background:var(--color-accent); right:5px; bottom:6px; }
+  .brand-word { font-family:var(--fr); font-weight:600; font-size:21px; letter-spacing:-.01em; }
+  .side-collapse { margin-left:auto; color:color-mix(in oklab,var(--color-base-content) 45%,transparent); cursor:pointer;
+    width:26px; height:26px; display:grid; place-items:center; border-radius:6px; }
+  .side-collapse:hover { background:var(--color-base-200); }
+  .side-nav { padding:6px 12px; overflow-y:auto; flex:1; }
+  .nav-sec { font-family:var(--ot); font-size:10px; font-weight:600; letter-spacing:.16em; text-transform:uppercase;
+    color:color-mix(in oklab,var(--color-base-content) 38%,transparent); padding:14px 10px 6px; }
+  .nav-item { display:flex; align-items:center; gap:11px; padding:8px 10px; border-radius:8px; cursor:pointer; font-size:13.5px;
+    color:color-mix(in oklab,var(--color-base-content) 80%,transparent); }
+  .nav-item:hover { background:var(--color-base-200); }
+  .nav-item.active { background:color-mix(in oklab,var(--color-primary) 10%,transparent); color:var(--color-primary); font-weight:600; }
+  .nav-item.accent { color:var(--color-primary); }
+  .nav-item svg { width:17px; height:17px; flex:0 0 17px; }
+  .nav-meta { margin-left:auto; font-size:11px; color:color-mix(in oklab,var(--color-base-content) 40%,transparent); font-weight:400; }
+  .nav-avatar { width:20px; height:20px; border-radius:50%; object-fit:cover; flex:0 0 20px; }
+  .nav-sub { padding-left:14px; }
+
+  /* ---------------- WORKSPACE ---------------- */
+  .work { flex:1; min-width:0; display:flex; flex-direction:column; background:var(--color-base-100); }
+  .titlebar { height:52px; flex:0 0 52px; display:flex; align-items:center; gap:12px; padding:0 16px; border-bottom:1px solid var(--color-base-300);
+    background:var(--color-base-100); }
+  .menu-btn { display:flex; align-items:center; gap:6px; font-family:var(--ot); font-weight:600; font-size:12px; letter-spacing:.04em;
+    color:color-mix(in oklab,var(--color-base-content) 65%,transparent); cursor:pointer; padding:5px 8px; border-radius:7px; }
+  .menu-btn:hover { background:var(--color-base-200); }
+  .doc-title-top { flex:1; text-align:center; font-family:var(--fr); font-weight:600; font-size:13.5px; letter-spacing:-.01em;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding:0 12px; }
+  .share-btn { display:flex; align-items:center; gap:6px; font-family:var(--ot); font-size:12px; font-weight:500; border:1px solid var(--color-base-300);
+    border-radius:8px; padding:6px 12px; cursor:pointer; }
+  .share-btn:hover { border-color:color-mix(in oklab,var(--color-primary) 40%,transparent); }
+  .share-dot { width:6px; height:6px; border-radius:50%; background:var(--color-primary); }
+
+  .panes { flex:1; display:flex; min-height:0; }
+  .pane { display:flex; flex-direction:column; min-width:0; }
+  .pane-doc { flex:1; border-right:1px solid var(--color-base-300); }
+  .pane-fb { flex:1; background:color-mix(in oklab,var(--color-base-200) 45%,var(--color-base-100)); }
+  .pane-head { height:46px; flex:0 0 46px; display:flex; align-items:center; gap:10px; padding:0 18px; border-bottom:1px solid var(--color-base-300); }
+  .pane-label { font-family:var(--ot); font-size:11px; font-weight:600; letter-spacing:.16em;
+    color:color-mix(in oklab,var(--color-base-content) 45%,transparent); }
+  .icon-btn { width:30px; height:30px; display:grid; place-items:center; border-radius:7px; cursor:pointer;
+    color:color-mix(in oklab,var(--color-base-content) 55%,transparent); }
+  .icon-btn:hover { background:var(--color-base-200); }
+  .icon-btn svg { width:17px; height:17px; }
+
+  /* document */
+  .doc-scroll { flex:1; overflow-y:auto; padding:30px 38px 80px; }
+  .doc-paper { max-width:640px; margin:0 auto; }
+  .doc-h1 { font-family:var(--fr); font-weight:600; font-size:23px; letter-spacing:-.01em; margin:0 0 14px; }
+  .doc-meta { font-family:var(--nr); font-size:15px; line-height:1.7; }
+  .doc-meta b { font-weight:600; }
+  .doc-sec { font-family:var(--fr); font-weight:600; font-size:17px; margin:26px 0 10px; }
+  .doc-p { font-family:var(--nr); font-size:15px; line-height:1.75; margin:12px 0;
+    color:color-mix(in oklab,var(--color-base-content) 90%,transparent); }
+  .doc-link { color:var(--color-primary); text-decoration:underline; }
+  .hl { background:color-mix(in oklab,var(--color-accent) 22%,transparent); border-radius:2px; transition:background .4s; padding:1px 0; }
+  .hl.flash { background:color-mix(in oklab,var(--color-accent) 55%,transparent); }
+  .hl-label { display:block; font-family:var(--ot); font-size:11px; font-weight:600; color:var(--color-primary);
+    background:color-mix(in oklab,var(--color-primary) 10%,transparent); border-radius:5px; padding:2px 7px; width:fit-content; margin-bottom:4px; }
+
+  /* feedback */
+  .fb-scroll { flex:1; overflow-y:auto; padding:18px 20px 80px; }
+  .fb-inner { max-width:680px; }
+  .preview-banner { background:color-mix(in oklab,var(--color-base-300) 40%,var(--color-base-100)); border:1px solid var(--color-base-300);
+    border-radius:11px; padding:16px 18px; margin-bottom:22px; }
+  .preview-banner h4 { font-family:var(--ot); font-weight:600; font-size:14px; margin:0 0 5px; }
+  .preview-banner p { font-family:var(--nr); font-size:13.5px; line-height:1.55; margin:0;
+    color:color-mix(in oklab,var(--color-base-content) 72%,transparent); }
+  .preview-banner a { color:var(--color-primary); text-decoration:underline; }
+  .learn-more { margin-top:11px; font-family:var(--ot); font-size:12px; border:1px solid var(--color-base-300); background:var(--color-base-100);
+    border-radius:7px; padding:5px 11px; display:inline-flex; align-items:center; gap:6px; cursor:pointer; }
+
+  .fb-section-head { display:flex; align-items:center; gap:8px; margin:24px 0 12px; }
+  .fb-section-head svg { width:18px; height:18px; color:var(--color-primary); }
+  .fb-section-head .t { font-family:var(--ot); font-weight:600; font-size:15px; }
+  .beta { font-family:var(--ot); font-size:10px; font-weight:500; color:color-mix(in oklab,var(--color-base-content) 45%,transparent);
+    border:1px solid var(--color-base-300); border-radius:4px; padding:1px 6px; }
+  .sort-toggle { margin-left:auto; display:flex; align-items:center; gap:2px; background:var(--color-base-200); border-radius:8px; padding:3px; }
+  .sort-toggle button { font-family:var(--ot); font-size:11.5px; font-weight:500; border:0; background:transparent; cursor:pointer;
+    padding:5px 11px; border-radius:6px; color:color-mix(in oklab,var(--color-base-content) 60%,transparent); }
+  .sort-toggle button.on { background:var(--color-base-100); color:var(--color-base-content); box-shadow:0 1px 2px rgba(0,0,0,.06); }
+
+  .fb-card { background:var(--color-base-100); border:1px solid var(--color-base-300); border-radius:12px; padding:18px 20px; margin-bottom:14px;
+    transition:opacity .35s, transform .35s; }
+  .fb-card.removing { opacity:0; transform:translateX(16px); }
+  .fb-card.done { border-color:color-mix(in oklab,var(--color-success) 45%,var(--color-base-300)); background:color-mix(in oklab,var(--color-success) 6%,var(--color-base-100)); }
+  .fb-card-title { font-family:var(--fr); font-weight:600; font-size:15.5px; line-height:1.3; margin:0 0 9px; }
+  .fb-num { color:var(--color-primary); font-weight:700; margin-right:2px; }
+  .fb-body { font-family:var(--nr); font-size:14px; line-height:1.6; color:color-mix(in oklab,var(--color-base-content) 82%,transparent); }
+  .fb-body.clamp { display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;
+    -webkit-mask-image:linear-gradient(180deg,#000 60%,transparent); }
+  .quote { display:flex; gap:10px; background:color-mix(in oklab,var(--color-base-200) 60%,var(--color-base-100)); border-radius:9px;
+    padding:13px 15px; margin:12px 0; }
+  .quote svg { width:18px; height:18px; flex:0 0 18px; color:color-mix(in oklab,var(--color-primary) 55%,transparent); margin-top:2px; }
+  .quote p { font-family:var(--nr); font-style:italic; font-size:13.5px; line-height:1.6; margin:0;
+    color:color-mix(in oklab,var(--color-base-content) 80%,transparent); }
+  .show-doc { margin-top:11px; font-family:var(--ot); font-size:12px; font-weight:500; border:1px solid var(--color-base-300);
+    background:var(--color-base-100); border-radius:7px; padding:6px 12px; display:inline-flex; align-items:center; gap:7px; cursor:pointer; }
+  .show-doc:hover { border-color:color-mix(in oklab,var(--color-primary) 40%,transparent); color:var(--color-primary); }
+  .show-more { margin-top:11px; font-family:var(--ot); font-size:12px; font-weight:500; border:1px solid var(--color-base-300);
+    background:var(--color-base-100); border-radius:7px; padding:5px 11px; display:inline-flex; align-items:center; gap:6px; cursor:pointer; }
+  .card-actions { display:flex; align-items:center; gap:8px; margin-top:14px; }
+  .ca-btn { font-family:var(--ot); font-size:12px; font-weight:500; border:1px solid var(--color-base-300); background:var(--color-base-100);
+    border-radius:8px; padding:6px 13px; display:inline-flex; align-items:center; gap:6px; cursor:pointer; }
+  .ca-btn svg { width:14px; height:14px; }
+  .ca-btn.done-active { background:var(--color-success); color:var(--color-success-content); border-color:transparent; }
+  .ca-btn:hover { border-color:color-mix(in oklab,var(--color-base-content) 30%,transparent); }
+  .ca-chat { margin-left:auto; }
+
+  .unlock { background:color-mix(in oklab,var(--color-primary) 6%,var(--color-base-100)); border:1px solid color-mix(in oklab,var(--color-primary) 22%,var(--color-base-300));
+    border-radius:12px; padding:20px; margin-top:8px; }
+  .unlock h4 { font-family:var(--fr); font-weight:600; font-size:16px; margin:0 0 8px; }
+  .unlock p { font-family:var(--nr); font-size:13.5px; line-height:1.55; margin:0 0 6px; color:color-mix(in oklab,var(--color-base-content) 75%,transparent); }
+  .unlock-btn { margin-top:12px; font-family:var(--ot); font-weight:600; font-size:13px; background:var(--color-primary); color:var(--color-primary-content);
+    border:0; border-radius:9px; padding:10px 18px; cursor:pointer; }
+
+  /* ask/ comments toolbar buttons */
+  .tb-btn { display:flex; align-items:center; gap:6px; font-family:var(--ot); font-size:12.5px; font-weight:500; border:1px solid var(--color-base-300);
+    background:var(--color-base-100); border-radius:8px; padding:6px 11px; cursor:pointer; }
+  .tb-btn:hover{ border-color:color-mix(in oklab,var(--color-base-content) 28%,transparent); }
+  .tb-btn .kbd { font-family:var(--ot); font-size:10px; font-weight:600; background:color-mix(in oklab,var(--color-primary) 14%,transparent);
+    color:var(--color-primary); border-radius:4px; padding:1px 5px; }
+  .tb-btn .ct { font-size:10px; vertical-align:super; color:var(--color-primary); font-weight:700; }
+  .ask-btn { border-color:color-mix(in oklab,var(--color-primary) 45%,transparent); color:var(--color-primary); }
+
+  /* ---------------- CHAT PANE ---------------- */
+  .pane-chat { width:0; flex:0 0 0; border-left:1px solid var(--color-base-300); background:color-mix(in oklab,var(--color-base-200) 40%,var(--color-base-100));
+    transition:width .28s, flex-basis .28s; overflow:hidden; }
+  .app.chat-open .pane-chat { width:360px; flex-basis:360px; }
+  .chat-head { height:46px; flex:0 0 46px; display:flex; align-items:center; gap:8px; padding:0 16px; border-bottom:1px solid var(--color-base-300); }
+  .chat-body { flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:12px; }
+  .bub { max-width:84%; font-family:var(--nr); font-size:14px; line-height:1.5; padding:10px 13px; border-radius:14px; }
+  .bub-ai { align-self:flex-start; background:var(--color-base-100); border:1px solid var(--color-base-300); border-bottom-left-radius:5px; }
+  .bub-me { align-self:flex-end; background:var(--color-primary); color:var(--color-primary-content); border-bottom-right-radius:5px; }
+  .chat-input { margin:12px; display:flex; align-items:center; gap:10px; background:var(--color-base-100); border:1px solid var(--color-base-300);
+    border-radius:11px; padding:10px 12px; }
+  .chat-input input { flex:1; border:0; outline:0; background:transparent; font-family:var(--ot); font-size:13px; color:var(--color-base-content); }
+  .chat-input input::placeholder{ color:color-mix(in oklab,var(--color-base-content) 40%,transparent); }
+  .chat-send { width:30px; height:30px; border-radius:8px; border:0; background:var(--color-primary); color:var(--color-primary-content);
+    display:grid; place-items:center; cursor:pointer; }
+
+  @media (max-width:900px){ .pane-doc{ display:none; } .side{ position:absolute; z-index:30; height:100%; } }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <!-- ================= SIDEBAR ================= -->
+  <aside class="side">
+    <div class="side-top">
+      <span class="brand-mark">P<span class="dot"></span></span>
+      <span class="brand-word">Perfect<span style="color:var(--color-primary)">Paper</span><span style="color:var(--color-accent)">.</span></span>
+      <span class="side-collapse" onclick="toggleSide()" title="Collapse">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </span>
+    </div>
+    <nav class="side-nav">
+      <div class="nav-sec">Reviews</div>
+      <div class="nav-item" data-nav><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg> New <span class="nav-meta">0 reviews left</span></div>
+      <div class="nav-item active" data-nav><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg> History</div>
+      <div class="nav-item" data-nav><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2 3h3l2.4 12.4a1.5 1.5 0 001.5 1.2h8.7a1.5 1.5 0 001.5-1.2L21 7H6"/></svg> Purchase</div>
+      <div class="nav-item accent" data-nav><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="13" rx="1.5"/><path d="M12 8v13M3 12h18M12 8s-1-5-4-5-3 3 0 5M12 8s1-5 4-5 3 3 0 5"/></svg> Earn free reviews</div>
+
+      <div class="nav-sec">PerfectPaper</div>
+      <div class="nav-item" data-nav><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg> Contact us</div>
+      <div class="nav-item" data-nav><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg> More…</div>
+
+      <div class="nav-sec">User</div>
+      <div class="nav-item" data-nav><img class="nav-avatar" src="https://i.pravatar.cc/40?img=12" alt="" /> Account</div>
+      <div class="nav-item" data-nav><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg> Subscriptions</div>
+      <div class="nav-item" data-nav><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l-5-5 5-5M5 12h12"/></svg> Log out</div>
+    </nav>
+  </aside>
+
+  <!-- ================= WORKSPACE ================= -->
+  <main class="work">
+    <div class="titlebar">
+      <span class="menu-btn" onclick="toggleSide()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg> MENU
+      </span>
+      <span class="doc-title-top">Rural–Urban Divides and Cultural Dynamics: The Effects of Rurality, Race, and Ethnicity on HPV and COVID-19 Vaccine Hesitancy Among Young Adults in the Western U.S., 2020–2021</span>
+      <span class="share-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="M8.2 10.8l7.6-4.6M8.2 13.2l7.6 4.6"/></svg> Sharing <span class="share-dot"></span></span>
+    </div>
+
+    <div class="panes">
+      <!-- DOCUMENT -->
+      <section class="pane pane-doc">
+        <div class="pane-head">
+          <span class="pane-label">DOCUMENT</span>
+          <span class="icon-btn" style="margin-left:auto" title="Download"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m0 0l-4-4m4 4l4-4M5 19h14"/></svg></span>
+        </div>
+        <div class="doc-scroll" id="docScroll">
+          <div class="doc-paper">
+            <h1 class="doc-h1 fr">TITLE PAGE</h1>
+            <p class="doc-meta"><b>Journal:</b> SSM — Population Health</p>
+            <p class="doc-meta" style="margin-top:10px"><b>Title:</b> Rural–Urban Divides and Cultural Dynamics: The Effects of Rurality, Race, and Ethnicity on HPV and COVID-19 Vaccine Hesitancy Among Young Adults in the Western U.S., 2020–2021</p>
+            <p class="doc-meta" style="margin-top:10px"><b>Corresponding Author:</b> Kaila Christini</p>
+            <p class="doc-meta"><a class="doc-link" href="#">Kaila.Christini@hci.utah.edu</a></p>
+
+            <div class="doc-sec fr">3.2 Statistical Analyses</div>
+            <p class="doc-p" id="anchor-1"><span class="hl-label">#1 · Causal adjustment</span><span class="hl">As shown in Figure 2, directed acyclic graphs (DAGs) encoded a priori knowledge and assumptions, and identified scientifically meaningful and minimally sufficient covariates for estimating total effects. DAGs were created using a Structural Causal Model framework, as proposed by Pearl (2009), with Daggity.net (Textor et al., 2017).</span> Multivariate logistic regression estimated odds ratios (ORs). Outcomes of interest were each of the HPV vaccine hesitancy scales and receipt, any doses, of the HPV vaccine.</p>
+            <p class="doc-p">Differences in low and high hesitancy were examined by gender, race and ethnicity, rurality, and the combination of rurality and Hispanic ethnicity.</p>
+
+            <div class="doc-sec fr">5.3 Cultural Dynamics</div>
+            <p class="doc-p" id="anchor-4"><span class="hl-label">#4 · Unsupported claim</span><span class="hl">Additionally, the levels of vaccine hesitancy seen in rural Hispanic YAs were more similar to the levels of vaccine hesitancy in White/Caucasian YAs than they were to those of urban Hispanic YAs.</span> This suggests that rural Hispanic YAs may have knowledge and opinions on HPV vaccination that are more similar to those of their geographical neighbors of all races/ethnicities, rather than their racial/ethnic counterparts in urban areas.</p>
+
+            <div class="doc-sec fr">5.4 Interpretation, Limitations, and Generalizability</div>
+            <p class="doc-p">This study had several limitations affecting the generalizability of the findings. One limitation of our study was that data regarding HPV vaccine receipt was self-reported, leaving results subject to recall bias. Participation in the survey was limited to adults with internet access, which may have excluded parts of the young adult population.</p>
+            <p class="doc-p" id="anchor-6"><span class="hl-label">#6 · States contradiction</span><span class="hl">Survey participants were from 10 US states, but residents of Utah made up a greater proportion of the sample than other states, with 38% of responders being from Utah.</span> Results may not be equally reflective of opinions of YAs across all Western states surveyed given that the distribution of survey participants was not equal across the 10 Western states surveyed.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- FEEDBACK -->
+      <section class="pane pane-fb">
+        <div class="pane-head">
+          <span class="pane-label">FEEDBACK</span>
+          <div style="margin-left:auto; display:flex; align-items:center; gap:9px">
+            <span class="tb-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16M7 12h10M10 19h4"/></svg> Comments <span class="ct">7</span> <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg></span>
+            <span class="tb-btn ask-btn" onclick="openChat()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 01-11.5 7.2L4 20l1-4.8A8 8 0 1121 12z"/></svg> Ask <span class="kbd">A</span></span>
+            <span class="icon-btn" title="Download"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m0 0l-4-4m4 4l4-4M5 19h14"/></svg></span>
+          </div>
+        </div>
+        <div class="fb-scroll">
+          <div class="fb-inner">
+            <div class="preview-banner">
+              <h4>You're viewing a Free Preview</h4>
+              <p>A Free Preview returns fewer comments. For a more complete and higher-quality set, <a href="#">try a Full Review</a>.</p>
+              <button class="learn-more">Learn more <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg></button>
+            </div>
+
+            <div class="fb-section-head">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 12l2 2 4-4"/></svg>
+              <span class="t fr">Overall Feedback</span><span class="beta">Beta</span>
+            </div>
+            <div class="fb-card" data-card>
+              <div class="fb-card-title fr">Construction of the hesitancy scales</div>
+              <div class="fb-body clamp" data-body>The three factor-derived scales described in Section 3.1 serve as the foundation for the substantive conclusions, yet providing readers with more evidence to trust their psychometric and conceptual security is necessary. The item descriptions indicate that the two complacency dimensions capture HPV knowledge, awareness, and benefit beliefs, which diverges from complacency in the SAGE sense of low perceived need or risk. The confidence dimension mixes confidence with convenience and access, notably including the campus-offering item.</div>
+              <button class="show-more" onclick="toggleMore(this)">Show more <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg></button>
+              <div class="card-actions">
+                <button class="ca-btn" onclick="markDone(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg> Done</button>
+                <button class="ca-btn" onclick="dismissCard(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/></svg> Dismiss</button>
+                <button class="ca-btn ca-chat" onclick="openChat()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 01-11.5 7.2L4 20l1-4.8A8 8 0 1121 12z"/></svg> Chat</button>
+              </div>
+            </div>
+
+            <div class="fb-section-head">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h12M4 10h16M4 15h10"/></svg>
+              <span class="t fr">Detailed Feedback</span>
+              <div class="sort-toggle">
+                <button class="on">By relevance</button><button>By position</button>
+              </div>
+            </div>
+
+            <div class="fb-card" data-card>
+              <div class="fb-card-title fr"><span class="fb-num">#1</span> Causal adjustment strategy is underspecified in Section 3.2</div>
+              <div class="quote">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 7h4v4H8v3H5V9a2 2 0 012-2zm9 0h4v4h-3v3h-3V9a2 2 0 012-2z"/></svg>
+                <p>As shown in Figure 2, directed acyclic graphs (DAGs) encoded a priori knowledge and assumptions, and identified scientifically meaningful and minimally sufficient covariates for estimating total effects.</p>
+              </div>
+              <div class="fb-body">The causal framing in Section 3.2 needs more support: the text refers to total effects identified by DAGs, but does not define the exposure–outcome estimands or state the exposure-specific adjustment sets, leaving the strategy only partially reconstructable from table footnotes.</div>
+              <button class="show-doc" onclick="showInDoc('anchor-1')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg> Show in the doc</button>
+              <div class="card-actions">
+                <button class="ca-btn" onclick="markDone(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg> Done</button>
+                <button class="ca-btn" onclick="dismissCard(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/></svg> Dismiss</button>
+                <button class="ca-btn ca-chat" onclick="openChat()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 01-11.5 7.2L4 20l1-4.8A8 8 0 1121 12z"/></svg> Chat</button>
+              </div>
+            </div>
+
+            <div class="fb-card" data-card>
+              <div class="fb-card-title fr"><span class="fb-num">#4</span> Unsupported claim on relative hesitancy levels in Section 5.3</div>
+              <div class="quote">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 7h4v4H8v3H5V9a2 2 0 012-2zm9 0h4v4h-3v3h-3V9a2 2 0 012-2z"/></svg>
+                <p>The levels of vaccine hesitancy seen in rural Hispanic YAs were more similar to the levels in White/Caucasian YAs than to those of urban Hispanic YAs.</p>
+              </div>
+              <div class="fb-body">Using the displayed high-hesitancy proportions, rural Hispanic YAs appear closer to urban Hispanic YAs for some dimensions; the intended comparator or similarity metric should be clarified.</div>
+              <button class="show-doc" onclick="showInDoc('anchor-4')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg> Show in the doc</button>
+              <div class="card-actions">
+                <button class="ca-btn" onclick="markDone(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg> Done</button>
+                <button class="ca-btn" onclick="dismissCard(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/></svg> Dismiss</button>
+                <button class="ca-btn ca-chat" onclick="openChat()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 01-11.5 7.2L4 20l1-4.8A8 8 0 1121 12z"/></svg> Chat</button>
+              </div>
+            </div>
+
+            <div class="fb-card" data-card>
+              <div class="fb-card-title fr"><span class="fb-num">#6</span> Contradiction in the number of Western states surveyed</div>
+              <div class="quote">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 7h4v4H8v3H5V9a2 2 0 012-2zm9 0h4v4h-3v3h-3V9a2 2 0 012-2z"/></svg>
+                <p>Survey participants were from 10 US states, but residents of Utah made up a greater proportion of the sample, with 38% of responders being from Utah.</p>
+              </div>
+              <div class="fb-body">The geographic scope is internally inconsistent: the abstract and Section 2.1 describe participants across 12 Western states, but Section 5.4 says 10 US states. The final analytic sample should be reported consistently.</div>
+              <button class="show-doc" onclick="showInDoc('anchor-6')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg> Show in the doc</button>
+              <div class="card-actions">
+                <button class="ca-btn" onclick="markDone(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg> Done</button>
+                <button class="ca-btn" onclick="dismissCard(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/></svg> Dismiss</button>
+                <button class="ca-btn ca-chat" onclick="openChat()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 01-11.5 7.2L4 20l1-4.8A8 8 0 1121 12z"/></svg> Chat</button>
+              </div>
+            </div>
+
+            <div class="unlock">
+              <h4 class="fr">Unlock Full Review</h4>
+              <p>Your preview shows limited feedback. Get full review credits to see a complete analysis of your document.</p>
+              <p style="font-size:12.5px;color:color-mix(in oklab,var(--color-base-content) 55%,transparent)">You'll need to upload your document again after purchasing credits.</p>
+              <button class="unlock-btn">Get Full Review Credits</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CHAT -->
+      <section class="pane pane-chat">
+        <div class="chat-head">
+          <span class="pane-label">CHAT</span><span class="beta">Beta</span>
+          <span class="icon-btn" style="margin-left:auto" onclick="closeChat()" title="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></span>
+        </div>
+        <div class="chat-body" id="chatBody">
+          <div class="bub bub-ai">Hi — I can talk through any of the 7 comments and help you plan revisions. There are a few important ones, like the causal-model justification (Comment #1) and the sample-size mismatch (Comment #6). Which would you like to start with?</div>
+          <div class="bub bub-me">How should I strengthen the DAG justification in §3.2?</div>
+          <div class="bub bub-ai">State each backdoor path you're closing and cite the assumption behind every included covariate. Make the minimally-sufficient adjustment set explicit per exposure, and define the estimand (total effect of rurality on hesitancy) before reporting the ORs.</div>
+        </div>
+        <div class="chat-input">
+          <input id="chatInput" placeholder="Ask about this feedback…" onkeydown="if(event.key==='Enter')sendChat()" />
+          <button class="chat-send" onclick="sendChat()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l16-8-6 16-3-7-7-1z"/></svg></button>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<script>
+  const app = document.getElementById('app');
+  function toggleSide(){ app.classList.toggle('collapsed'); }
+  function openChat(){ app.classList.add('chat-open'); }
+  function closeChat(){ app.classList.remove('chat-open'); }
+  function toggleMore(btn){
+    const body = btn.parentElement.querySelector('[data-body]');
+    body.classList.toggle('clamp');
+    btn.innerHTML = body.classList.contains('clamp')
+      ? 'Show more <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>'
+      : 'Show less <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 15l-6-6-6 6"/></svg>';
+  }
+  function markDone(btn){
+    const card = btn.closest('[data-card]');
+    card.classList.toggle('done');
+    btn.classList.toggle('done-active');
+  }
+  function dismissCard(btn){
+    const card = btn.closest('[data-card]');
+    card.classList.add('removing');
+    setTimeout(()=>{ card.style.display='none'; }, 360);
+  }
+  // sort toggle
+  document.querySelectorAll('.sort-toggle button').forEach(b=>b.addEventListener('click',()=>{
+    b.parentElement.querySelectorAll('button').forEach(x=>x.classList.remove('on')); b.classList.add('on');
+  }));
+  // nav active + navigate to the app shell screens
+  const navMap=[['New','new'],['History','history'],['Purchase','purchase'],['Earn','earn'],['Contact','contact'],['Account','account'],['Subscriptions','subs']];
+  document.querySelectorAll('[data-nav]').forEach(n=>n.addEventListener('click',()=>{
+    document.querySelectorAll('[data-nav]').forEach(x=>x.classList.remove('active')); n.classList.add('active');
+    const t=n.textContent; const hit=navMap.find(([k])=>t.includes(k));
+    if(hit) location.href='app.html#'+hit[1];
+  }));
+  function showInDoc(id){
+    const el = document.getElementById(id);
+    const scroll = document.getElementById('docScroll');
+    scroll.scrollTo({ top: el.offsetTop - 80, behavior:'smooth' });
+    const hl = el.querySelector('.hl');
+    hl.classList.add('flash'); setTimeout(()=>hl.classList.remove('flash'), 1400);
+  }
+  function sendChat(){
+    const input = document.getElementById('chatInput');
+    const v = input.value.trim(); if(!v) return;
+    const body = document.getElementById('chatBody');
+    const me = document.createElement('div'); me.className='bub bub-me'; me.textContent=v; body.appendChild(me);
+    input.value='';
+    setTimeout(()=>{
+      const ai = document.createElement('div'); ai.className='bub bub-ai';
+      ai.textContent = "Good question — anchor that revision to the specific table or figure the reviewer cited, and note the change in your response letter so it's easy to verify.";
+      body.appendChild(ai); body.scrollTo({top:body.scrollHeight, behavior:'smooth'});
+    }, 600);
+    body.scrollTo({top:body.scrollHeight, behavior:'smooth'});
+  }
+</script>
+</body>
+</html>

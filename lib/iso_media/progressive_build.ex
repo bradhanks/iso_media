@@ -207,5 +207,4 @@ defmodule ISOMedia.ProgressiveBuild do
     h = MovieHeader.decode(mvhd)
     MovieHeader.encode(%{h | duration: dur})
   end
-
 end

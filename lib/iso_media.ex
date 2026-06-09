@@ -86,7 +86,8 @@ defmodule ISOMedia do
 
   @doc "Generate the HLS media playlist (`.m3u8`) for a fragmented tree. See `ISOMedia.Streaming.hls_media_playlist/2`."
   @spec hls_media_playlist(tree(), keyword()) :: String.t()
-  def hls_media_playlist(boxes, opts \\ []), do: ISOMedia.Streaming.hls_media_playlist(boxes, opts)
+  def hls_media_playlist(boxes, opts \\ []),
+    do: ISOMedia.Streaming.hls_media_playlist(boxes, opts)
 
   @doc "Generate the HLS multivariant playlist (`.m3u8`) for a fragmented tree. See `ISOMedia.Streaming.hls_master_playlist/2`."
   @spec hls_master_playlist(tree(), keyword()) :: String.t()

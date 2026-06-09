@@ -23,8 +23,8 @@ defmodule ISOMedia.FragmentIndex do
   @doc "True when the tree is fragmented: has a `moov`/`mvex` and at least one `moof`."
   def fragmented?(boxes) when is_list(boxes) do
     moov = Box.child(boxes, "moov")
-    has_mvex = moov != nil and (Box.child(moov.children, "mvex") != nil)
-    has_moof = (Box.child(boxes, "moof") != nil)
+    has_mvex = moov != nil and Box.child(moov.children, "mvex") != nil
+    has_moof = Box.child(boxes, "moof") != nil
     has_mvex and has_moof
   end
 

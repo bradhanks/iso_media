@@ -1,0 +1,26 @@
+<Layouts.app flash={@flash} current_scope={@current_scope}>
+  <section class="ds-container py-16 lg:py-24" aria-label={gettext("Testimonials")}>
+    <div class="mb-10 max-w-2xl">
+      <p class="font-sans text-[11px] font-bold uppercase tracking-[0.16em] text-primary">
+        {gettext("Testimonials")}
+      </p>
+      <h1 class="ds-h2 mt-2">{gettext("What researchers say")}</h1>
+      <p class="mt-4 font-serif text-base-content/70">
+        {gettext(
+          "Early feedback from researchers who put their manuscripts through PerfectPaper before submission."
+        )}
+      </p>
+    </div>
+
+    <div class="grid gap-6 md:grid-cols-3">
+      <.testimonial_card
+        :for={t <- testimonials()}
+        quote={t.quote}
+        name={t.name}
+        title={t.title}
+        institution={t.institution}
+        avatar_src={t.avatar_src}
+      />
+    </div>
+  </section>
+</Layouts.app>

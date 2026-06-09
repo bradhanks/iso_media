@@ -1,0 +1,318 @@
+<Layouts.app flash={@flash} current_scope={@current_scope}>
+  <%!--
+    Draft privacy notice in PerfectPaper's voice — a strong starting point, NOT a
+    substitute for legal review. TODO(legal): confirm the live subprocessor list,
+    retention windows, and regional disclosures before launch.
+  --%>
+  <% toc = [
+    {"model-training", "Your work and model training", "01"},
+    {"what-we-collect", "What we collect", "02"},
+    {"how-we-use", "How we use your information", "03"},
+    {"legal-bases", "Legal bases (EEA / UK)", "04"},
+    {"sharing", "When and with whom we share", "05"},
+    {"ai-providers", "AI service providers", "06"},
+    {"cookies", "Cookies and tracking", "07"},
+    {"international", "International transfers", "08"},
+    {"retention", "How long we keep information", "09"},
+    {"security", "How we keep it safe", "10"},
+    {"children", "Children", "11"},
+    {"your-rights", "Your privacy rights", "12"},
+    {"us-rights", "US state privacy rights", "13"},
+    {"changes", "Changes to this notice", "14"},
+    {"contact", "Contact us", "15"}
+  ] %>
+
+  <.document_record
+    kind="Privacy notice"
+    version="v1.0"
+    effective="May 30, 2026"
+    reading_minutes={8}
+    jurisdiction="Global · GDPR · CCPA"
+    summary="How PerfectPaper, Inc. collects, uses, and protects your information when you use our Services. The short version: your manuscripts are yours, we never train models on them, and you can delete them at any time."
+  />
+
+  <div class="ds-container pt-10">
+    <.stat_strip items={[
+      %{value: "0", label: "Drafts used to train models"},
+      %{value: "AES-256", label: "Encryption at rest", mono: true},
+      %{value: "Anytime", label: "Delete your data on request"},
+      %{value: "GDPR · CCPA", label: "Rights honored", mono: true}
+    ]} />
+  </div>
+
+  <section class="ds-container py-12 lg:py-16">
+    <div class="grid lg:grid-cols-12 gap-10 lg:gap-14">
+      <aside class="lg:col-span-3">
+        <.sticky_toc items={toc} />
+      </aside>
+
+      <div class="lg:col-span-9">
+        <.chapter_section number="01" title="Your work and model training" id="model-training">
+          <:brief>
+            We never train large language models on the manuscripts you upload, and we never
+            sell them. This is the core promise of the product.
+          </:brief>
+          <p>
+            The content you upload is confidential. PerfectPaper does not train any large
+            language model on your manuscripts, and our AI service providers are contractually
+            prohibited from doing so. We do not sell or share your content with third parties
+            except the providers we need to deliver the Services to you.
+          </p>
+          <p>
+            When you delete a review session from your history, we permanently delete its
+            content. We may use de-identified signals about how you act on comments — for
+            example, which feedback you address or dismiss — to improve ranking and quality.
+            You can opt out of that use by emailing
+            <a
+              href="mailto:privacy@perfectpaper.ink"
+              class="text-primary font-medium hover:underline"
+            >
+              privacy@perfectpaper.ink
+            </a>
+            from your account address.
+          </p>
+        </.chapter_section>
+
+        <.chapter_section number="02" title="What we collect" id="what-we-collect">
+          <:brief>
+            Your account details, the documents you upload, and basic technical data about
+            how you use the Services.
+          </:brief>
+          <p>
+            We collect information you give us and information collected automatically when you
+            use the Services:
+          </p>
+          <.editorial_table columns={["Category", "Examples", "Why we have it"]}>
+            <tr>
+              <td>Account information</td>
+              <td>Name, email address, password</td>
+              <td>To create and secure your account</td>
+            </tr>
+            <tr>
+              <td>Your Content</td>
+              <td>Manuscripts and documents you upload, and the feedback we generate</td>
+              <td>To provide and return reviews</td>
+            </tr>
+            <tr>
+              <td>Billing data</td>
+              <td>Payment-method details, processed by our payment provider</td>
+              <td>To take payment for paid reviews</td>
+            </tr>
+            <tr>
+              <td>Usage and device data</td>
+              <td>IP address, browser and device type, pages and actions, log data</td>
+              <td>To keep the Services secure and to improve them</td>
+            </tr>
+            <tr>
+              <td>Pricing and fraud-prevention data</td>
+              <td>
+                The country indicated by your network and your payment method, and risk
+                signals derived from your IP address (we store the country and the derived
+                signals — not the IP itself)
+              </td>
+              <td>
+                To offer region-adjusted pricing and to detect and prevent pricing abuse
+                (legitimate interest). Flagged transactions are reviewed by a person and are
+                never automatically denied
+              </td>
+            </tr>
+          </.editorial_table>
+          <p>We do not seek to collect sensitive personal information.</p>
+        </.chapter_section>
+
+        <.chapter_section number="03" title="How we use your information" id="how-we-use">
+          <:brief>
+            To run the Services, support you, keep the platform secure, and — with your
+            permission — to tell you about relevant updates.
+          </:brief>
+          <p>We process your information to:</p>
+          <ul class="list-disc pl-6 space-y-2">
+            <li>create and authenticate your account and deliver reviews;</li>
+            <li>process the manuscripts you upload in order to generate feedback;</li>
+            <li>take payment, manage credits and subscriptions, and prevent fraud;</li>
+            <li>respond to your questions and provide support;</li>
+            <li>understand usage so we can improve the Services;</li>
+            <li>
+              send service messages, and — where you've opted in — marketing you can leave anytime.
+            </li>
+          </ul>
+        </.chapter_section>
+
+        <.chapter_section number="04" title="Legal bases (EEA / UK)" id="legal-bases">
+          <p>
+            If you are in the European Economic Area or the United Kingdom, we rely on these
+            legal bases: <strong>performance of a contract</strong>
+            (to provide the Services
+            you request), <strong>legitimate interests</strong>
+            (to secure and improve the
+            Services, where not overridden by your rights), <strong>consent</strong>
+            (for
+            optional marketing, which you can withdraw at any time), and
+            <strong>legal obligations</strong>
+            (to comply with applicable law).
+          </p>
+        </.chapter_section>
+
+        <.chapter_section number="05" title="When and with whom we share" id="sharing">
+          <:brief>
+            Only with the service providers needed to run PerfectPaper, under contracts that
+            require them to protect your data — never with data brokers.
+          </:brief>
+          <p>
+            We share information with vendors who process it on our behalf and under
+            confidentiality and data-protection obligations, by category:
+          </p>
+          <.editorial_table columns={["Purpose", "Type of provider"]} first_col_plain>
+            <tr>
+              <td>Cloud hosting and storage</td>
+              <td>Infrastructure provider (data encrypted at rest)</td>
+            </tr>
+            <tr>
+              <td>AI-generated feedback</td>
+              <td>
+                Enterprise AI model providers, contractually barred from training on your content
+              </td>
+            </tr>
+            <tr>
+              <td>Payments</td>
+              <td>PCI-compliant payment processor</td>
+            </tr>
+            <tr>
+              <td>Email and support</td>
+              <td>Transactional email and customer-support providers</td>
+            </tr>
+          </.editorial_table>
+          <p>
+            We may also share information to comply with law, or in connection with a merger,
+            acquisition, or sale of assets — in which case we will tell you.
+          </p>
+        </.chapter_section>
+
+        <.chapter_section number="06" title="AI service providers" id="ai-providers">
+          <p>
+            We provide AI-powered reviews through enterprise AI service providers. Your
+            manuscript text is sent to these providers only to generate your feedback, under
+            agreements that prohibit them from using it to train their models and require them
+            to protect it. You must not use the AI features in ways that violate a provider's
+            policies.
+          </p>
+        </.chapter_section>
+
+        <.chapter_section number="07" title="Cookies and tracking" id="cookies">
+          <p>
+            We use cookies and similar technologies to keep you signed in, remember your
+            preferences, secure the Services, and understand usage. You can control cookies
+            through your browser. Where required, we ask for your consent to non-essential
+            cookies.
+          </p>
+          <p>
+            {gettext(
+              "We use your approximate country, derived from your IP address via Cloudflare, " <>
+                "to show regional pricing that reflects local cost of living. " <>
+                "We retain coarse pricing-decision records — country only, never your full IP — " <>
+                "for up to 180 days to detect and prevent pricing fraud. " <>
+                "This processing rests on our legitimate interest in offering fair, sustainable " <>
+                "pricing and is never used to make an automated decision about you under Art. 22 GDPR."
+            )}
+          </p>
+        </.chapter_section>
+
+        <.chapter_section number="08" title="International transfers" id="international">
+          <p>
+            We operate from the United States, and your information may be processed there and
+            in other countries where we or our providers operate. Where we transfer personal
+            information out of the EEA or UK, we use appropriate safeguards such as the European
+            Commission's Standard Contractual Clauses.
+          </p>
+        </.chapter_section>
+
+        <.chapter_section number="09" title="How long we keep information" id="retention">
+          <:brief>
+            As long as your account is active, and then only as long as we have a legitimate or
+            legal reason. Delete a session and its content is gone.
+          </:brief>
+          <p>
+            We keep your information for as long as your account is active or as needed to
+            provide the Services. When you delete a review session, we permanently delete its
+            content. When we no longer need information, we delete or anonymize it, except where
+            we must retain it to meet legal obligations or it persists briefly in secure backups
+            before aging out.
+          </p>
+        </.chapter_section>
+
+        <.chapter_section number="10" title="How we keep it safe" id="security">
+          <p>
+            We use technical and organizational measures designed to protect your information,
+            including encryption in transit and at rest and access controls. No system is
+            perfectly secure, but we work hard to protect your data and to respond quickly if
+            something goes wrong.
+          </p>
+        </.chapter_section>
+
+        <.chapter_section number="11" title="Children" id="children">
+          <p>
+            The Services are not directed to children under 18, and we do not knowingly collect
+            their personal information. If you believe a child has provided us information,
+            contact
+            <a
+              href="mailto:privacy@perfectpaper.ink"
+              class="text-primary font-medium hover:underline"
+            >
+              privacy@perfectpaper.ink
+            </a>
+            and we will delete it.
+          </p>
+        </.chapter_section>
+
+        <.chapter_section number="12" title="Your privacy rights" id="your-rights">
+          <:brief>
+            Access, correct, export, or delete your information — and withdraw consent or opt
+            out of marketing — at any time.
+          </:brief>
+          <p>
+            Depending on where you live, you may have the right to access, correct, delete, or
+            receive a portable copy of your personal information, to object to or restrict
+            certain processing, and to withdraw consent. You can exercise many of these directly
+            in your account, or by contacting us. We will respond as required by applicable law,
+            and we will not discriminate against you for exercising your rights.
+          </p>
+        </.chapter_section>
+
+        <.chapter_section number="13" title="US state privacy rights" id="us-rights">
+          <p>
+            If you are a resident of a US state with a comprehensive privacy law — such as
+            California, Colorado, Connecticut, Texas, Virginia, and others — you may have rights
+            to access, correct, delete, and obtain a copy of your personal information, and to
+            opt out of any "sale" or "sharing" for targeted advertising. PerfectPaper does not
+            sell your personal information. To make a request, contact <a
+              href="mailto:privacy@perfectpaper.ink"
+              class="text-primary font-medium hover:underline"
+            >privacy@perfectpaper.ink</a>;
+            we will verify your identity before acting.
+          </p>
+        </.chapter_section>
+
+        <.chapter_section number="14" title="Changes to this notice" id="changes">
+          <p>
+            We will update this notice as our practices or the law change. When changes are
+            material, we will post the updated notice with a new effective date and, where
+            appropriate, notify you directly.
+          </p>
+        </.chapter_section>
+
+        <.chapter_section number="15" title="Contact us" id="contact">
+          <p>
+            Questions about your privacy, or want to exercise a right? Email <a
+              href="mailto:privacy@perfectpaper.ink"
+              class="text-primary font-medium hover:underline"
+            >privacy@perfectpaper.ink</a>,
+            or write to PerfectPaper, Inc., Privacy Department, Delaware, USA. If you are in the
+            EEA or UK, you may also lodge a complaint with your local data protection authority.
+          </p>
+        </.chapter_section>
+      </div>
+    </div>
+  </section>
+
+  <.back_to_top />
+</Layouts.app>

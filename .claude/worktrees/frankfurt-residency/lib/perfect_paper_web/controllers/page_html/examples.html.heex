@@ -1,0 +1,174 @@
+<Layouts.app flash={@flash} current_scope={@current_scope}>
+  <%!-- Page header --%>
+  <section class="ds-container pt-14 pb-10 lg:pt-20 lg:pb-14 text-center">
+    <p class="ds-eyebrow inline-flex items-center gap-2 mb-5">
+      <span class="inline-block size-[7px] rounded-full bg-accent"></span> {gettext(
+        "Sample reports"
+      )}
+    </p>
+    <h1 class="ds-h1 max-w-3xl mx-auto">
+      {gettext("See PerfectPaper in action")}
+    </h1>
+    <p class="ds-lead max-w-2xl mx-auto mt-5">
+      {gettext(
+        "Browse real review reports across disciplines — each one shows the structured, sourced feedback PerfectPaper delivers before you submit."
+      )}
+    </p>
+  </section>
+
+  <%!-- Example reports gallery --%>
+  <section class="ds-container pb-16 lg:pb-24">
+    <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <%!-- Card 1: Neuroscience --%>
+      <div class="card bg-base-100 border border-base-300 flex flex-col">
+        <div class="card-body flex flex-col gap-3">
+          <div>
+            <.badge color="primary" variant="soft" size="sm">{gettext("Neuroscience")}</.badge>
+          </div>
+          <h2 class="card-title font-display text-lg leading-snug">
+            {gettext("Chaotic balanced state in a model of cortical circuits")}
+          </h2>
+          <p class="font-serif text-sm leading-relaxed text-base-content/70 flex-1">
+            {gettext(
+              "PerfectPaper flagged three structural concerns: the mean-field derivation assumes stationarity without justification, the simulation parameters lack reproducibility anchors, and two figures carry inconsistent axis conventions."
+            )}
+          </p>
+          <div class="card-actions mt-2">
+            <a href={~p"/users/register"} class="btn btn-primary btn-sm font-sans font-semibold">
+              {gettext("View sample")}
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <%!-- Card 2: Engineering --%>
+      <div class="card bg-base-100 border border-base-300 flex flex-col">
+        <div class="card-body flex flex-col gap-3">
+          <div>
+            <.badge color="secondary" variant="soft" size="sm">{gettext("Engineering")}</.badge>
+          </div>
+          <h2 class="card-title font-display text-lg leading-snug">
+            {gettext("Coset codes — Part I: Introduction and geometrical classification")}
+          </h2>
+          <p class="font-serif text-sm leading-relaxed text-base-content/70 flex-1">
+            {gettext(
+              "The review identified an underspecified proof sketch in Section 4, a notation collision between the lattice and quotient-group sections, and a missing comparison with prior partition-based constructions."
+            )}
+          </p>
+          <div class="card-actions mt-2">
+            <a href={~p"/users/register"} class="btn btn-primary btn-sm font-sans font-semibold">
+              {gettext("View sample")}
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <%!-- Card 3: Mathematics --%>
+      <div class="card bg-base-100 border border-base-300 flex flex-col">
+        <div class="card-body flex flex-col gap-3">
+          <div>
+            <.badge color="accent" variant="soft" size="sm">{gettext("Mathematics")}</.badge>
+          </div>
+          <h2 class="card-title font-display text-lg leading-snug">
+            {gettext("Inference in molecular population genetics")}
+          </h2>
+          <p class="font-serif text-sm leading-relaxed text-base-content/70 flex-1">
+            {gettext(
+              "Seven comments addressed the likelihood derivation, including a sign error in the mutation-drift balance equation and an undisclosed approximation in the coalescent integral that affects asymptotic claims."
+            )}
+          </p>
+          <div class="card-actions mt-2">
+            <a href={~p"/users/register"} class="btn btn-primary btn-sm font-sans font-semibold">
+              {gettext("View sample")}
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <%!-- Card 4: Economics --%>
+      <div class="card bg-base-100 border border-base-300 flex flex-col">
+        <div class="card-body flex flex-col gap-3">
+          <div>
+            <.badge color="neutral" variant="soft" size="sm">{gettext("Economics")}</.badge>
+          </div>
+          <h2 class="card-title font-display text-lg leading-snug">
+            {gettext("Robust market interventions")}
+          </h2>
+          <p class="font-serif text-sm leading-relaxed text-base-content/70 flex-1">
+            {gettext(
+              "The feedback highlighted that the minimax regret criterion in Section 3 conflates ex-ante and ex-post welfare, and that the numerical simulations use a parameter range that favors the proposed mechanism without explanation."
+            )}
+          </p>
+          <div class="card-actions mt-2">
+            <a href={~p"/users/register"} class="btn btn-primary btn-sm font-sans font-semibold">
+              {gettext("View sample")}
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <%!-- Card 5: Public Health --%>
+      <div class="card bg-base-100 border border-base-300 flex flex-col">
+        <div class="card-body flex flex-col gap-3">
+          <div>
+            <.badge color="info" variant="soft" size="sm">{gettext("Public Health")}</.badge>
+          </div>
+          <h2 class="card-title font-display text-lg leading-snug">
+            {gettext("Rural–urban divides and cultural dynamics in vaccine hesitancy")}
+          </h2>
+          <p class="font-serif text-sm leading-relaxed text-base-content/70 flex-1">
+            {gettext(
+              "PerfectPaper raised five comments: the psychometric scales needed Cronbach alpha reporting, the causal DAG lacked stated adjustment sets, and subgroup sample counts in Table 4 did not reconcile with the totals in Section 4.1."
+            )}
+          </p>
+          <div class="card-actions mt-2">
+            <a href={~p"/users/register"} class="btn btn-primary btn-sm font-sans font-semibold">
+              {gettext("View sample")}
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <%!-- Card 6: Computer Science --%>
+      <div class="card bg-base-100 border border-base-300 flex flex-col">
+        <div class="card-body flex flex-col gap-3">
+          <div>
+            <.badge color="primary" variant="soft" size="sm">
+              {gettext("Computer Science")}
+            </.badge>
+          </div>
+          <h2 class="card-title font-display text-lg leading-snug">
+            {gettext("Targeting interventions in networks")}
+          </h2>
+          <p class="font-serif text-sm leading-relaxed text-base-content/70 flex-1">
+            {gettext(
+              "The review noted an ambiguity in the influence-maximisation problem formulation, a missing discussion of computational complexity relative to greedy baselines, and an incomplete related-work comparison with cascade models from the past three years."
+            )}
+          </p>
+          <div class="card-actions mt-2">
+            <a href={~p"/users/register"} class="btn btn-primary btn-sm font-sans font-semibold">
+              {gettext("View sample")}
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <%!-- Discipline index note --%>
+    <p class="mt-10 text-center font-sans text-sm text-base-content/50">
+      {gettext("Reports span 40+ disciplines. More samples added regularly.")}
+    </p>
+  </section>
+
+  <%!-- Closing CTA --%>
+  <.cta_banner
+    heading={gettext("Ready to review your own manuscript?")}
+    subcopy={
+      gettext(
+        "Upload your paper and receive structured, sourced feedback in minutes — the way a thoughtful peer reviewer would give it."
+      )
+    }
+    cta_label={gettext("Get your review")}
+    cta_href={~p"/users/register"}
+  />
+</Layouts.app>

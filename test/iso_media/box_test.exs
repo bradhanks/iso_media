@@ -207,7 +207,11 @@ defmodule ISOMedia.BoxTest do
     setup do
       boxes = [
         Box.leaf("ftyp", <<>>),
-        Box.container("moov", [Box.leaf("mvhd", <<>>), Box.leaf("trak", <<1>>), Box.leaf("trak", <<2>>)]),
+        Box.container("moov", [
+          Box.leaf("mvhd", <<>>),
+          Box.leaf("trak", <<1>>),
+          Box.leaf("trak", <<2>>)
+        ]),
         Box.leaf("mdat", <<>>)
       ]
 
@@ -227,6 +231,7 @@ defmodule ISOMedia.BoxTest do
 
     test "child!/3 raises with context when absent", %{boxes: boxes} do
       assert Box.child!(boxes, "moov").type == "moov"
+
       assert_raise ArgumentError, ~r/faststart: no moof box/, fn ->
         Box.child!(boxes, "moof", "faststart")
       end

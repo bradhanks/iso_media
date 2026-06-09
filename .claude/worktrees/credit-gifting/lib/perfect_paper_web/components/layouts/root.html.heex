@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="csrf-token" content={get_csrf_token()} />
+    <PerfectPaperWeb.CookieConsent.consent_mode_head
+      :if={assigns[:cookie_consent]}
+      consent={@cookie_consent}
+    />
+    <link rel="icon" href={~p"/images/icon-mulberry.svg"} type="image/svg+xml" />
+    <link rel="icon" href={~p"/favicon.ico"} sizes="48x48" />
+    <link rel="apple-touch-icon" href={~p"/images/icon-mulberry.png"} />
+    <.live_title default="PerfectPaper" suffix=" · PerfectPaper" phx-no-format>{assigns[:page_title]}</.live_title>
+    <link
+      rel="preload"
+      href={~p"/fonts/Outfit-VariableFont_wght.ttf"}
+      as="font"
+      type="font/ttf"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href={~p"/fonts/Fraunces-VariableFont_SOFT_WONK_opsz_wght.ttf"}
+      as="font"
+      type="font/ttf"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href={~p"/fonts/Newsreader-VariableFont_opsz_wght.ttf"}
+      as="font"
+      type="font/ttf"
+      crossorigin
+    />
+    <link phx-track-static rel="stylesheet" href={~p"/assets/css/app.css"} />
+    <script defer phx-track-static type="text/javascript" src={~p"/assets/js/app.js"}>
+    </script>
+  </head>
+  <body>
+    {@inner_content}
+    <PerfectPaperWeb.CookieConsent.banner
+      :if={assigns[:show_cookie_banner] && assigns[:conn]}
+      consent={@cookie_consent}
+      return_to={Phoenix.Controller.current_path(@conn)}
+    />
+  </body>
+</html>

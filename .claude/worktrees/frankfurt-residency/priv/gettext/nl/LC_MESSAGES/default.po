@@ -1,0 +1,3655 @@
+## "msgid"s in this file come from POT (.pot) files.
+###
+### Do not add, change, or remove "msgid"s manually here as
+### they're tied to the ones in the corresponding POT file
+### (with the same domain).
+###
+### Use "mix gettext.extract --merge" or "mix gettext.merge"
+### to merge POT files into PO files.
+msgid ""
+msgstr ""
+"Language: nl\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: lib/perfect_paper_web/components/core_components.ex:375
+#, elixir-autogen, elixir-format
+msgid "Actions"
+msgstr "Acties"
+
+#: lib/perfect_paper_web/components/layouts.ex:283
+#: lib/perfect_paper_web/components/layouts.ex:295
+#, elixir-autogen, elixir-format
+msgid "Attempting to reconnect"
+msgstr "Verbinding herstellen…"
+
+#: lib/perfect_paper_web/components/daisy/daisy_data_input_components.ex:299
+#, elixir-autogen, elixir-format
+msgid "Choose files"
+msgstr "Bestanden kiezen"
+
+#: lib/perfect_paper_web/components/daisy/daisy_action_components.ex:352
+#, elixir-autogen, elixir-format
+msgid "Close"
+msgstr "Sluiten"
+
+#: lib/perfect_paper_web/components/app_shell.ex:123
+#: lib/perfect_paper_web/components/daisy/daisy_layout_components.ex:79
+#, elixir-autogen, elixir-format
+msgid "Close sidebar"
+msgstr "Zijbalk sluiten"
+
+#: lib/perfect_paper_web/components/daisy/daisy_data_input_components.ex:358
+#, elixir-autogen, elixir-format
+msgid "Complete"
+msgstr "Voltooid"
+
+#: lib/perfect_paper_web/components/daisy/daisy_action_components.ex:571
+#: lib/perfect_paper_web/components/daisy/daisy_action_components.ex:620
+#, elixir-autogen, elixir-format
+msgid "Copy to clipboard"
+msgstr "Naar klembord kopiëren"
+
+#: lib/perfect_paper_web/components/daisy/daisy_feedback_components.ex:93
+#: lib/perfect_paper_web/components/daisy/daisy_layout_components.ex:345
+#: lib/perfect_paper_web/components/review_components.ex:430
+#: lib/perfect_paper_web/live/history_live/show.html.heex:89
+#, elixir-autogen, elixir-format
+msgid "Dismiss"
+msgstr "Negeren"
+
+#: lib/perfect_paper_web/components/daisy/daisy_data_input_components.ex:672
+#, elixir-autogen, elixir-format
+msgid "File is too large"
+msgstr "Bestand is te groot"
+
+#: lib/perfect_paper_web/components/daisy/daisy_data_input_components.ex:674
+#, elixir-autogen, elixir-format
+msgid "File type not accepted"
+msgstr "Bestandstype niet geaccepteerd"
+
+#: lib/perfect_paper_web/components/daisy/daisy_feedback_components.ex:140
+#, elixir-autogen, elixir-format
+msgid "Loading"
+msgstr "Laden"
+
+#: lib/perfect_paper_web/components/daisy/daisy_data_input_components.ex:294
+#, elixir-autogen, elixir-format
+msgid "Max file size: %{size}"
+msgstr "Maximale bestandsgrootte: %{size}"
+
+#: lib/perfect_paper_web/components/daisy/daisy_layout_components.ex:279
+#, elixir-autogen, elixir-format
+msgid "Online"
+msgstr "Online"
+
+#: lib/perfect_paper_web/components/daisy/daisy_layout_components.ex:212
+#, elixir-autogen, elixir-format
+msgid "Open search"
+msgstr "Zoeken openen"
+
+#: lib/perfect_paper_web/components/daisy/daisy_layout_components.ex:114
+#, elixir-autogen, elixir-format
+msgid "Open sidebar"
+msgstr "Zijbalk openen"
+
+#: lib/perfect_paper_web/components/daisy/daisy_data_input_components.ex:203
+#: lib/perfect_paper_web/components/daisy/daisy_data_input_components.ex:396
+#: lib/perfect_paper_web/live/new_live.html.heex:51
+#, elixir-autogen, elixir-format
+msgid "Remove file"
+msgstr "Bestand verwijderen"
+
+#: lib/perfect_paper_web/components/layouts.ex:290
+#, elixir-autogen, elixir-format
+msgid "Something went wrong!"
+msgstr "Er is iets misgegaan!"
+
+#: lib/perfect_paper_web/components/daisy/daisy_action_components.ex:477
+#, elixir-autogen, elixir-format
+msgid "Theme"
+msgstr "Thema"
+
+#: lib/perfect_paper_web/components/app_shell.ex:67
+#: lib/perfect_paper_web/components/daisy/daisy_layout_components.ex:68
+#, elixir-autogen, elixir-format
+msgid "Toggle sidebar"
+msgstr "Zijbalk in-/uitschakelen"
+
+#: lib/perfect_paper_web/components/daisy/daisy_data_input_components.ex:673
+#, elixir-autogen, elixir-format
+msgid "Too many files selected"
+msgstr "Te veel bestanden geselecteerd"
+
+#: lib/perfect_paper_web/components/daisy/daisy_data_input_components.ex:386
+#, elixir-autogen, elixir-format
+msgid "Upload complete"
+msgstr "Upload voltooid"
+
+#: lib/perfect_paper_web/components/daisy/daisy_data_input_components.ex:676
+#, elixir-autogen, elixir-format
+msgid "Upload error"
+msgstr "Uploadfout"
+
+#: lib/perfect_paper_web/components/layouts.ex:278
+#, elixir-autogen, elixir-format
+msgid "We can't find the internet"
+msgstr "Geen internetverbinding gevonden"
+
+#: lib/perfect_paper_web/components/core_components.ex:81
+#: lib/perfect_paper_web/components/daisy/daisy_action_components.ex:368
+#, elixir-autogen, elixir-format
+msgid "close"
+msgstr "sluiten"
+
+#: lib/perfect_paper_web/components/cookie_consent.ex:98
+#, elixir-autogen, elixir-format
+msgid "Accept all"
+msgstr "Alles accepteren"
+
+#: lib/perfect_paper_web/components/cookie_consent.ex:90
+#: lib/perfect_paper_web/components/cookie_consent.ex:152
+#, elixir-autogen, elixir-format
+msgid "Reject non-essential"
+msgstr "Niet-essentiële weigeren"
+
+#: lib/perfect_paper_web/components/cookie_consent.ex:62
+#, elixir-autogen, elixir-format
+msgid "Your privacy choices"
+msgstr "Uw privacyinstellingen"
+
+#: lib/perfect_paper_web/controllers/page_html/contact.html.heex:257
+#, elixir-autogen, elixir-format
+msgid "1 business day"
+msgstr "1 werkdag"
+
+#: lib/perfect_paper_web/controllers/page_html/contact.html.heex:261
+#: lib/perfect_paper_web/controllers/page_html/contact.html.heex:265
+#, elixir-autogen, elixir-format
+msgid "2–3 business days"
+msgstr "2–3 werkdagen"
+
+#: lib/perfect_paper_web/components/marketing/pricing_components.ex:247
+#, elixir-autogen, elixir-format
+msgid "A clean draft to hand your human editor"
+msgstr "Een verzorgde versie voor uw eindredacteur"
+
+#: lib/perfect_paper_web/controllers/page_html/enterprise.html.heex:38
+#, elixir-autogen, elixir-format
+msgid "A compliance roadmap"
+msgstr "Een complianceroadmap"
+
+#: lib/perfect_paper_web/components/marketing/pricing_components.ex:176
+#, elixir-autogen, elixir-format
+msgid "A freelance copy-editor"
+msgstr "Een freelance teksteditor"
+
+#: lib/perfect_paper_web/components/marketing/pricing_components.ex:165
+#, elixir-autogen, elixir-format
+msgid "A great copy-editor is worth every penny for the final pass. PerfectPaper gives every draft along the way the same kind of careful read — in minutes, so you arrive at that final pass with cleaner prose."
+msgstr "Een goede teksteditor is elke cent waard voor de eindlezing. PerfectPaper geeft elke tussentijdse versie dezelfde zorgvuldige blik — in minuten, zodat u bij die eindlezing aankomt met vloeiendere tekst."
+
+#: lib/perfect_paper_web/components/marketing.ex:715
+#, elixir-autogen, elixir-format
+msgid "A reviewer that reads the whole paper"
+msgstr "Een beoordelaar die het volledige artikel leest"
+
+#: lib/perfect_paper_web/controllers/page_html.ex:147
+#, elixir-autogen, elixir-format
+msgid "API docs"
+msgstr "API-documentatie"
+
+#: lib/perfect_paper_web/controllers/page_html.ex:143
+#, elixir-autogen, elixir-format
+msgid "API keys and a REST API"
+msgstr "API-sleutels en een REST API"
+
+#: lib/perfect_paper_web/controllers/page_html/enterprise.html.heex:55
+#, elixir-autogen, elixir-format
+msgid "Access"
+msgstr "Toegang"
+
+#: lib/perfect_paper_web/controllers/page_html.ex:124
+#, elixir-autogen, elixir-format
+msgid "Access & identity"
+msgstr "Toegang & identiteit"
+
+#: lib/perfect_paper_web/components/app_shell.ex:186
+#: lib/perfect_paper_web/components/app_shell.ex:217
+#: lib/perfect_paper_web/components/app_shell.ex:275
+#: lib/perfect_paper_web/components/app_shell.ex:276
+#: lib/perfect_paper_web/components/layouts.ex:130
+#: lib/perfect_paper_web/live/account_live.ex:22
+#: lib/perfect_paper_web/live/account_live.ex:58
+#: lib/perfect_paper_web/live/admin_live/credits.html.heex:25
+#, elixir-autogen, elixir-format
+msgid "Account"
+msgstr "Account"
+
+#: lib/perfect_paper_web/components/marketing.ex:842
+#, elixir-autogen, elixir-format
+msgid "Affiliations"
+msgstr "Affiliaties"
+
+#: lib/perfect_paper_web/components/layouts.ex:222
+#, elixir-autogen, elixir-format
+msgid "All systems operational"
+msgstr "Alle systemen operationeel"
+
+#: lib/perfect_paper_web/components/marketing.ex:863
+#, elixir-autogen, elixir-format
+msgid "American Cancer Society"
+msgstr "American Cancer Society"
+
+#: lib/perfect_paper_web/controllers/page_html.ex:78
+#, elixir-autogen, elixir-format
+msgid "American Cancer Society Fellow"
+msgstr "American Cancer Society Fellow"
+
+#: lib/perfect_paper_web/components/cookie_consent.ex:188
+#, elixir-autogen, elixir-format
+msgid "Analytics"
+msgstr "Analyse"
+
+#: lib/perfect_paper_web/components/marketing/pricing_components.ex:243
+#, elixir-autogen, elixir-format
+msgid "Argument, structure, citations, and prose"
+msgstr "Argumentatie, structuur, bronverwijzingen en taal"
+
+#: lib/perfect_paper_web/controllers/page_html.ex:57
+#, elixir-autogen, elixir-format
+msgid "Associate Professor of Epidemiology"
+msgstr "Universitair hoofddocent epidemiologie"
+
+#: lib/perfect_paper_web/controllers/page_html.ex:141
+#, elixir-autogen, elixir-format
+msgid "Automate reviews and stream events into your own systems."
+msgstr "Automatiseer beoordelingen en stuur gebeurtenissen door naar uw eigen systemen."
+
+#: lib/perfect_paper_web/components/marketing/pricing_components.ex:204
+#, elixir-autogen, elixir-format
+msgid "Availability depends on their schedule"
+msgstr "Beschikbaarheid afhankelijk van hun agenda"
+
+#: lib/perfect_paper_web/components/marketing.ex:273
+#, elixir-autogen, elixir-format
+msgid "Awaiting your manuscript"
+msgstr "Wacht op uw manuscript"
+
+#: lib/perfect_paper_web/components/marketing/editorial_components.ex:249
+#, elixir-autogen, elixir-format
+msgid "Back to top"
+msgstr "Terug naar boven"
+
+#: lib/perfect_paper_web/controllers/page_html/contact.html.heex:103
+#, elixir-autogen, elixir-format
+msgid "Billing or credits"
+msgstr "Facturering of credits"
+
+#: lib/perfect_paper_web/controllers/page_html.ex:110
+#, elixir-autogen, elixir-format
+msgid "Bring your lab or department together with shared organizations, roles, and credits."
+msgstr "Breng uw lab of afdeling samen met gedeelde organisaties, rollen en credits."
+
+#: lib/perfect_paper_web/controllers/page_html/examples.html.heex:13
+#, elixir-autogen, elixir-format
+msgid "Browse real review reports across disciplines — each one shows the structured, sourced feedback PerfectPaper delivers before you submit."
+msgstr "Bekijk echte beoordelingsrapporten uit verschillende disciplines — elk rapport toont de gestructureerde, onderbouwde feedback die PerfectPaper levert vóór indiening."
+
+#: lib/perfect_paper_web/controllers/page_html/home.html.heex:5
+#, elixir-autogen, elixir-format
+msgid "Built by NIH-funded cancer researchers"
+msgstr "Ontwikkeld door NIH-gefinancierde kankeronderzoekers"
+
+#: lib/perfect_paper_web/components/marketing.ex:844
+#, elixir-autogen, elixir-format
+msgid "Built by researchers funded by leading cancer-prevention institutions"
+msgstr "Ontwikkeld door onderzoekers die worden gefinancierd door toonaangevende kankerpreventie-instellingen"
+
+#: lib/perfect_paper_web/controllers/page_html/enterprise.html.heex:7
+#, elixir-autogen, elixir-format
+msgid "Built for teams that take research data seriously"
+msgstr "Gebouwd voor teams die onderzoeksdata serieus nemen"
+
+#: lib/perfect_paper_web/components/locale_switcher.ex:25
+#, elixir-autogen, elixir-format
+msgid "Change language"
+msgstr "Taal wijzigen"
+
+#: lib/perfect_paper_web/controllers/page_html/examples.html.heex:29
+#, elixir-autogen, elixir-format
+msgid "Chaotic balanced state in a model of cortical circuits"
+msgstr "Chaotische evenwichtstoestand in een model van corticale circuits"
+
+#: lib/perfect_paper_web/controllers/page_html.ex:155
+#, elixir-autogen, elixir-format
+msgid "Clear data handling and a compliance roadmap you can share with your IT team."
+msgstr "Transparante gegevensverwerking en een complianceroadmap die u kunt delen met uw IT-team."
+
+#: lib/perfect_paper_web/components/marketing/pricing_components.ex:235
+#, elixir-autogen, elixir-format
+msgid "Comments back in minutes, any time of day"
+msgstr "Feedback binnen minuten, op elk moment van de dag"
+
+#: lib/perfect_paper_web/controllers/page_html/home.html.heex:59
+#, elixir-autogen, elixir-format
+msgid "Common questions"
+msgstr "Veelgestelde vragen"
+
+#: lib/perfect_paper_web/components/layouts.ex:199
+#, elixir-autogen, elixir-format
+msgid "Company"
+msgstr "Bedrijf"
+
+#: lib/perfect_paper_web/controllers/page_html.ex:216
+#: lib/perfect_paper_web/controllers/page_html/enterprise.html.heex:57
+#, elixir-autogen, elixir-format
+msgid "Compliance"
+msgstr "Compliance"
+
+#: lib/perfect_paper_web/controllers/page_html.ex:153
+#, elixir-autogen, elixir-format
+msgid "Compliance & data"
+msgstr "Compliance & gegevens"
+
+#: lib/perfect_paper_web/controllers/page_html/examples.html.heex:137
+#, elixir-autogen, elixir-format
+msgid "Computer Science"
+msgstr "Informatica"
+
+#: lib/perfect_paper_web/controllers/page_html.ex:157
+#, elixir-autogen, elixir-format
+msgid "Configurable retention and deletion"
+msgstr "Configureerbare retentie en verwijdering"
+
+#: lib/perfect_paper_web/components/layouts.ex:104
+#: lib/perfect_paper_web/components/layouts.ex:203
+#, elixir-autogen, elixir-format
+msgid "Contact"
+msgstr "Contact"
+
+#: lib/perfect_paper_web/controllers/page_html/enterprise.html.heex:101
+#: lib/perfect_paper_web/controllers/page_html/enterprise_security.html.heex:35
+#, elixir-autogen, elixir-format
+msgid "Contact sales"
+msgstr "Contact met verkoop"
+
+#: lib/perfect_paper_web/controllers/page_html/home.html.heex:96
+#, elixir-autogen, elixir-format
+msgid "Contact us"
+msgstr "Neem contact op"
+
+#: lib/perfect_paper_web/controllers/page_html.ex:99
+#, elixir-autogen, elixir-format
+msgid "Content never used for model training"
+msgstr "Inhoud nooit gebruikt voor modeltraining"
+
+#: lib/perfect_paper_web/components/marketing/editorial_components.ex:189
+#: lib/perfect_paper_web/components/marketing/editorial_components.ex:200
+#, elixir-autogen, elixir-format
+msgid "Contents"
+msgstr "Inhoudsopgave"
+
+#: lib/perfect_paper_web/components/layouts.ex:212
+#, elixir-autogen, elixir-format
+msgid "Cookie settings"
+msgstr "Cookie-instellingen"
+
+#: lib/perfect_paper_web/components/marketing/pricing_components.ex:263
+#, elixir-autogen, elixir-format
+msgid "Copy-editing rates are illustrative industry ranges. PerfectPaper is a careful first reader — not a replacement for a trusted human editor on your final pass."
+msgstr "De vermelde tarieven voor tekstediting zijn indicatieve marktprijzen. PerfectPaper is een zorgvuldige eerste lezer — geen vervanging van een vertrouwde menselijke editor bij uw eindredactie."
+
+#: lib/perfect_paper_web/controllers/page_html/examples.html.heex:51
+#, elixir-autogen, elixir-format
+msgid "Coset codes — Part I: Introduction and geometrical classification"
+msgstr "Cosetcodes — Deel I: Inleiding en meetkundige classificatie"
+
+#: lib/perfect_paper_web/components/cookie_consent.ex:104
+#, elixir-autogen, elixir-format
+msgid "Customize choices"
+msgstr "Keuzes aanpassen"
+
+#: lib/perfect_paper_web/components/marketing/pricing_components.ex:196
+#, elixir-autogen, elixir-format
+msgid "Days to weeks of turnaround"
+msgstr "Doorlooptijd van dagen tot weken"
+
+#: lib/perfect_paper_web/controllers/page_html.ex:173
+#, elixir-autogen, elixir-format
+msgid "Dedicated support contact"
+msgstr "Toegewijd contactpersoon voor ondersteuning"
+
+#: lib/perfect_paper_web/controllers/page_html.ex:169
+#, elixir-autogen, elixir-format
+msgid "Dedicated support, onboarding help, and service-level agreements are available on enterprise plans."
+msgstr "Toegewijde ondersteuning, onboardinghulp en service-level agreements zijn beschikbaar via enterprise-abonnementen."
+
+#: lib/perfect_paper_web/components/marketing/pricing_components.ex:208
+#, elixir-autogen, elixir-format
+msgid "Deep human judgment for the final pass"
+msgstr "Diepgaand menselijk oordeel voor de eindredactie"
+
+#: lib/perfect_paper_web/controllers/page_html.ex:145
+#, elixir-autogen, elixir-format
+msgid "Delivery log with replay"
+msgstr "Afleveringslog met herhaalfunctie"
+
+#: lib/perfect_paper_web/controllers/page_html.ex:140
+#, elixir-autogen, elixir-format
+msgid "Developer platform"
+msgstr "Ontwikkelaarsplatform"
+
+#: lib/perfect_paper_web/controllers/page_html/enterprise.html.heex:56
+#, elixir-autogen, elixir-format
+msgid "Developers"
+msgstr "Ontwikkelaars"
+
+#: lib/perfect_paper_web/components/marketing.ex:666
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Discuss"
+msgstr "Bespreken"
+
+#: lib/perfect_paper_web/components/marketing.ex:734
+#, elixir-autogen, elixir-format
+msgid "Discuss, then resolve"
+msgstr "Bespreken, daarna verwerken"
+
+#: lib/perfect_paper_web/components/marketing/editorial_components.ex:197
+#, elixir-autogen, elixir-format
+msgid "Document contents"
+msgstr "Documentinhoud"
+
+#: lib/perfect_paper_web/components/marketing/editorial_components.ex:62
+#, elixir-autogen, elixir-format
+msgid "Document of record"
+msgstr "Officieel document"
+
+#: lib/perfect_paper_web/controllers/page_html.ex:158
+#, elixir-autogen, elixir-format
+msgid "Documented subprocessors and data residency"
+msgstr "Gedocumenteerde subverwerkers en gegevenslocatie"
+
+#: lib/perfect_paper_web/controllers/page_html/contact.html.heex:48
+#, elixir-autogen, elixir-format
+msgid "Dr. Jane Smith"
+msgstr "Dr. Jane Smith"
+
+#: lib/perfect_paper_web/components/marketing.ex:729
+#, elixir-autogen, elixir-format
+msgid "Each comment quotes the passage it refers to and explains the issue, so you always know exactly what to revise."
+msgstr "Elk commentaar citeert de passage waarop het betrekking heeft en legt het probleem uit, zodat u altijd precies weet wat u moet aanpassen."
+
+#: lib/perfect_paper_web/controllers/page_html/testimonials.html.heex:9
+#, elixir-autogen, elixir-format
+msgid "Early feedback from researchers who put their manuscripts through PerfectPaper before submission."
+msgstr "Eerste reacties van onderzoekers die hun manuscripten voor indiening door PerfectPaper lieten beoordelen."
+
+#: lib/perfect_paper_web/controllers/page_html/examples.html.heex:92
+#, elixir-autogen, elixir-format
+msgid "Economics"
+msgstr "Economie"
+
+#: lib/perfect_paper_web/components/marketing/editorial_components.ex:83
+#, elixir-autogen, elixir-format
+msgid "Effective"
+msgstr "Effectief"
+
+#: lib/perfect_paper_web/controllers/page_html/contact.html.heex:57
+#: lib/perfect_paper_web/live/account_live.ex:77
+#, elixir-autogen, elixir-format
+msgid "Email address"
+msgstr "E-mailadres"
+
+#: lib/perfect_paper_web/controllers/page_html.ex:188
+#, elixir-autogen, elixir-format
+msgid "Encryption"
+msgstr "Versleuteling"
+
+#: lib/perfect_paper_web/controllers/page_html.ex:98
+#, elixir-autogen, elixir-format
+msgid "Encryption in transit and at rest"
+msgstr "Versleuteling tijdens transport en in opslag"
+
+#: lib/perfect_paper_web/controllers/page_html/examples.html.heex:48
+#, elixir-autogen, elixir-format
+msgid "Engineering"
+msgstr "Techniek"
+
+#: lib/perfect_paper_web/components/layouts.ex:92
+#: lib/perfect_paper_web/components/layouts.ex:201
+#, elixir-autogen, elixir-format
+msgid "Enterprise"
+msgstr "Enterprise"
+
+#: lib/perfect_paper_web/components/marketing.ex:1010
+#, elixir-autogen, elixir-format
+msgid "Enterprise sections"
+msgstr "Enterprise-secties"
+
+#: lib/perfect_paper_web/components/layouts.ex:194
+#, elixir-autogen, elixir-format
+msgid "Example reports"
+msgstr "Voorbeeldrapporten"
+
+#: lib/perfect_paper_web/components/layouts.ex:86
+#, elixir-autogen, elixir-format
+msgid "Examples"
+msgstr "Voorbeelden"
+
+#: lib/perfect_paper_web/components/marketing.ex:73
+#, elixir-autogen, elixir-format
+msgid "Expert feedback on"
+msgstr "Deskundige feedback op"
+
+#: lib/perfect_paper_web/controllers/page_html/contact.html.heex:234
+#, elixir-autogen, elixir-format
+msgid "Exploring PerfectPaper as a pre-submission screening tool for your journal? We would love to discuss a pilot."
+msgstr "Overweegt u PerfectPaper als prescreeningtool voor uw tijdschrift? We bespreken graag een pilot met u."
+
+#: lib/perfect_paper_web/components/marketing.ex:530
+#, elixir-autogen, elixir-format
+msgid "Export revised manuscript"
+msgstr "Herzien manuscript exporteren"
+
+#: lib/perfect_paper_web/components/layouts.ex:98
+#: lib/perfect_paper_web/components/layouts.ex:195
+#: lib/perfect_paper_web/controllers/page_html/home.html.heex:57
+#, elixir-autogen, elixir-format
+msgid "FAQ"
+msgstr "FAQ"
+
+#: lib/perfect_paper_web/controllers/page_html/contact.html.heex:102
+#, elixir-autogen, elixir-format
+msgid "Feature suggestion"
+msgstr "Functiesuggestie"
+
+#: lib/perfect_paper_web/components/marketing.ex:655
+#: lib/perfect_paper_web/components/review_components.ex:117
+#, elixir-autogen, elixir-format
+msgid "Feedback"
+msgstr "Feedback"
+
+#: lib/perfect_paper_web/controllers/page_html/contact.html.heex:193
+#, elixir-autogen, elixir-format
+msgid "For institutions"
+msgstr "Voor instellingen"
+
+#: lib/perfect_paper_web/controllers/page_html/contact.html.heex:231
+#, elixir-autogen, elixir-format
+msgid "For journals"
+msgstr "Voor tijdschriften"
+
+#: lib/perfect_paper_web/components/marketing/pricing_components.ex:308
+#, elixir-autogen, elixir-format
+msgid "For labs and authors with steady output."
+msgstr "Voor labs en auteurs met een regelmatige output."
+
+#: lib/perfect_paper_web/controllers/page_html/contact.html.heex:41
+#, elixir-autogen, elixir-format
+msgid "Full name"
+msgstr "Volledige naam"
+
+#: lib/perfect_paper_web/components/marketing.ex:720
+#, elixir-autogen, elixir-format
+msgid "Full-paper reading"
+msgstr "Volledige artikellezing"
+
+#: lib/perfect_paper_web/controllers/page_html/contact.html.heex:256
+#, elixir-autogen, elixir-format
+msgid "General enquiries"
+msgstr "Algemene vragen"
+
+#: lib/perfect_paper_web/controllers/page_html/contact.html.heex:97
+#, elixir-autogen, elixir-format
+msgid "General question"
+msgstr "Algemene vraag"
+
+#: lib/perfect_paper_web/controllers/page_html/contact.html.heex:155
+#, elixir-autogen, elixir-format
+msgid "General support"
+msgstr "Algemene ondersteuning"
+
+#: lib/perfect_paper_web/controllers/page_html/contact.html.heex:6
+#, elixir-autogen, elixir-format
+msgid "Get in touch"
+msgstr "Neem contact op"
+
+#: lib/perfect_paper_web/components/marketing/hero_components.ex:61
+#: lib/perfect_paper_web/components/marketing/pricing_components.ex:131
+#: lib/perfect_paper_web/controllers/page_html/home.html.heex:46
+#, elixir-autogen, elixir-format
+msgid "Get started"
+msgstr "Aan de slag"
+
+#: lib/perfect_paper_web/components/marketing.ex:55
+#: lib/perfect_paper_web/components/marketing.ex:796
+#: lib/perfect_paper_web/controllers/page_html/examples.html.heex:171
+#, elixir-autogen, elixir-format
+msgid "Get your review"
+msgstr "Ontvang uw beoordeling"
+
+#: lib/perfect_paper_web/components/layouts.ex:160
+#, elixir-autogen, elixir-format
+msgid "Go to app"
+msgstr "Naar de app"
+
+#: lib/perfect_paper_web/controllers/page_html.ex:132
+#, elixir-autogen, elixir-format
+msgid "Granular, scoped access grants"
+msgstr "Gedetailleerde, scoped toegangsrechten"
+
+#: lib/perfect_paper_web/controllers/page_html.ex:115
+#, elixir-autogen, elixir-format
+msgid "Groups and per-project access"
+msgstr "Groepen en toegang per project"
+
+#: lib/perfect_paper_web/components/cookie_consent.ex:189
+#, elixir-autogen, elixir-format
+msgid "Helps us understand how PerfectPaper is used so we can improve it."
+msgstr "Helpt ons te begrijpen hoe PerfectPaper wordt gebruikt, zodat we het kunnen verbeteren."
+
+#: lib/perfect_paper_web/controllers/page_html.ex:39
+#, elixir-autogen, elixir-format
+msgid "How is this different from a grammar checker?"
+msgstr "Hoe verschilt dit van een grammaticacontrole?"
+
+#: lib/perfect_paper_web/components/layouts.ex:74
+#: lib/perfect_paper_web/components/layouts.ex:192
+#: lib/perfect_paper_web/components/marketing.ex:714
+#: lib/perfect_paper_web/live/earn_live.ex:132
+#, elixir-autogen, elixir-format
+msgid "How it works"
+msgstr "Hoe het werkt"
+
+#: lib/perfect_paper_web/controllers/page_html.ex:29
+#, elixir-autogen, elixir-format
+msgid "How long does a review take?"
+msgstr "Hoe lang duurt een beoordeling?"
+
+#: lib/perfect_paper_web/controllers/page_html/enterprise.html.heex:33
+#, elixir-autogen, elixir-format
+msgid "How we handle your data"
+msgstr "Hoe wij uw gegevens verwerken"
+
+#: lib/perfect_paper_web/controllers/page_html/enterprise_security.html.heex:16
+#, elixir-autogen, elixir-format
+msgid "How we keep your research private and secure — from upload to deletion."
+msgstr "Hoe wij uw onderzoek privé en veilig houden — van upload tot verwijdering."
+
+#: lib/perfect_paper_web/components/marketing.ex:855
+#: lib/perfect_paper_web/controllers/page_html.ex:68
+#, elixir-autogen, elixir-format
+msgid "Huntsman Cancer Institute"
+msgstr "Huntsman Cancer Institute"
+
+#: lib/perfect_paper_web/controllers/page_html.ex:73
+#, elixir-autogen, elixir-format
+msgid "I sent my first-author manuscript through before submission and walked in far more confident. Worth it for the consistency checks alone."
+msgstr "Ik heb mijn manuscript als eerste auteur laten beoordelen vóór indiening en liep er beduidend zelfverzekerder naartoe. Al de consistentiecontroles alleen zijn het al waard."
+
+#: lib/perfect_paper_web/components/marketing/editorial_components.ex:145
+#, elixir-autogen, elixir-format
+msgid "In brief"
+msgstr "Samengevat"
+
+#: lib/perfect_paper_web/components/marketing/editorial_components.ex:69
+#, elixir-autogen, elixir-format
+msgid "In plain language."
+msgstr "In gewone taal."
+
+#: lib/perfect_paper_web/controllers/page_html/examples.html.heex:73
+#, elixir-autogen, elixir-format
+msgid "Inference in molecular population genetics"
+msgstr "Inferentie in moleculaire populatiegenetica"
+
+#: lib/perfect_paper_web/controllers/page_html.ex:202
+#, elixir-autogen, elixir-format
+msgid "Input sanitization"
+msgstr "Invoervalidatie"
+
+#: lib/perfect_paper_web/controllers/page_html.ex:100
+#, elixir-autogen, elixir-format
+msgid "Input sanitization on every upload"
+msgstr "Invoervalidatie bij elke upload"
+
+#: lib/perfect_paper_web/controllers/page_html/contact.html.heex:74
+#, elixir-autogen, elixir-format
+msgid "Institution"
+msgstr "Instelling"
+
+#: lib/perfect_paper_web/controllers/page_html/contact.html.heex:99
+#, elixir-autogen, elixir-format
+msgid "Institutional or bulk access"
+msgstr "Institutionele of bulktoegang"
+
+#: lib/perfect_paper_web/controllers/page_html/contact.html.heex:260
+#, elixir-autogen, elixir-format
+msgid "Institutional partnerships"
+msgstr "Institutionele partnerschappen"
+
+#: lib/perfect_paper_web/controllers/page_html/contact.html.heex:196
+#, elixir-autogen, elixir-format
+msgid "Interested in campus-wide access or a departmental plan? We offer flexible arrangements for research groups and writing centres."
+msgstr "Geïnteresseerd in campusbrede toegang of een afdelingsplan? Wij bieden flexibele regelingen voor onderzoeksgroepen en schrijfcentra."
+
+#: lib/perfect_paper_web/controllers/page_html.ex:116
+#, elixir-autogen, elixir-format
+msgid "Invitations and a shared credit pool"
+msgstr "Uitnodigingen en een gedeelde creditpool"
+
+#: lib/perfect_paper_web/controllers/page_html.ex:37
+#, elixir-autogen, elixir-format
+msgid "Is my manuscript kept private?"
+msgstr "Blijft mijn manuscript vertrouwelijk?"
+
+#: lib/perfect_paper_web/controllers/page_html/contact.html.heex:100
+#, elixir-autogen, elixir-format
+msgid "Journal partnership"
+msgstr "Tijdschriftpartnerschap"
+
+#: lib/perfect_paper_web/controllers/page_html/contact.html.heex:264
+#, elixir-autogen, elixir-format
+msgid "Journal pilots"
+msgstr "Tijdschriftpilots"
+
+#: lib/perfect_paper_web/components/marketing/editorial_components.ex:87
+#, elixir-autogen, elixir-format
+msgid "Jurisdiction"
+msgstr "Rechtsgebied"
+
+#: lib/perfect_paper_web/components/layouts.ex:208
+#, elixir-autogen, elixir-format
+msgid "Legal"
+msgstr "Juridisch"
+
+#: lib/perfect_paper_web/components/layouts.ex:154
+#: lib/perfect_paper_web/live/user_live/confirmation.ex:62
+#: lib/perfect_paper_web/live/user_live/login.ex:40
+#: lib/perfect_paper_web/live/user_live/registration.ex:50
+#, elixir-autogen, elixir-format
+msgid "Log in"
+msgstr "Aanmelden"
+
+#: lib/perfect_paper_web/components/app_shell.ex:196
+#: lib/perfect_paper_web/components/layouts.ex:144
+#, elixir-autogen, elixir-format
+msgid "Log out"
+msgstr "Afmelden"
+
+#: lib/perfect_paper_web/components/layouts.ex:185
+#, elixir-autogen, elixir-format
+msgid "Made for researchers, by researchers."
+msgstr "Gemaakt door onderzoekers, voor onderzoekers."
+
+#: lib/perfect_paper_web/components/cookie_consent.ex:195
+#, elixir-autogen, elixir-format
+msgid "Marketing"
+msgstr "Marketing"
+
+#: lib/perfect_paper_web/controllers/page_html/examples.html.heex:70
+#, elixir-autogen, elixir-format
+msgid "Mathematics"
+msgstr "Wiskunde"
+
+#: lib/perfect_paper_web/controllers/page_html/contact.html.heex:109
+#, elixir-autogen, elixir-format
+msgid "Message"
+msgstr "Bericht"
+
+#: lib/perfect_paper_web/components/marketing/pricing_components.ex:93
+#: lib/perfect_paper_web/live/billing_live.ex:193
+#, elixir-autogen, elixir-format
+msgid "Most popular"
+msgstr "Meest populair"
+
+#: lib/perfect_paper_web/controllers/page_html.ex:30
+#, elixir-autogen, elixir-format
+msgid "Most reviews complete in 10–30 minutes. We email you the moment yours is ready."
+msgstr "De meeste beoordelingen zijn klaar in 10–30 minuten. Wij sturen u een e-mail zodra uw beoordeling gereed is."
+
+#: lib/perfect_paper_web/components/marketing.ex:859
+#, elixir-autogen, elixir-format
+msgid "National Cancer Institute"
+msgstr "National Cancer Institute"
+
+#: lib/perfect_paper_web/controllers/page_html/examples.html.heex:26
+#, elixir-autogen, elixir-format
+msgid "Neuroscience"
+msgstr "Neurowetenschappen"
+
+#: lib/perfect_paper_web/controllers/page_html.ex:195
+#, elixir-autogen, elixir-format
+msgid "Never used for training"
+msgstr "Nooit gebruikt voor training"
+
+#: lib/perfect_paper_web/controllers/page_html/enterprise.html.heex:31
+#, elixir-autogen, elixir-format
+msgid "Never used to train AI"
+msgstr "Nooit gebruikt voor het trainen van AI"
+
+#: lib/perfect_paper_web/components/marketing/pricing_components.ex:200
+#, elixir-autogen, elixir-format
+msgid "New fee for every revision and re-read"
+msgstr "Nieuwe kosten voor elke revisie en herlezing"
+
+#: lib/perfect_paper_web/controllers/page_html.ex:174
+#, elixir-autogen, elixir-format
+msgid "Onboarding and IT help-desk resources"
+msgstr "Onboarding- en IT-helpdeskbronnen"
+
+#: lib/perfect_paper_web/controllers/page_html.ex:131
+#, elixir-autogen, elixir-format
+msgid "Organization-enforced multi-factor authentication"
+msgstr "Door de organisatie afgedwongen meervoudige verificatie"
+
+#: lib/perfect_paper_web/controllers/page_html.ex:144
+#, elixir-autogen, elixir-format
+msgid "Organization-scoped webhooks, HMAC-signed"
+msgstr "Organisatiegerichte webhooks, HMAC-ondertekend"
+
+#: lib/perfect_paper_web/controllers/page_html.ex:114
+#, elixir-autogen, elixir-format
+msgid "Organizations with member roles"
+msgstr "Organisaties met ledenrollen"
+
+#: lib/perfect_paper_web/components/marketing.ex:309
+#: lib/perfect_paper_web/components/review_components.ex:140
+#, elixir-autogen, elixir-format
+msgid "Overall feedback"
+msgstr "Algemene feedback"
+
+#: lib/perfect_paper_web/components/marketing.ex:54
+#, elixir-autogen, elixir-format
+msgid "Peer review, reimagined"
+msgstr "Peer review, opnieuw uitgevonden"
+
+#: lib/perfect_paper_web/components/marketing/pricing_components.ex:162
+#, elixir-autogen, elixir-format
+msgid "PerfectPaper and a freelance copy-editor"
+msgstr "PerfectPaper en een freelance teksteditor"
+
+#: lib/perfect_paper_web/controllers/page_html/examples.html.heex:32
+#, elixir-autogen, elixir-format
+msgid "PerfectPaper flagged three structural concerns: the mean-field derivation assumes stationarity without justification, the simulation parameters lack reproducibility anchors, and two figures carry inconsistent axis conventions."
+msgstr "PerfectPaper signaleerde drie structurele bezwaren: de mean-field-afleiding veronderstelt stationariteit zonder onderbouwing, de simulatieparameters missen reproduceerbare ankerpunten en twee figuren hanteren inconsistente asconventies."
+
+#: lib/perfect_paper_web/controllers/page_html/enterprise.html.heex:10
+#, elixir-autogen, elixir-format
+msgid "PerfectPaper gives labs, departments, and institutions the security, access controls, and integrations they need — without getting in the way of the work."
+msgstr "PerfectPaper biedt labs, afdelingen en instellingen de beveiliging, toegangscontroles en integraties die zij nodig hebben — zonder het werk te hinderen."
+
+#: lib/perfect_paper_web/controllers/page_html/examples.html.heex:120
+#, elixir-autogen, elixir-format
+msgid "PerfectPaper raised five comments: the psychometric scales needed Cronbach alpha reporting, the causal DAG lacked stated adjustment sets, and subgroup sample counts in Table 4 did not reconcile with the totals in Section 4.1."
+msgstr "PerfectPaper formuleerde vijf opmerkingen: de psychometrische schalen vereisten Cronbach-alpha-rapportage, de causale DAG miste expliciete aanpassingssets en de deelgroepsaantallen in Tabel 4 sloten niet aan op de totalen in Paragraaf 4.1."
+
+#: lib/perfect_paper_web/components/marketing.ex:722
+#, elixir-autogen, elixir-format
+msgid "PerfectPaper reads every section in context — methods, claims, and figures together — not a paragraph at a time."
+msgstr "PerfectPaper leest elke sectie in context — methoden, beweringen en figuren samen — niet alinea voor alinea."
+
+#: lib/perfect_paper_web/components/marketing.ex:78
+#, elixir-autogen, elixir-format
+msgid "PerfectPaper reads your full paper the way a thoughtful reviewer would — then returns structured, sourced feedback you can act on. Discuss any comment, revise with confidence, and walk into submission ready."
+msgstr "PerfectPaper leest uw volledige artikel zoals een weloverwogen beoordelaar dat zou doen — en levert vervolgens gestructureerde, onderbouwde feedback waarop u kunt handelen. Bespreek elke opmerking, herzien met vertrouwen en dien in met de zekerheid dat u er klaar voor bent."
+
+#: lib/perfect_paper_web/controllers/page_html.ex:40
+#, elixir-autogen, elixir-format
+msgid "PerfectPaper reviews substance — methods, evidence, logic, and consistency — the way a referee would, not just spelling and style."
+msgstr "PerfectPaper beoordeelt de inhoud — methoden, bewijs, redenering en consistentie — zoals een referee dat zou doen, niet alleen spelling en stijl."
+
+#: lib/perfect_paper_web/controllers/page_html.ex:53
+#, elixir-autogen, elixir-format
+msgid "PerfectPaper turned a dreaded revision cycle into an afternoon. It flagged an unsupported claim in my methods that two human reviewers had missed."
+msgstr "PerfectPaper heeft een gevreesde herzieningsronde omgezet in een middagje werk. Het signaleerde een niet-onderbouwde bewering in mijn methoden die twee menselijke beoordelaars hadden gemist."
+
+#: lib/perfect_paper_web/controllers/page_html.ex:77
+#, elixir-autogen, elixir-format
+msgid "PhD Candidate, Population Health"
+msgstr "Promovendus, volksgezondheid"
+
+#: lib/perfect_paper_web/components/app_shell.ex:213
+#: lib/perfect_paper_web/components/marketing/pricing_components.ex:55
+#, elixir-autogen, elixir-format
+msgid "Plans"
+msgstr "Abonnementen"
+
+#: lib/perfect_paper_web/controllers/page_html/home.html.heex:20
+#, elixir-autogen, elixir-format
+msgid "Plans that scale with your work"
+msgstr "Abonnementen die meegroeien met uw werk"
+
+#: lib/perfect_paper_web/controllers/page_html.ex:67
+#, elixir-autogen, elixir-format
+msgid "Postdoctoral Research Fellow"
+msgstr "Postdoctoraal onderzoeker"
+
+#: lib/perfect_paper_web/components/layouts.ex:80
+#: lib/perfect_paper_web/controllers/page_html/home.html.heex:18
+#, elixir-autogen, elixir-format
+msgid "Pricing"
+msgstr "Prijzen"
+
+#: lib/perfect_paper_web/components/layouts.ex:193
+#, elixir-autogen, elixir-format
+msgid "Pricing & plans"
+msgstr "Prijzen & abonnementen"
+
+#: lib/perfect_paper_web/components/marketing/pricing_components.ex:56
+#, elixir-autogen, elixir-format
+msgid "Pricing that scales with your writing"
+msgstr "Prijzen die meegroeien met uw schrijfwerk"
+
+#: lib/perfect_paper_web/components/marketing/pricing_components.ex:300
+#, elixir-autogen, elixir-format
+msgid "Priority processing"
+msgstr "Prioriteitsverwerking"
+
+#: lib/perfect_paper_web/components/layouts.ex:210
+#: lib/perfect_paper_web/controllers/page_html/enterprise.html.heex:26
+#, elixir-autogen, elixir-format
+msgid "Privacy policy"
+msgstr "Privacybeleid"
+
+#: lib/perfect_paper_web/controllers/page_html/enterprise.html.heex:4
+#: lib/perfect_paper_web/controllers/page_html/enterprise_security.html.heex:12
+#, elixir-autogen, elixir-format
+msgid "Privacy, by design"
+msgstr "Privacy by design"
+
+#: lib/perfect_paper_web/components/layouts.ex:190
+#, elixir-autogen, elixir-format
+msgid "Product"
+msgstr "Product"
+
+#: lib/perfect_paper_web/controllers/page_html/examples.html.heex:114
+#, elixir-autogen, elixir-format
+msgid "Public Health"
+msgstr "Volksgezondheid"
+
+#: lib/perfect_paper_web/controllers/page_html.ex:159
+#, elixir-autogen, elixir-format
+msgid "Pursuing SOC 2 and ISO 27001 certification"
+msgstr "SOC 2- en ISO 27001-certificering in voorbereiding"
+
+#: lib/perfect_paper_web/controllers/page_html.ex:218
+#, elixir-autogen, elixir-format
+msgid "Pursuing SOC 2 and ISO 27001 certification. Our data handling, subprocessors, and security posture are documented and available for your IT and procurement teams."
+msgstr "SOC 2- en ISO 27001-certificering in voorbereiding. Onze gegevensverwerking, subverwerkers en beveiligingshouding zijn gedocumenteerd en beschikbaar voor uw IT- en inkoopteams."
+
+#: lib/perfect_paper_web/controllers/page_html/contact.html.heex:98
+#, elixir-autogen, elixir-format
+msgid "Question about my review"
+msgstr "Vraag over mijn beoordeling"
+
+#: lib/perfect_paper_web/controllers/page_html/contact.html.heex:158
+#, elixir-autogen, elixir-format
+msgid "Questions about reviews, billing, or your account — we are here to help."
+msgstr "Vragen over beoordelingen, facturering of uw account — wij staan voor u klaar."
+
+#: lib/perfect_paper_web/controllers/page_html/home.html.heex:93
+#, elixir-autogen, elixir-format
+msgid "Questions about security or data handling?"
+msgstr "Vragen over beveiliging of gegevensverwerking?"
+
+#: lib/perfect_paper_web/controllers/page_html/enterprise_security.html.heex:29
+#, elixir-autogen, elixir-format
+msgid "Questions about security?"
+msgstr "Vragen over beveiliging?"
+
+#: lib/perfect_paper_web/controllers/page_html.ex:102
+#, elixir-autogen, elixir-format
+msgid "Read the full security page"
+msgstr "Lees de volledige beveiligingspagina"
+
+#: lib/perfect_paper_web/components/marketing/editorial_components.ex:93
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Reading"
+msgstr "Lezen"
+
+#: lib/perfect_paper_web/components/marketing.ex:254
+#, elixir-autogen, elixir-format
+msgid "Reading Section 3.2 — methods"
+msgstr "Paragraaf 3.2 lezen — methoden"
+
+#: lib/perfect_paper_web/controllers/page_html/examples.html.heex:165
+#, elixir-autogen, elixir-format
+msgid "Ready to review your own manuscript?"
+msgstr "Klaar om uw eigen manuscript te laten beoordelen?"
+
+#: lib/perfect_paper_web/controllers/page_html/contact.html.heex:101
+#, elixir-autogen, elixir-format
+msgid "Report a bug"
+msgstr "Fout melden"
+
+#: lib/perfect_paper_web/controllers/page_html/examples.html.heex:159
+#, elixir-autogen, elixir-format
+msgid "Reports span 40+ disciplines. More samples added regularly."
+msgstr "Rapporten bestrijken meer dan 40 disciplines. Regelmatig worden nieuwe voorbeelden toegevoegd."
+
+#: lib/perfect_paper_web/components/cookie_consent.ex:179
+#, elixir-autogen, elixir-format
+msgid "Required to sign you in, keep the service secure, and remember these choices. Always on."
+msgstr "Vereist om u aan te melden, de dienst veilig te houden en deze keuzes te onthouden. Altijd actief."
+
+#: lib/perfect_paper_web/components/marketing.ex:677
+#, elixir-autogen, elixir-format
+msgid "Resolve"
+msgstr "Verwerken"
+
+#: lib/perfect_paper_web/controllers/page_html/contact.html.heex:252
+#, elixir-autogen, elixir-format
+msgid "Response times"
+msgstr "Reactietijden"
+
+#: lib/perfect_paper_web/controllers/page_html.ex:209
+#, elixir-autogen, elixir-format
+msgid "Retention and deletion"
+msgstr "Retentie en verwijdering"
+
+#: lib/perfect_paper_web/components/marketing.ex:644
+#: lib/perfect_paper_web/live/history_live/show.ex:36
+#, elixir-autogen, elixir-format
+msgid "Review"
+msgstr "Beoordeling"
+
+#: lib/perfect_paper_web/controllers/page_html/examples.html.heex:95
+#, elixir-autogen, elixir-format
+msgid "Robust market interventions"
+msgstr "Robuuste marktinterventies"
+
+#: lib/perfect_paper_web/components/marketing/pricing_components.ex:190
+#, elixir-autogen, elixir-format
+msgid "Roughly $150–$400 for a single read of an 8,000-word paper."
+msgstr "Ongeveer $150–$400 voor een enkelvoudige lezing van een artikel van 8.000 woorden."
+
+#: lib/perfect_paper_web/controllers/page_html/examples.html.heex:117
+#, elixir-autogen, elixir-format
+msgid "Rural–urban divides and cultural dynamics in vaccine hesitancy"
+msgstr "Stad-platteland-kloof en culturele dynamiek bij vaccinatieaarzeling"
+
+#: lib/perfect_paper_web/controllers/page_html/examples.html.heex:5
+#, elixir-autogen, elixir-format
+msgid "Sample reports"
+msgstr "Voorbeeldrapporten"
+
+#: lib/perfect_paper_web/components/cookie_consent.ex:114
+#, elixir-autogen, elixir-format
+msgid "Save choices"
+msgstr "Keuzes opslaan"
+
+#: lib/perfect_paper_web/components/cookie_consent.ex:160
+#, elixir-autogen, elixir-format
+msgid "Save preferences"
+msgstr "Voorkeuren opslaan"
+
+#: lib/perfect_paper_web/components/layouts.ex:213
+#: lib/perfect_paper_web/controllers/page_html.ex:92
+#: lib/perfect_paper_web/controllers/page_html/enterprise.html.heex:53
+#, elixir-autogen, elixir-format
+msgid "Security"
+msgstr "Beveiliging"
+
+#: lib/perfect_paper_web/controllers/page_html/enterprise_security.html.heex:14
+#, elixir-autogen, elixir-format
+msgid "Security at PerfectPaper"
+msgstr "Beveiliging bij PerfectPaper"
+
+#: lib/perfect_paper_web/controllers/page_html/examples.html.heex:10
+#, elixir-autogen, elixir-format
+msgid "See PerfectPaper in action"
+msgstr "Zie PerfectPaper in actie"
+
+#: lib/perfect_paper_web/components/marketing.ex:56
+#, elixir-autogen, elixir-format
+msgid "See a sample"
+msgstr "Bekijk een voorbeeld"
+
+#: lib/perfect_paper_web/controllers/page_html/enterprise.html.heex:44
+#, elixir-autogen, elixir-format
+msgid "See compliance"
+msgstr "Bekijk compliance"
+
+#: lib/perfect_paper_web/controllers/page_html/contact.html.heex:96
+#, elixir-autogen, elixir-format
+msgid "Select a topic…"
+msgstr "Selecteer een onderwerp…"
+
+#: lib/perfect_paper_web/controllers/page_html/contact.html.heex:126
+#, elixir-autogen, elixir-format
+msgid "Send message"
+msgstr "Bericht versturen"
+
+#: lib/perfect_paper_web/controllers/page_html/contact.html.heex:29
+#, elixir-autogen, elixir-format
+msgid "Send us a message"
+msgstr "Stuur ons een bericht"
+
+#: lib/perfect_paper_web/controllers/page_html.ex:175
+#, elixir-autogen, elixir-format
+msgid "Service-level agreements (SLAs)"
+msgstr "Service-level agreements (SLA's)"
+
+#: lib/perfect_paper_web/components/app_shell.ex:188
+#: lib/perfect_paper_web/components/layouts.ex:135
+#, elixir-autogen, elixir-format
+msgid "Settings"
+msgstr "Instellingen"
+
+#: lib/perfect_paper_web/controllers/page_html/examples.html.heex:76
+#, elixir-autogen, elixir-format
+msgid "Seven comments addressed the likelihood derivation, including a sign error in the mutation-drift balance equation and an undisclosed approximation in the coalescent integral that affects asymptotic claims."
+msgstr "Zeven opmerkingen betroffen de afleiding van de aannemelijkheid, waaronder een tekenfout in de mutatie-drift-balancesvergelijking en een niet-vermelde benadering in de coalescent-integraal die asymptotische beweringen beïnvloedt."
+
+#: lib/perfect_paper_web/controllers/page_html.ex:126
+#, elixir-autogen, elixir-format
+msgid "Sign in the way your institution already does, and control exactly who sees what."
+msgstr "Meld u aan op de manier die uw instelling al gebruikt, en bepaal precies wie wat ziet."
+
+#: lib/perfect_paper_web/controllers/page_html.ex:130
+#, elixir-autogen, elixir-format
+msgid "Single sign-on (SSO)"
+msgstr "Single sign-on (SSO)"
+
+#: lib/perfect_paper_web/components/marketing/pricing_components.ex:256
+#, elixir-autogen, elixir-format
+msgid "Start a free read"
+msgstr "Begin een gratis lezing"
+
+#: lib/perfect_paper_web/components/cookie_consent.ex:177
+#, elixir-autogen, elixir-format
+msgid "Strictly necessary"
+msgstr "Strikt noodzakelijk"
+
+#: lib/perfect_paper_web/components/marketing.ex:727
+#, elixir-autogen, elixir-format
+msgid "Structured, sourced feedback"
+msgstr "Gestructureerde, onderbouwde feedback"
+
+#: lib/perfect_paper_web/controllers/page_html/contact.html.heex:89
+#, elixir-autogen, elixir-format
+msgid "Subject"
+msgstr "Onderwerp"
+
+#: lib/perfect_paper_web/components/marketing.ex:633
+#, elixir-autogen, elixir-format
+msgid "Submit"
+msgstr "Indienen"
+
+#: lib/perfect_paper_web/controllers/page_html/enterprise.html.heex:58
+#, elixir-autogen, elixir-format
+msgid "Support"
+msgstr "Ondersteuning"
+
+#: lib/perfect_paper_web/controllers/page_html.ex:167
+#, elixir-autogen, elixir-format
+msgid "Support & SLAs"
+msgstr "Ondersteuning & SLA's"
+
+#: lib/perfect_paper_web/components/marketing.ex:736
+#, elixir-autogen, elixir-format
+msgid "Talk through any comment with PerfectPaper, mark it addressed, and export a submission-ready manuscript."
+msgstr "Bespreek elke opmerking met PerfectPaper, markeer hem als verwerkt en exporteer een indiensklaar manuscript."
+
+#: lib/perfect_paper_web/controllers/page_html.ex:177
+#, elixir-autogen, elixir-format
+msgid "Talk to sales"
+msgstr "Contact met verkoop"
+
+#: lib/perfect_paper_web/controllers/page_html/enterprise.html.heex:95
+#, elixir-autogen, elixir-format
+msgid "Talk to us about your team."
+msgstr "Vertel ons over uw team."
+
+#: lib/perfect_paper_web/controllers/page_html/examples.html.heex:141
+#, elixir-autogen, elixir-format
+msgid "Targeting interventions in networks"
+msgstr "Gerichte interventies in netwerken"
+
+#: lib/perfect_paper_web/components/marketing/pricing_components.ex:311
+#, elixir-autogen, elixir-format
+msgid "Team and organization support"
+msgstr "Ondersteuning voor teams en organisaties"
+
+#: lib/perfect_paper_web/controllers/page_html/enterprise.html.heex:54
+#, elixir-autogen, elixir-format
+msgid "Teams"
+msgstr "Teams"
+
+#: lib/perfect_paper_web/controllers/page_html.ex:108
+#, elixir-autogen, elixir-format
+msgid "Teams & organizations"
+msgstr "Teams & organisaties"
+
+#: lib/perfect_paper_web/controllers/page_html/enterprise.html.heex:97
+#, elixir-autogen, elixir-format
+msgid "Tell us about your lab, department, or institution and we'll help you get set up — including security review, onboarding, and SLAs."
+msgstr "Vertel ons over uw lab, afdeling of instelling en wij helpen u op weg — inclusief beveiligingsbeoordeling, onboarding en SLA's."
+
+#: lib/perfect_paper_web/controllers/page_html/contact.html.heex:115
+#, elixir-autogen, elixir-format
+msgid "Tell us what's on your mind…"
+msgstr "Vertel ons wat u bezighoudt…"
+
+#: lib/perfect_paper_web/components/layouts.ex:211
+#, elixir-autogen, elixir-format
+msgid "Terms of service"
+msgstr "Gebruiksvoorwaarden"
+
+#: lib/perfect_paper_web/components/layouts.ex:202
+#: lib/perfect_paper_web/controllers/page_html/testimonials.html.heex:2
+#: lib/perfect_paper_web/controllers/page_html/testimonials.html.heex:5
+#, elixir-autogen, elixir-format
+msgid "Testimonials"
+msgstr "Getuigenissen"
+
+#: lib/perfect_paper_web/controllers/page_html.ex:63
+#, elixir-autogen, elixir-format
+msgid "The comments read like a thoughtful colleague's, not a grammar checker's. Every note pointed to the exact passage and explained why it mattered."
+msgstr "De opmerkingen lezen als die van een bedachtzame collega, niet als die van een grammaticacontrole. Elke noot verwees naar de exacte passage en legde uit waarom het relevant was."
+
+#: lib/perfect_paper_web/controllers/page_html/examples.html.heex:98
+#, elixir-autogen, elixir-format
+msgid "The feedback highlighted that the minimax regret criterion in Section 3 conflates ex-ante and ex-post welfare, and that the numerical simulations use a parameter range that favors the proposed mechanism without explanation."
+msgstr "De feedback wees erop dat het minimax-spijt-criterium in Paragraaf 3 ex-ante- en ex-post-welvaart vermengt, en dat de numerieke simulaties een parameterbereik gebruiken dat het voorgestelde mechanisme begunstigt zonder toelichting."
+
+#: lib/perfect_paper_web/controllers/page_html/home.html.heex:83
+#, elixir-autogen, elixir-format
+msgid "The paper is yours; it stays yours."
+msgstr "Het artikel is van u; dat blijft zo."
+
+#: lib/perfect_paper_web/controllers/page_html/examples.html.heex:54
+#, elixir-autogen, elixir-format
+msgid "The review identified an underspecified proof sketch in Section 4, a notation collision between the lattice and quotient-group sections, and a missing comparison with prior partition-based constructions."
+msgstr "De beoordeling identificeerde een ondergespecificeerde bewijsschets in Paragraaf 4, een notatieconflict tussen de rooster- en quotiëntgroepsecties, en een ontbrekende vergelijking met eerdere partitiegebaseerde constructies."
+
+#: lib/perfect_paper_web/controllers/page_html/examples.html.heex:144
+#, elixir-autogen, elixir-format
+msgid "The review noted an ambiguity in the influence-maximisation problem formulation, a missing discussion of computational complexity relative to greedy baselines, and an incomplete related-work comparison with cascade models from the past three years."
+msgstr "De beoordeling wees op een ambiguïteit in de probleemformulering van invloedmaximalisatie, een ontbrekende bespreking van de computationele complexiteit ten opzichte van greedy-basislijnen, en een onvolledige vergelijking van verwant werk met cascademodellen van de afgelopen drie jaar."
+
+#: lib/perfect_paper_web/components/layouts.ex:204
+#: lib/perfect_paper_web/controllers/page_html/home.html.heex:78
+#, elixir-autogen, elixir-format
+msgid "Trust & privacy"
+msgstr "Vertrouwen & privacy"
+
+#: lib/perfect_paper_web/components/marketing.ex:58
+#, elixir-autogen, elixir-format
+msgid "Trusted by researchers at 40+ institutions"
+msgstr "Vertrouwd door onderzoekers aan 40+ instellingen"
+
+#: lib/perfect_paper_web/controllers/page_html/contact.html.heex:82
+#, elixir-autogen, elixir-format
+msgid "University of Chicago"
+msgstr "University of Chicago"
+
+#: lib/perfect_paper_web/components/marketing.ex:851
+#: lib/perfect_paper_web/controllers/page_html.ex:58
+#, elixir-autogen, elixir-format
+msgid "University of Utah"
+msgstr "University of Utah"
+
+#: lib/perfect_paper_web/components/marketing.ex:792
+#, elixir-autogen, elixir-format
+msgid "Upload your manuscript and get structured, sourced feedback in minutes — the way a thoughtful reviewer would give it."
+msgstr "Upload uw manuscript en ontvang in minuten gestructureerde, onderbouwde feedback — zoals een weloverwogen beoordelaar dat zou geven."
+
+#: lib/perfect_paper_web/controllers/page_html/examples.html.heex:167
+#, elixir-autogen, elixir-format
+msgid "Upload your paper and receive structured, sourced feedback in minutes — the way a thoughtful peer reviewer would give it."
+msgstr "Upload uw artikel en ontvang in minuten gestructureerde, onderbouwde feedback — zoals een weloverwogen peer reviewer dat zou geven."
+
+#: lib/perfect_paper_web/controllers/page_html.ex:204
+#, elixir-autogen, elixir-format
+msgid "Uploaded text is run through Unicode sanitization before processing, removing hidden and malformed characters that could otherwise interfere with a review."
+msgstr "Geüploade tekst wordt vóór verwerking onderworpen aan Unicode-opschoning, waarbij verborgen en misvormde tekens worden verwijderd die anders de beoordeling kunnen verstoren."
+
+#: lib/perfect_paper_web/components/marketing/content_components.ex:350
+#, elixir-autogen, elixir-format
+msgid "Used by researchers at institutions worldwide"
+msgstr "Gebruikt door onderzoekers aan instellingen wereldwijd"
+
+#: lib/perfect_paper_web/components/cookie_consent.ex:196
+#, elixir-autogen, elixir-format
+msgid "Used to measure and personalize campaigns about PerfectPaper."
+msgstr "Gebruikt om campagnes over PerfectPaper te meten en te personaliseren."
+
+#: lib/perfect_paper_web/components/marketing/editorial_components.ex:79
+#, elixir-autogen, elixir-format
+msgid "Version"
+msgstr "Versie"
+
+#: lib/perfect_paper_web/controllers/page_html/examples.html.heex:38
+#: lib/perfect_paper_web/controllers/page_html/examples.html.heex:60
+#: lib/perfect_paper_web/controllers/page_html/examples.html.heex:82
+#: lib/perfect_paper_web/controllers/page_html/examples.html.heex:104
+#: lib/perfect_paper_web/controllers/page_html/examples.html.heex:126
+#: lib/perfect_paper_web/controllers/page_html/examples.html.heex:150
+#, elixir-autogen, elixir-format
+msgid "View sample"
+msgstr "Voorbeeld bekijken"
+
+#: lib/perfect_paper_web/components/marketing.ex:789
+#, elixir-autogen, elixir-format
+msgid "Walk into submission ready."
+msgstr "Dien in met de zekerheid dat u er klaar voor bent."
+
+#: lib/perfect_paper_web/controllers/page_html/contact.html.heex:32
+#, elixir-autogen, elixir-format
+msgid "We aim to respond within one business day."
+msgstr "We streven ernaar binnen één werkdag te reageren."
+
+#: lib/perfect_paper_web/controllers/page_html.ex:211
+#, elixir-autogen, elixir-format
+msgid "We keep your documents only as long as needed to produce your review. You can delete a review and its source document at any time."
+msgstr "Wij bewaren uw documenten alleen zo lang als nodig is om uw beoordeling te produceren. U kunt een beoordeling en het bijbehorende brondocument op elk moment verwijderen."
+
+#: lib/perfect_paper_web/controllers/page_html/enterprise.html.heex:22
+#, elixir-autogen, elixir-format
+msgid "We protect your manuscripts with strong access controls and encrypted storage, in transit and at rest."
+msgstr "Wij beschermen uw manuscripten met sterke toegangscontroles en versleutelde opslag, zowel tijdens transport als in opslag."
+
+#: lib/perfect_paper_web/controllers/page_html/home.html.heex:88
+#, elixir-autogen, elixir-format
+msgid "We retain your documents only as long as needed to produce your review, and you can delete a review and its source at any time."
+msgstr "Wij bewaren uw documenten alleen zo lang als nodig is om uw beoordeling te produceren, en u kunt een beoordeling en de bijbehorende bron op elk moment verwijderen."
+
+#: lib/perfect_paper_web/components/cookie_consent.ex:65
+#, elixir-autogen, elixir-format
+msgid "We use essential cookies to keep you signed in and to run PerfectPaper securely. With your permission we also use analytics to understand how the service is used. You can change this any time. Read our"
+msgstr "Wij gebruiken essentiële cookies om u aangemeld te houden en PerfectPaper veilig te laten werken. Met uw toestemming gebruiken wij ook analyses om te begrijpen hoe de dienst wordt gebruikt. U kunt dit op elk moment wijzigen. Lees ons"
+
+#: lib/perfect_paper_web/controllers/page_html/contact.html.heex:123
+#, elixir-autogen, elixir-format
+msgid "We will never share your details with third parties."
+msgstr "Wij delen uw gegevens nooit met derden."
+
+#: lib/perfect_paper_web/controllers/page_html/contact.html.heex:11
+#, elixir-autogen, elixir-format
+msgid "We would love to hear from you."
+msgstr "Wij horen graag van u."
+
+#: lib/perfect_paper_web/controllers/page_html/enterprise_security.html.heex:31
+#, elixir-autogen, elixir-format
+msgid "We're happy to walk your IT or procurement team through our data handling and compliance roadmap."
+msgstr "Wij lopen graag met uw IT- of inkoopteam door onze gegevensverwerking en complianceroadmap."
+
+#: lib/perfect_paper_web/controllers/page_html/enterprise.html.heex:40
+#, elixir-autogen, elixir-format
+msgid "We're pursuing SOC 2 and ISO 27001. Our data handling and subprocessors are documented for your IT team."
+msgstr "Wij werken aan SOC 2- en ISO 27001-certificering. Onze gegevensverwerking en subverwerkers zijn gedocumenteerd voor uw IT-team."
+
+#: lib/perfect_paper_web/controllers/page_html.ex:31
+#, elixir-autogen, elixir-format
+msgid "What file types can I upload?"
+msgstr "Welke bestandstypen kan ik uploaden?"
+
+#: lib/perfect_paper_web/controllers/page_html/testimonials.html.heex:7
+#, elixir-autogen, elixir-format
+msgid "What researchers say"
+msgstr "Wat onderzoekers zeggen"
+
+#: lib/perfect_paper_web/controllers/page_html/contact.html.heex:14
+#, elixir-autogen, elixir-format
+msgid "Whether you have a question about your review, a suggestion for a feature, or an inquiry about institutional access — our team reads every message."
+msgstr "Of u nu een vraag heeft over uw beoordeling, een suggestie voor een functie of een verzoek om institutionele toegang — ons team leest elk bericht."
+
+#: lib/perfect_paper_web/controllers/page_html.ex:38
+#, elixir-autogen, elixir-format
+msgid "Yes. Your content is encrypted, never shared, and never used to train models."
+msgstr "Ja. Uw inhoud is versleuteld, nooit gedeeld en nooit gebruikt om modellen te trainen."
+
+#: lib/perfect_paper_web/controllers/page_html/home.html.heex:83
+#, elixir-autogen, elixir-format
+msgid "Your content is encrypted in transit and at rest, and is"
+msgstr "Uw inhoud is versleuteld tijdens transport en in opslag, en is"
+
+#: lib/perfect_paper_web/controllers/page_html/enterprise.html.heex:20
+#, elixir-autogen, elixir-format
+msgid "Your content stays yours"
+msgstr "Uw inhoud blijft van u"
+
+#: lib/perfect_paper_web/controllers/page_html/home.html.heex:80
+#, elixir-autogen, elixir-format
+msgid "Your manuscript stays yours"
+msgstr "Uw manuscript blijft van u"
+
+#: lib/perfect_paper_web/controllers/page_html.ex:190
+#, elixir-autogen, elixir-format
+msgid "Your manuscripts are encrypted in transit (TLS) and at rest. Access is controlled and scoped so only you and the collaborators you choose can read a review."
+msgstr "Uw manuscripten zijn versleuteld tijdens transport (TLS) en in opslag. Toegang is gecontroleerd en beperkt, zodat alleen u en de medewerkers die u kiest een beoordeling kunnen inzien."
+
+#: lib/perfect_paper_web/controllers/page_html.ex:94
+#, elixir-autogen, elixir-format
+msgid "Your manuscripts are encrypted in transit and at rest and are never used to train models."
+msgstr "Uw manuscripten zijn versleuteld tijdens transport en in opslag en worden nooit gebruikt om modellen te trainen."
+
+#: lib/perfect_paper_web/controllers/page_html.ex:197
+#, elixir-autogen, elixir-format
+msgid "Your papers are yours. Nothing you upload is ever used as training data, and your content is not shared with third parties for that purpose."
+msgstr "Uw artikelen zijn van u. Niets wat u uploadt wordt ooit gebruikt als trainingsdata, en uw inhoud wordt niet voor dat doel met derden gedeeld."
+
+#: lib/perfect_paper_web/controllers/page_html/enterprise.html.heex:32
+#, elixir-autogen, elixir-format
+msgid "Your papers are yours. Nothing you upload is ever used as training data."
+msgstr "Uw artikelen zijn van u. Niets wat u uploadt wordt ooit gebruikt als trainingsdata."
+
+#: lib/perfect_paper_web/components/marketing.ex:74
+#, elixir-autogen, elixir-format
+msgid "before you submit."
+msgstr "voordat u indient."
+
+#: lib/perfect_paper_web/components/marketing/pricing_components.ex:217
+#, elixir-autogen, elixir-format
+msgid "every draft"
+msgstr "elke versie"
+
+#: lib/perfect_paper_web/controllers/page_html/home.html.heex:83
+#, elixir-autogen, elixir-format
+msgid "never used to train models"
+msgstr "nooit gebruikt om modellen te trainen"
+
+#: lib/perfect_paper_web/controllers/page_html/contact.html.heex:75
+#, elixir-autogen, elixir-format
+msgid "optional"
+msgstr "optioneel"
+
+#: lib/perfect_paper_web/components/marketing/pricing_components.ex:178
+#, elixir-autogen, elixir-format
+msgid "per pass"
+msgstr "per lezing"
+
+#: lib/perfect_paper_web/components/marketing/pricing_components.ex:186
+#, elixir-autogen, elixir-format
+msgid "per word, per pass"
+msgstr "per woord, per lezing"
+
+#: lib/perfect_paper_web/components/cookie_consent.ex:70
+#, elixir-autogen, elixir-format
+msgid "privacy notice"
+msgstr "privacyverklaring"
+
+#: lib/perfect_paper_web/controllers/page_html/contact.html.heex:64
+#, elixir-autogen, elixir-format
+msgid "you@university.edu"
+msgstr "u@universiteit.nl"
+
+#: lib/perfect_paper_web/components/marketing.ex:73
+#, elixir-autogen, elixir-format
+msgid "your manuscript,"
+msgstr "uw manuscript,"
+
+#: lib/perfect_paper_web/components/layouts.ex:220
+#, elixir-autogen, elixir-format
+msgid "© 2026 PerfectPaper, Inc."
+msgstr "© 2026 PerfectPaper, Inc."
+
+#: lib/perfect_paper_web/controllers/page_html/enterprise_security.html.heex:7
+#, elixir-autogen, elixir-format
+msgid "← Enterprise"
+msgstr "← Enterprise"
+
+#: lib/perfect_paper_web/components/marketing/pricing_components.ex:283
+#, elixir-autogen, elixir-format
+msgid "1 full review per month"
+msgstr "1 volledige beoordeling per maand"
+
+#: lib/perfect_paper_web/components/marketing/pricing_components.ex:310
+#, elixir-autogen, elixir-format
+msgid "10 full reviews per month"
+msgstr "10 volledige beoordelingen per maand"
+
+#: lib/perfect_paper_web/components/marketing/pricing_components.ex:297
+#, elixir-autogen, elixir-format
+msgid "3 full reviews per month"
+msgstr "3 volledige beoordelingen per maand"
+
+#: lib/perfect_paper_web/components/marketing/pricing_components.ex:281
+#, elixir-autogen, elixir-format, fuzzy
+msgid "A careful read when you need a second opinion."
+msgstr "Een zorgvuldige lezing wanneer u een tweede mening nodig heeft."
+
+#: lib/perfect_paper_web/components/marketing.ex:615
+#: lib/perfect_paper_web/components/review_components.ex:487
+#, elixir-autogen, elixir-format
+msgid "Add a comment or criticism…"
+msgstr "Voeg een opmerking of kritiek toe…"
+
+#: lib/perfect_paper_web/components/marketing.ex:175
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Add your manuscript"
+msgstr "Voeg uw manuscript toe"
+
+#: lib/perfect_paper_web/components/marketing.ex:458
+#: lib/perfect_paper_web/components/marketing.ex:474
+#: lib/perfect_paper_web/components/marketing.ex:490
+#: lib/perfect_paper_web/components/review_components.ex:536
+#, elixir-autogen, elixir-format
+msgid "Addressed"
+msgstr "Verwerkt"
+
+#: lib/perfect_paper_web/components/marketing/pricing_components.ex:305
+#, elixir-autogen, elixir-format
+msgid "Advanced"
+msgstr "Geavanceerd"
+
+#: lib/perfect_paper_web/components/marketing.ex:336
+#, elixir-autogen, elixir-format
+msgid "As shown in Figure 2, directed acyclic graphs encoded a priori knowledge for estimating total effects…"
+msgstr "Zoals getoond in Figuur 2 codeerden gerichte acyclische grafen a-priorikennis voor het schatten van totale effecten…"
+
+#: lib/perfect_paper_web/components/marketing.ex:583
+#, elixir-autogen, elixir-format
+msgid "Asked PerfectPaper"
+msgstr "Aan PerfectPaper gevraagd"
+
+#: lib/perfect_paper_web/controllers/page_html.ex:33
+#, elixir-autogen, elixir-format
+msgid "Can I export my reviewed manuscript?"
+msgstr "Kan ik mijn beoordeeld manuscript exporteren?"
+
+#: lib/perfect_paper_web/components/marketing.ex:567
+#, elixir-autogen, elixir-format
+msgid "Can we make the adjustment set explicit before we resubmit?"
+msgstr "Kunnen we de aanpassingsset expliciet maken voordat we opnieuw indienen?"
+
+#: lib/perfect_paper_web/components/marketing.ex:457
+#, elixir-autogen, elixir-format
+msgid "Causal adjustment"
+msgstr "Causale aanpassing"
+
+#: lib/perfect_paper_web/components/marketing.ex:331
+#: lib/perfect_paper_web/components/marketing.ex:558
+#, elixir-autogen, elixir-format
+msgid "Causal adjustment underspecified in §3.2"
+msgstr "Causale aanpassing ondergespecificeerd in §3.2"
+
+#: lib/perfect_paper_web/components/marketing/pricing_components.ex:315
+#, elixir-autogen, elixir-format
+msgid "Choose Advanced"
+msgstr "Kies Geavanceerd"
+
+#: lib/perfect_paper_web/components/marketing/pricing_components.ex:302
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Choose Professional"
+msgstr "Kies Professioneel"
+
+#: lib/perfect_paper_web/components/marketing/pricing_components.ex:288
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Choose Starter"
+msgstr "Kies Starter"
+
+#: lib/perfect_paper_web/components/marketing/pricing_components.ex:285
+#, elixir-autogen, elixir-format
+msgid "Comments you can address, dismiss, or undo"
+msgstr "Opmerkingen die u kunt verwerken, negeren of ongedaan maken"
+
+#: lib/perfect_paper_web/components/marketing.ex:361
+#, elixir-autogen, elixir-format
+msgid "Construction of the hesitancy scales"
+msgstr "Opbouw van de aarzelingsschalen"
+
+#: lib/perfect_paper_web/components/marketing/pricing_components.ex:312
+#, elixir-autogen, elixir-format
+msgid "Custom review settings for your lab"
+msgstr "Aangepaste beoordelingsinstellingen voor uw lab"
+
+#: lib/perfect_paper_web/components/marketing.ex:554
+#, elixir-autogen, elixir-format
+msgid "DISCUSSION · #1"
+msgstr "BESPREKING · #1"
+
+#: lib/perfect_paper_web/components/app_shell.ex:346
+#: lib/perfect_paper_web/components/marketing.ex:144
+#, elixir-autogen, elixir-format
+msgid "DOCUMENT"
+msgstr "DOCUMENT"
+
+#: lib/perfect_paper_web/components/marketing.ex:326
+#: lib/perfect_paper_web/components/review_components.ex:174
+#, elixir-autogen, elixir-format
+msgid "Detailed feedback"
+msgstr "Gedetailleerde feedback"
+
+#: lib/perfect_paper_web/components/marketing.ex:353
+#: lib/perfect_paper_web/components/marketing.ex:383
+#: lib/perfect_paper_web/components/marketing.ex:413
+#: lib/perfect_paper_web/components/review_components.ex:458
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Discussion"
+msgstr "Bespreking"
+
+#: lib/perfect_paper_web/components/marketing.ex:564
+#, elixir-autogen, elixir-format
+msgid "Dr. Anya Rao · co-author"
+msgstr "Dr. Anya Rao · co-auteur"
+
+#: lib/perfect_paper_web/components/marketing/pricing_components.ex:286
+#, elixir-autogen, elixir-format
+msgid "Export to Word, Markdown, or HTML"
+msgstr "Exporteren naar Word, Markdown of HTML"
+
+#: lib/perfect_paper_web/components/app_shell.ex:365
+#: lib/perfect_paper_web/components/marketing.ex:147
+#, elixir-autogen, elixir-format
+msgid "FEEDBACK"
+msgstr "FEEDBACK"
+
+#: lib/perfect_paper_web/components/marketing/pricing_components.ex:295
+#, elixir-autogen, elixir-format, fuzzy
+msgid "For researchers revising toward a deadline."
+msgstr "Voor onderzoekers die herzieningen uitvoeren vóór een deadline."
+
+#: lib/perfect_paper_web/components/marketing/pricing_components.ex:222
+#: lib/perfect_paper_web/live/account_live.ex:115
+#: lib/perfect_paper_web/live/account_live.ex:133
+#: lib/perfect_paper_web/live/billing_live.ex:129
+#, elixir-autogen, elixir-format
+msgid "Free preview"
+msgstr "Gratis voorvertoning"
+
+#: lib/perfect_paper_web/components/marketing.ex:473
+#, elixir-autogen, elixir-format
+msgid "Hesitancy scales"
+msgstr "Aarzelingsschalen"
+
+#: lib/perfect_paper_web/components/marketing.ex:391
+#, elixir-autogen, elixir-format
+msgid "Incorrect sample sizes in Table 4"
+msgstr "Onjuiste steekproefomvangen in Tabel 4"
+
+#: lib/perfect_paper_web/components/marketing/pricing_components.ex:299
+#, elixir-autogen, elixir-format
+msgid "Methods, evidence, logic, and consistency checks"
+msgstr "Methoden, bewijs, redenering en consistentiecontroles"
+
+#: lib/perfect_paper_web/components/marketing.ex:609
+#, elixir-autogen, elixir-format
+msgid "Perfect — adding it to the methods now."
+msgstr "Uitstekend — ik voeg het nu toe aan de methoden."
+
+#: lib/perfect_paper_web/components/marketing.ex:511
+#, elixir-autogen, elixir-format
+msgid "Polish pass — no new issues"
+msgstr "Afwerkingslezing — geen nieuwe problemen"
+
+#: lib/perfect_paper_web/components/marketing/pricing_components.ex:291
+#, elixir-autogen, elixir-format
+msgid "Professional"
+msgstr "Professioneel"
+
+#: lib/perfect_paper_web/components/marketing/pricing_components.ex:229
+#, elixir-autogen, elixir-format
+msgid "Re-read each new draft as you revise — included in your plan."
+msgstr "Herlezing van elke nieuwe versie tijdens herziening — inbegrepen in uw abonnement."
+
+#: lib/perfect_paper_web/components/marketing/pricing_components.ex:298
+#, elixir-autogen, elixir-format
+msgid "Re-read new drafts to catch issues you introduced while revising"
+msgstr "Herlezing van nieuwe versies om problemen op te sporen die u tijdens herziening hebt geïntroduceerd"
+
+#: lib/perfect_paper_web/components/marketing.ex:497
+#, elixir-autogen, elixir-format
+msgid "Re-running PerfectPaper review…"
+msgstr "PerfectPaper-beoordeling opnieuw uitvoeren…"
+
+#: lib/perfect_paper_web/components/marketing.ex:618
+#: lib/perfect_paper_web/components/review_components.ex:490
+#: lib/perfect_paper_web/live/history_live/show.html.heex:107
+#: lib/perfect_paper_web/live/history_live/show.html.heex:169
+#, elixir-autogen, elixir-format
+msgid "Reply"
+msgstr "Antwoorden"
+
+#: lib/perfect_paper_web/components/marketing.ex:437
+#, elixir-autogen, elixir-format
+msgid "Revision complete"
+msgstr "Herziening voltooid"
+
+#: lib/perfect_paper_web/components/marketing/pricing_components.ex:239
+#, elixir-autogen, elixir-format
+msgid "Revisions re-read as part of your plan — no new fee per pass"
+msgstr "Herzieningen worden herlezen als onderdeel van uw abonnement — geen extra kosten per lezing"
+
+#: lib/perfect_paper_web/components/marketing/pricing_components.ex:313
+#, elixir-autogen, elixir-format, fuzzy
+msgid "SSO, API access, and dedicated support"
+msgstr "SSO, API-toegang en toegewijde ondersteuning"
+
+#: lib/perfect_paper_web/components/marketing.ex:489
+#, elixir-autogen, elixir-format
+msgid "Sample sizes"
+msgstr "Steekproefomvangen"
+
+#: lib/perfect_paper_web/components/marketing.ex:137
+#, elixir-autogen, elixir-format
+msgid "Sharing"
+msgstr "Delen"
+
+#: lib/perfect_paper_web/components/marketing/pricing_components.ex:278
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Starter"
+msgstr "Starter"
+
+#: lib/perfect_paper_web/components/marketing.ex:598
+#, elixir-autogen, elixir-format
+msgid "State each backdoor path you're closing and cite the assumption behind every included covariate."
+msgstr "Beschrijf elk achterpad dat u sluit en citeer de aanname achter elke opgenomen covariaat."
+
+#: lib/perfect_paper_web/components/marketing/pricing_components.ex:284
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Structured, sourced feedback on every section"
+msgstr "Gestructureerde, onderbouwde feedback op elke sectie"
+
+#: lib/perfect_paper_web/components/marketing.ex:312
+#: lib/perfect_paper_web/components/review_components.ex:141
+#, elixir-autogen, elixir-format
+msgid "Summary"
+msgstr "Samenvatting"
+
+#: lib/perfect_paper_web/components/marketing.ex:396
+#, elixir-autogen, elixir-format
+msgid "The Hispanic young-adult subgroup counts don't reconcile with the totals in §4.1."
+msgstr "De tellingen van de Spaanstalige jongvolwassenensubgroep kloppen niet met de totalen in §4.1."
+
+#: lib/perfect_paper_web/components/marketing.ex:366
+#, elixir-autogen, elixir-format
+msgid "The three factor-derived scales in §3.1 carry your conclusions — give readers the psychometric evidence."
+msgstr "De drie factorgebaseerde schalen in §3.1 dragen uw conclusies — geef lezers het psychometrische bewijs."
+
+#: lib/perfect_paper_web/components/marketing.ex:319
+#, elixir-autogen, elixir-format
+msgid "Three issues stand between this draft and a clean submission — the causal model in §3.2, the scale construction in §3.1, and a reconciliation error in Table 4."
+msgstr "Drie kwesties staan tussen dit concept en een correcte indiening — het causale model in §3.2, de schalopbouw in §3.1 en een reconciliatiefout in Tabel 4."
+
+#: lib/perfect_paper_web/components/marketing.ex:203
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Uploaded"
+msgstr "Geüpload"
+
+#: lib/perfect_paper_web/controllers/page_html.ex:32
+#, elixir-autogen, elixir-format
+msgid "Word documents (.docx) up to 25 MB. Support for more formats is on the way."
+msgstr "Word-documenten (.docx) tot 25 MB. Ondersteuning voor meer formaten is onderweg."
+
+#: lib/perfect_paper_web/controllers/page_html.ex:34
+#, elixir-autogen, elixir-format
+msgid "Yes. Download your manuscript and its feedback as Word (.docx), Markdown, or HTML."
+msgstr "Ja. Download uw manuscript en de bijbehorende feedback als Word (.docx), Markdown of HTML."
+
+#: lib/perfect_paper_web/components/marketing.ex:606
+#: lib/perfect_paper_web/components/review_components.ex:520
+#, elixir-autogen, elixir-format
+msgid "You"
+msgstr "U"
+
+#: lib/perfect_paper_web/components/marketing.ex:183
+#, elixir-autogen, elixir-format
+msgid "manuscript.docx"
+msgstr "manuscript.docx"
+
+#: lib/perfect_paper_web/components/marketing/pricing_components.ex:225
+#, elixir-autogen, elixir-format, fuzzy
+msgid "— then $40/mo for full reviews"
+msgstr "— daarna $40/maand voor volledige beoordelingen"
+
+#: lib/perfect_paper_web/components/marketing.ex:355
+#: lib/perfect_paper_web/components/marketing.ex:385
+#: lib/perfect_paper_web/components/marketing.ex:415
+#, elixir-autogen, elixir-format
+msgid "← Show in the doc"
+msgstr "← Tonen in het document"
+
+#: lib/perfect_paper_web/live/webhooks_live.html.heex:129
+#, elixir-autogen, elixir-format
+msgid "%{count} attempt(s)"
+msgstr "%{count} poging(en)"
+
+#: lib/perfect_paper_web/live/history_live/index.html.heex:32
+#, elixir-autogen, elixir-format
+msgid "%{count} comments"
+msgstr "%{count} opmerkingen"
+
+#: lib/perfect_paper_web/live/billing_live.ex:355
+#, elixir-autogen, elixir-format
+msgid "%{count} credits — one-time"
+msgstr "%{count} credits — eenmalig"
+
+#: lib/perfect_paper_web/live/org_billing_live.html.heex:29
+#, elixir-autogen, elixir-format
+msgid "%{count} over (trued up on the next invoice)"
+msgstr "%{count} teveel (verrekend op de volgende factuur)"
+
+#: lib/perfect_paper_web/components/review_components.ex:120
+#, elixir-autogen, elixir-format
+msgid "%{n} open"
+msgstr "%{n} open"
+
+#: lib/perfect_paper_web/live/billing_live.ex:303
+#, elixir-autogen, elixir-format, fuzzy
+msgid "1 review"
+msgstr "1 beoordeling"
+
+#: lib/perfect_paper_web/live/billing_live.ex:306
+#, elixir-autogen, elixir-format
+msgid "10 reviews"
+msgstr "10 beoordelingen"
+
+#: lib/perfect_paper_web/live/billing_live.ex:304
+#, elixir-autogen, elixir-format
+msgid "3 reviews"
+msgstr "3 beoordelingen"
+
+#: lib/perfect_paper_web/live/scim_live.html.heex:16
+#, elixir-autogen, elixir-format
+msgid "A token is configured (last used: %{date})."
+msgstr "Er is een token geconfigureerd (laatst gebruikt: %{date})."
+
+#: lib/perfect_paper_web/live/history_live/show.html.heex:31
+#, elixir-autogen, elixir-format
+msgid "AI reviewer"
+msgstr "AI-beoordelaar"
+
+#: lib/perfect_paper_web/live/account_live.ex:204
+#, elixir-autogen, elixir-format
+msgid "API keys"
+msgstr "API-sleutels"
+
+#: lib/perfect_paper_web/live/earn_live.ex:238
+#, elixir-autogen, elixir-format
+msgid "Accepted"
+msgstr "Geaccepteerd"
+
+#: lib/perfect_paper_web/live/history_live/show.ex:164
+#, elixir-autogen, elixir-format
+msgid "Access revoked."
+msgstr "Toegang ingetrokken."
+
+#: lib/perfect_paper_web/live/admin_live/credits.html.heex:12
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Account email"
+msgstr "Account-e-mail"
+
+#: lib/perfect_paper_web/live/admin_live/billing.html.heex:25
+#, elixir-autogen, elixir-format
+msgid "Activate latest draft"
+msgstr "Laatste concept activeren"
+
+#: lib/perfect_paper_web/live/account_live.ex:234
+#: lib/perfect_paper_web/live/webhooks_live.html.heex:46
+#, elixir-autogen, elixir-format
+msgid "Active"
+msgstr "Actief"
+
+#: lib/perfect_paper_web/live/history_live/show.html.heex:180
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Add a comment"
+msgstr "Opmerking toevoegen"
+
+#: lib/perfect_paper_web/live/webhooks_live.html.heex:161
+#: lib/perfect_paper_web/live/webhooks_live.html.heex:242
+#, elixir-autogen, elixir-format
+msgid "Add endpoint"
+msgstr "Eindpunt toevoegen"
+
+#: lib/perfect_paper_web/components/review_components.ex:411
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Address"
+msgstr "Verwerken"
+
+#: lib/perfect_paper_web/live/billing_live.ex:165
+#, elixir-autogen, elixir-format
+msgid "All plans include a 7-day trial period. Cancel anytime — no questions asked."
+msgstr "Alle abonnementen omvatten een proefperiode van 7 dagen. Op elk moment opzeggen — geen vragen gesteld."
+
+#: lib/perfect_paper_web/live/user_live/registration.ex:48
+#, elixir-autogen, elixir-format
+msgid "Already registered?"
+msgstr "Al geregistreerd?"
+
+#: lib/perfect_paper_web/live/org_billing_live.html.heex:54
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Amount"
+msgstr "Bedrag"
+
+#: lib/perfect_paper_web/live/admin_live/billing.ex:60
+#, elixir-autogen, elixir-format
+msgid "An active contract already exists"
+msgstr "Er bestaat al een actief contract"
+
+#: lib/perfect_paper_web/live/new_live.html.heex:80
+#, elixir-autogen, elixir-format
+msgid "Analysis takes 10–30 min"
+msgstr "Analyse duurt 10–30 minuten"
+
+#: lib/perfect_paper_web/components/review_components.ex:390
+#, elixir-autogen, elixir-format
+msgid "Archive"
+msgstr "Archiveren"
+
+#: lib/perfect_paper_web/components/review_components.ex:240
+#, elixir-autogen, elixir-format
+msgid "Archived"
+msgstr "Gearchiveerd"
+
+#: lib/perfect_paper_web/components/review_components.ex:497
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Ask PerfectPaper"
+msgstr "PerfectPaper vragen"
+
+#: lib/perfect_paper_web/components/app_shell.ex:422
+#, elixir-autogen, elixir-format
+msgid "Ask a question about this review…"
+msgstr "Stel een vraag over deze beoordeling…"
+
+#: lib/perfect_paper_web/live/workspace_live.ex:204
+#, elixir-autogen, elixir-format
+msgid "Ask about this review"
+msgstr "Vraag over deze beoordeling"
+
+#: lib/perfect_paper_web/live/workspace_live.ex:208
+#, elixir-autogen, elixir-format
+msgid "Ask anything about this review — what to prioritize, how to address a specific comment, or how the overall assessment was reached."
+msgstr "Stel alles over deze beoordeling — wat prioriteit heeft, hoe u een specifieke opmerking verwerkt, of hoe de algehele beoordeling tot stand is gekomen."
+
+#: lib/perfect_paper_web/live/account_live.ex:206
+#, elixir-autogen, elixir-format
+msgid "Authenticate programmatic access to the PerfectPaper API. Keys are shown only once at creation."
+msgstr "Authenticeer programmatische toegang tot de PerfectPaper API. Sleutels worden slechts één keer getoond bij aanmaak."
+
+#: lib/perfect_paper_web/live/scim_live.html.heex:13
+#, elixir-autogen, elixir-format
+msgid "Bearer token"
+msgstr "Bearer-token"
+
+#: lib/perfect_paper_web/live/org_billing_live.html.heex:2
+#, elixir-autogen, elixir-format
+msgid "Billing"
+msgstr "Facturering"
+
+#: lib/perfect_paper_web/live/admin_live/billing.ex:14
+#: lib/perfect_paper_web/live/admin_live/billing.html.heex:2
+#, elixir-autogen, elixir-format
+msgid "Billing admin"
+msgstr "Factureringsbeheer"
+
+#: lib/perfect_paper_web/live/earn_live.ex:142
+#: lib/perfect_paper_web/live/earn_live.ex:165
+#, elixir-autogen, elixir-format
+msgid "Both receive credits"
+msgstr "Beiden ontvangen credits"
+
+#: lib/perfect_paper_web/live/billing_live.ex:296
+#, elixir-autogen, elixir-format
+msgid "Buy additional credits"
+msgstr "Extra credits kopen"
+
+#: lib/perfect_paper_web/components/review_components.ex:215
+#, elixir-autogen, elixir-format
+msgid "By position"
+msgstr "Op positie"
+
+#: lib/perfect_paper_web/components/review_components.ex:203
+#, elixir-autogen, elixir-format
+msgid "By relevance"
+msgstr "Op relevantie"
+
+#: lib/perfect_paper_web/live/history_live/show.html.heex:68
+#: lib/perfect_paper_web/live/history_live/show.html.heex:156
+#, elixir-autogen, elixir-format
+msgid "Cancel"
+msgstr "Annuleren"
+
+#: lib/perfect_paper_web/live/account_live.ex:90
+#, elixir-autogen, elixir-format
+msgid "Change email or password"
+msgstr "E-mail of wachtwoord wijzigen"
+
+#: lib/perfect_paper_web/components/app_shell.ex:421
+#: lib/perfect_paper_web/live/workspace_live.ex:176
+#, elixir-autogen, elixir-format
+msgid "Chat"
+msgstr "Chat"
+
+#: lib/perfect_paper_web/live/user_live/login.ex:30
+#: lib/perfect_paper_web/live/user_live/registration.ex:31
+#, elixir-autogen, elixir-format
+msgid "Check your email"
+msgstr "Controleer uw e-mail"
+
+#: lib/perfect_paper_web/live/billing_live.ex:252
+#, elixir-autogen, elixir-format
+msgid "Choose %{plan}"
+msgstr "Kies %{plan}"
+
+#: lib/perfect_paper_web/live/new_live.ex:83
+#, elixir-autogen, elixir-format
+msgid "Choose a manuscript to upload first."
+msgstr "Kies eerst een manuscript om te uploaden."
+
+#: lib/perfect_paper_web/live/billing_live.ex:118
+#, elixir-autogen, elixir-format
+msgid "Choose your plan"
+msgstr "Kies uw abonnement"
+
+#: lib/perfect_paper_web/live/sso_live.html.heex:162
+#, elixir-autogen, elixir-format
+msgid "Client id"
+msgstr "Client-id"
+
+#: lib/perfect_paper_web/live/sso_live.html.heex:49
+#: lib/perfect_paper_web/live/sso_live.html.heex:168
+#, elixir-autogen, elixir-format
+msgid "Client secret"
+msgstr "Client-geheim"
+
+#: lib/perfect_paper_web/components/app_shell.ex:430
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Close chat"
+msgstr "Chat sluiten"
+
+#: lib/perfect_paper_web/live/earn_live.ex:190
+#, elixir-autogen, elixir-format
+msgid "Code"
+msgstr "Code"
+
+#: lib/perfect_paper_web/live/history_live/show.ex:174
+#: lib/perfect_paper_web/live/history_live/show.ex:179
+#, elixir-autogen, elixir-format
+msgid "Collaborator"
+msgstr "Medewerker"
+
+#: lib/perfect_paper_web/live/history_live/show.html.heex:201
+#, elixir-autogen, elixir-format
+msgid "Collaborators"
+msgstr "Medewerkers"
+
+#: lib/perfect_paper_web/components/app_shell.ex:76
+#, elixir-autogen, elixir-format
+msgid "Collapse or expand sidebar"
+msgstr "Zijbalk samenvouwen of uitvouwen"
+
+#: lib/perfect_paper_web/live/earn_live.ex:139
+#: lib/perfect_paper_web/live/earn_live.ex:156
+#, elixir-autogen, elixir-format
+msgid "Colleague signs up"
+msgstr "Collega registreert zich"
+
+#: lib/perfect_paper_web/live/billing_live.ex:359
+#, elixir-autogen, elixir-format
+msgid "Coming soon"
+msgstr "Binnenkort beschikbaar"
+
+#: lib/perfect_paper_web/live/webhooks_live.html.heex:195
+#, elixir-autogen, elixir-format
+msgid "Comma-separated"
+msgstr "Kommagescheiden"
+
+#: lib/perfect_paper_web/components/review_components.ex:249
+#, elixir-autogen, elixir-format
+msgid "Comment"
+msgstr "Opmerking"
+
+#: lib/perfect_paper_web/live/history_live/show.ex:113
+#, elixir-autogen, elixir-format
+msgid "Comment added."
+msgstr "Opmerking toegevoegd."
+
+#: lib/perfect_paper_web/live/history_live/show.ex:100
+#, elixir-autogen, elixir-format
+msgid "Comment body cannot be empty."
+msgstr "De tekst van de opmerking mag niet leeg zijn."
+
+#: lib/perfect_paper_web/live/history_live/show.html.heex:218
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Commenter"
+msgstr "Opmerker"
+
+#: lib/perfect_paper_web/live/admin_live/credits.ex:21
+#: lib/perfect_paper_web/live/admin_live/credits.html.heex:1
+#: lib/perfect_paper_web/live/admin_live/credits.html.heex:4
+#, elixir-autogen, elixir-format
+msgid "Comp credits"
+msgstr "Goodwillcredits"
+
+#: lib/perfect_paper_web/live/new_live.html.heex:86
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Completely secure"
+msgstr "Volledig beveiligd"
+
+#: lib/perfect_paper_web/live/sso_live.ex:72
+#, elixir-autogen, elixir-format
+msgid "Configure SSO before verifying the domain."
+msgstr "Configureer SSO vóór het verifiëren van het domein."
+
+#: lib/perfect_paper_web/live/sso_live.html.heex:6
+#, elixir-autogen, elixir-format
+msgid "Configure enterprise SSO for %{org}."
+msgstr "Enterprise SSO configureren voor %{org}."
+
+#: lib/perfect_paper_web/live/user_live/confirmation.ex:40
+#, elixir-autogen, elixir-format
+msgid "Confirm and log in only this time"
+msgstr "Bevestigen en alleen nu aanmelden"
+
+#: lib/perfect_paper_web/live/user_live/confirmation.ex:37
+#, elixir-autogen, elixir-format
+msgid "Confirm and stay logged in"
+msgstr "Bevestigen en aangemeld blijven"
+
+#: lib/perfect_paper_web/live/user_live/confirmation.ex:34
+#: lib/perfect_paper_web/live/user_live/confirmation.ex:39
+#, elixir-autogen, elixir-format
+msgid "Confirming..."
+msgstr "Bevestigen…"
+
+#: lib/perfect_paper_web/live/scim_live.html.heex:4
+#, elixir-autogen, elixir-format
+msgid "Connect your identity provider to provision and deprovision members automatically."
+msgstr "Verbind uw identiteitsprovider om leden automatisch te provisioneren en te deprovisioneren."
+
+#: lib/perfect_paper_web/live/org_billing_live.html.heex:16
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Contract"
+msgstr "Contract"
+
+#: lib/perfect_paper_web/live/account_live.ex:175
+#, elixir-autogen, elixir-format
+msgid "Control which messages PerfectPaper sends to your inbox."
+msgstr "Beheer welke berichten PerfectPaper naar uw inbox stuurt."
+
+#: lib/perfect_paper_web/live/workspace_live.ex:195
+#, elixir-autogen, elixir-format
+msgid "Converting your manuscript…"
+msgstr "Uw manuscript converteren…"
+
+#: lib/perfect_paper_web/live/earn_live.ex:110
+#, elixir-autogen, elixir-format
+msgid "Copy"
+msgstr "Kopiëren"
+
+#: lib/perfect_paper_web/live/earn_live.ex:108
+#, elixir-autogen, elixir-format
+msgid "Copy referral link"
+msgstr "Verwijzingslink kopiëren"
+
+#: lib/perfect_paper_web/live/scim_live.html.heex:21
+#, elixir-autogen, elixir-format
+msgid "Copy this token now — it will not be shown again:"
+msgstr "Kopieer dit token nu — het wordt niet opnieuw getoond:"
+
+#: lib/perfect_paper_web/live/earn_live.ex:150
+#, elixir-autogen, elixir-format
+msgid "Copy your personal referral link and send it to a colleague who has not yet created a PerfectPaper account."
+msgstr "Kopieer uw persoonlijke verwijzingslink en stuur deze naar een collega die nog geen PerfectPaper-account heeft."
+
+#: lib/perfect_paper_web/live/history_live/show.ex:116
+#, elixir-autogen, elixir-format
+msgid "Could not add comment."
+msgstr "Opmerking kon niet worden toegevoegd."
+
+#: lib/perfect_paper_web/live/sso_live.ex:96
+#, elixir-autogen, elixir-format
+msgid "Could not change SSO status."
+msgstr "SSO-status kon niet worden gewijzigd."
+
+#: lib/perfect_paper_web/live/webhooks_live.ex:132
+#, elixir-autogen, elixir-format
+msgid "Could not delete that endpoint."
+msgstr "Dat eindpunt kon niet worden verwijderd."
+
+#: lib/perfect_paper_web/live/history_live/index.ex:27
+#, elixir-autogen, elixir-format
+msgid "Could not delete that review."
+msgstr "Die beoordeling kon niet worden verwijderd."
+
+#: lib/perfect_paper_web/live/webhooks_live.ex:145
+#, elixir-autogen, elixir-format
+msgid "Could not load deliveries."
+msgstr "Afleveringen konden niet worden geladen."
+
+#: lib/perfect_paper_web/live/admin_live/credits.ex:64
+#, elixir-autogen, elixir-format
+msgid "Could not record the grant."
+msgstr "De toekenning kon niet worden vastgelegd."
+
+#: lib/perfect_paper_web/live/webhooks_live.ex:181
+#, elixir-autogen, elixir-format
+msgid "Could not redeliver."
+msgstr "Opnieuw afleveren is mislukt."
+
+#: lib/perfect_paper_web/live/history_live/show.ex:167
+#, elixir-autogen, elixir-format
+msgid "Could not revoke access."
+msgstr "Toegang kon niet worden ingetrokken."
+
+#: lib/perfect_paper_web/live/history_live/show.ex:146
+#, elixir-autogen, elixir-format
+msgid "Could not send invitation."
+msgstr "Uitnodiging kon niet worden verstuurd."
+
+#: lib/perfect_paper_web/live/history_live/show.ex:72
+#: lib/perfect_paper_web/live/workspace_live.ex:80
+#, elixir-autogen, elixir-format
+msgid "Could not undo that action."
+msgstr "Die actie kon niet ongedaan worden gemaakt."
+
+#: lib/perfect_paper_web/live/history_live/show.ex:83
+#, elixir-autogen, elixir-format
+msgid "Could not update sharing."
+msgstr "Delen kon niet worden bijgewerkt."
+
+#: lib/perfect_paper_web/live/history_live/show.ex:51
+#: lib/perfect_paper_web/live/history_live/show.ex:59
+#: lib/perfect_paper_web/live/workspace_live.ex:59
+#: lib/perfect_paper_web/live/workspace_live.ex:67
+#, elixir-autogen, elixir-format
+msgid "Could not update that comment."
+msgstr "Die opmerking kon niet worden bijgewerkt."
+
+#: lib/perfect_paper_web/live/account_live.ex:49
+#, elixir-autogen, elixir-format
+msgid "Could not update your preference. Please try again."
+msgstr "Uw voorkeur kon niet worden bijgewerkt. Probeer het opnieuw."
+
+#: lib/perfect_paper_web/live/sso_live.ex:75
+#, elixir-autogen, elixir-format
+msgid "Could not verify the domain."
+msgstr "Het domein kon niet worden geverifieerd."
+
+#: lib/perfect_paper_web/live/admin_live/billing.html.heex:57
+#, elixir-autogen, elixir-format
+msgid "Create draft"
+msgstr "Concept aanmaken"
+
+#: lib/perfect_paper_web/live/admin_live/billing.html.heex:30
+#, elixir-autogen, elixir-format
+msgid "Create draft contract"
+msgstr "Conceptcontract aanmaken"
+
+#: lib/perfect_paper_web/live/earn_live.ex:125
+#, elixir-autogen, elixir-format
+msgid "Create my referral link"
+msgstr "Mijn verwijzingslink aanmaken"
+
+#: lib/perfect_paper_web/live/user_live/registration.ex:46
+#, elixir-autogen, elixir-format
+msgid "Create your account"
+msgstr "Uw account aanmaken"
+
+#: lib/perfect_paper_web/live/earn_live.ex:196
+#, elixir-autogen, elixir-format
+msgid "Created"
+msgstr "Aangemaakt"
+
+#: lib/perfect_paper_web/live/account_live.ex:227
+#, elixir-autogen, elixir-format
+msgid "Created %{date}"
+msgstr "Aangemaakt op %{date}"
+
+#: lib/perfect_paper_web/live/org_billing_live.html.heex:35
+#, elixir-autogen, elixir-format
+msgid "Credit pool"
+msgstr "Creditpool"
+
+#: lib/perfect_paper_web/live/org_billing_live.html.heex:11
+#, elixir-autogen, elixir-format
+msgid "Credit pool:"
+msgstr "Creditpool:"
+
+#: lib/perfect_paper_web/live/billing_live.ex:315
+#, elixir-autogen, elixir-format
+msgid "Credit purchases are not yet available. Check back soon."
+msgstr "Creditaankopen zijn nog niet beschikbaar. Kom binnenkort terug."
+
+#: lib/perfect_paper_web/live/account_live.ex:147
+#: lib/perfect_paper_web/live/billing_live.ex:94
+#, elixir-autogen, elixir-format
+msgid "Credits"
+msgstr "Credits"
+
+#: lib/perfect_paper_web/live/billing_live.ex:271
+#, elixir-autogen, elixir-format
+msgid "Credits are used for each proofreading session. Unused credits carry over each month."
+msgstr "Credits worden gebruikt voor elke proeflezingssessie. Ongebruikte credits worden maandelijks overgedragen."
+
+#: lib/perfect_paper_web/live/admin_live/credits.html.heex:35
+#, elixir-autogen, elixir-format
+msgid "Credits to grant"
+msgstr "Te verlenen credits"
+
+#: lib/perfect_paper_web/live/admin_live/billing.html.heex:42
+#, elixir-autogen, elixir-format
+msgid "Credits/seat"
+msgstr "Credits/gebruiker"
+
+#: lib/perfect_paper_web/live/admin_live/credits.html.heex:29
+#: lib/perfect_paper_web/live/billing_live.ex:279
+#, elixir-autogen, elixir-format
+msgid "Current balance"
+msgstr "Huidig saldo"
+
+#: lib/perfect_paper_web/live/history_live/show.html.heex:229
+#, elixir-autogen, elixir-format
+msgid "Current collaborators"
+msgstr "Huidige medewerkers"
+
+#: lib/perfect_paper_web/live/billing_live.ex:150
+#, elixir-autogen, elixir-format
+msgid "Current period ends %{date}."
+msgstr "Huidige periode eindigt op %{date}."
+
+#: lib/perfect_paper_web/live/account_live.ex:112
+#: lib/perfect_paper_web/live/billing_live.ex:208
+#: lib/perfect_paper_web/live/billing_live.ex:255
+#, elixir-autogen, elixir-format
+msgid "Current plan"
+msgstr "Huidig abonnement"
+
+#: lib/perfect_paper_web/live/sso_live.html.heex:173
+#: lib/perfect_paper_web/live/sso_live.html.heex:202
+#, elixir-autogen, elixir-format
+msgid "Currently set — leave blank to keep"
+msgstr "Momenteel ingesteld — laat leeg om te behouden"
+
+#: lib/perfect_paper_web/live/org_review_settings_live.ex:52
+#, elixir-autogen, elixir-format
+msgid "Custom instructions added to every review for this organization."
+msgstr "Aangepaste instructies worden toegevoegd aan elke beoordeling voor deze organisatie."
+
+#: lib/perfect_paper_web/live/new_live.html.heex:33
+#, elixir-autogen, elixir-format
+msgid "DOCX · up to 25 MB"
+msgstr "DOCX · tot 25 MB"
+
+#: lib/perfect_paper_web/live/history_live/index.html.heex:42
+#: lib/perfect_paper_web/live/webhooks_live.html.heex:64
+#, elixir-autogen, elixir-format
+msgid "Delete"
+msgstr "Verwijderen"
+
+#: lib/perfect_paper_web/live/webhooks_live.html.heex:62
+#, elixir-autogen, elixir-format
+msgid "Delete this endpoint permanently?"
+msgstr "Dit eindpunt permanent verwijderen?"
+
+#: lib/perfect_paper_web/live/history_live/index.html.heex:40
+#, elixir-autogen, elixir-format
+msgid "Delete this review permanently? This cannot be undone."
+msgstr "Deze beoordeling permanent verwijderen? Dit kan niet ongedaan worden gemaakt."
+
+#: lib/perfect_paper_web/live/webhooks_live.ex:175
+#, elixir-autogen, elixir-format
+msgid "Delivery not found."
+msgstr "Aflevering niet gevonden."
+
+#: lib/perfect_paper_web/live/webhooks_live.html.heex:223
+#, elixir-autogen, elixir-format
+msgid "Description"
+msgstr "Beschrijving"
+
+#: lib/perfect_paper_web/live/user_live/registration.ex:37
+#, elixir-autogen, elixir-format
+msgid "Didn't get it?"
+msgstr "Niet ontvangen?"
+
+#: lib/perfect_paper_web/live/scim_live.html.heex:2
+#, elixir-autogen, elixir-format
+msgid "Directory provisioning (SCIM)"
+msgstr "Directoryprovisionering (SCIM)"
+
+#: lib/perfect_paper_web/live/sso_live.html.heex:79
+#, elixir-autogen, elixir-format
+msgid "Disable SSO"
+msgstr "SSO uitschakelen"
+
+#: lib/perfect_paper_web/live/sso_live.html.heex:45
+#, elixir-autogen, elixir-format
+msgid "Disabled"
+msgstr "Uitgeschakeld"
+
+#: lib/perfect_paper_web/components/review_components.ex:289
+#: lib/perfect_paper_web/components/review_components.ex:535
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Dismissed"
+msgstr "Genegeerd"
+
+#: lib/perfect_paper_web/components/review_components.ex:81
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Document"
+msgstr "Document"
+
+#: lib/perfect_paper_web/live/sso_live.html.heex:26
+#, elixir-autogen, elixir-format
+msgid "Domain"
+msgstr "Domein"
+
+#: lib/perfect_paper_web/live/sso_live.html.heex:69
+#, elixir-autogen, elixir-format
+msgid "Domain verified"
+msgstr "Domein geverifieerd"
+
+#: lib/perfect_paper_web/live/sso_live.ex:69
+#, elixir-autogen, elixir-format
+msgid "Domain verified."
+msgstr "Domein geverifieerd."
+
+#: lib/perfect_paper_web/live/user_live/login.ex:45
+#, elixir-autogen, elixir-format
+msgid "Don't have an account?"
+msgstr "Nog geen account?"
+
+#: lib/perfect_paper_web/live/workspace_live.ex:132
+#, elixir-autogen, elixir-format
+msgid "Download"
+msgstr "Downloaden"
+
+#: lib/perfect_paper_web/live/workspace_live.ex:145
+#, elixir-autogen, elixir-format
+msgid "Download as DOCX"
+msgstr "Downloaden als DOCX"
+
+#: lib/perfect_paper_web/live/workspace_live.ex:150
+#, elixir-autogen, elixir-format
+msgid "Download as Markdown"
+msgstr "Downloaden als Markdown"
+
+#: lib/perfect_paper_web/live/new_live.html.heex:22
+#, elixir-autogen, elixir-format
+msgid "Drag and drop your file here"
+msgstr "Sleep uw bestand hier naartoe"
+
+#: lib/perfect_paper_web/live/new_live.html.heex:24
+#, elixir-autogen, elixir-format
+msgid "Drag your manuscript here, or"
+msgstr "Sleep uw manuscript hier naartoe, of"
+
+#: lib/perfect_paper_web/live/org_billing_live.html.heex:56
+#, elixir-autogen, elixir-format
+msgid "Due"
+msgstr "Verschuldigd"
+
+#: lib/perfect_paper_web/live/account_live.ex:149
+#, elixir-autogen, elixir-format
+msgid "Each proofreading review consumes one credit."
+msgstr "Elke proeflezingsbeoordeling verbruikt één credit."
+
+#: lib/perfect_paper_web/live/billing_live.ex:285
+#, elixir-autogen, elixir-format
+msgid "Each proofreading review costs"
+msgstr "Elke proeflezingsbeoordeling kost"
+
+#: lib/perfect_paper_web/components/app_shell.ex:290
+#: lib/perfect_paper_web/live/earn_live.ex:26
+#: lib/perfect_paper_web/live/earn_live.ex:67
+#, elixir-autogen, elixir-format
+msgid "Earn credits"
+msgstr "Credits verdienen"
+
+#: lib/perfect_paper_web/live/earn_live.ex:76
+#, elixir-autogen, elixir-format
+msgid "Earn free review credits"
+msgstr "Gratis beoordelingscredits verdienen"
+
+#: lib/perfect_paper_web/live/history_live/show.html.heex:219
+#, elixir-autogen, elixir-format
+msgid "Editor"
+msgstr "Editor"
+
+#: lib/perfect_paper_web/live/user_live/login.ex:78
+#: lib/perfect_paper_web/live/user_live/login.ex:102
+#: lib/perfect_paper_web/live/user_live/registration.ex:69
+#, elixir-autogen, elixir-format
+msgid "Email"
+msgstr "E-mail"
+
+#: lib/perfect_paper_web/live/sso_live.html.heex:23
+#: lib/perfect_paper_web/live/sso_live.html.heex:145
+#, elixir-autogen, elixir-format
+msgid "Email domain"
+msgstr "E-maildomein"
+
+#: lib/perfect_paper_web/live/account_live.ex:173
+#, elixir-autogen, elixir-format
+msgid "Email preferences"
+msgstr "E-mailvoorkeuren"
+
+#: lib/perfect_paper_web/live/account_live.ex:44
+#, elixir-autogen, elixir-format
+msgid "Email updates disabled."
+msgstr "E-mailupdates uitgeschakeld."
+
+#: lib/perfect_paper_web/live/account_live.ex:44
+#, elixir-autogen, elixir-format
+msgid "Email updates enabled."
+msgstr "E-mailupdates ingeschakeld."
+
+#: lib/perfect_paper_web/live/sso_live.html.heex:79
+#, elixir-autogen, elixir-format
+msgid "Enable SSO"
+msgstr "SSO inschakelen"
+
+#: lib/perfect_paper_web/live/sso_live.html.heex:42
+#, elixir-autogen, elixir-format
+msgid "Enabled"
+msgstr "Ingeschakeld"
+
+#: lib/perfect_paper_web/live/webhooks_live.ex:87
+#, elixir-autogen, elixir-format
+msgid "Endpoint created. Signing secret (shown once): %{secret}"
+msgstr "Eindpunt aangemaakt. Ondertekeningsgeheim (eenmalig getoond): %{secret}"
+
+#: lib/perfect_paper_web/live/webhooks_live.ex:123
+#, elixir-autogen, elixir-format
+msgid "Endpoint deleted."
+msgstr "Eindpunt verwijderd."
+
+#: lib/perfect_paper_web/live/webhooks_live.ex:126
+#, elixir-autogen, elixir-format
+msgid "Endpoint not found."
+msgstr "Eindpunt niet gevonden."
+
+#: lib/perfect_paper_web/live/webhooks_live.html.heex:193
+#, elixir-autogen, elixir-format
+msgid "Event types"
+msgstr "Gebeurtenistypen"
+
+#: lib/perfect_paper_web/live/scim_live.html.heex:27
+#, elixir-autogen, elixir-format
+msgid "Generate token"
+msgstr "Token genereren"
+
+#: lib/perfect_paper_web/live/admin_live/credits.html.heex:42
+#, elixir-autogen, elixir-format
+msgid "Grant credits"
+msgstr "Credits verlenen"
+
+#: lib/perfect_paper_web/live/admin_live/credits.html.heex:6
+#, elixir-autogen, elixir-format
+msgid "Grant goodwill credits to an account when something breaks or a customer is unhappy with results."
+msgstr "Verleen goodwillcredits aan een account als er iets misgaat of een klant ontevreden is over de resultaten."
+
+#: lib/perfect_paper_web/live/admin_live/credits.ex:61
+#, elixir-autogen, elixir-format
+msgid "Granted %{amount} credits to %{email}."
+msgstr "%{amount} credits verleend aan %{email}."
+
+#: lib/perfect_paper_web/components/review_components.ex:147
+#, elixir-autogen, elixir-format
+msgid "Hide"
+msgstr "Verbergen"
+
+#: lib/perfect_paper_web/components/app_shell.ex:210
+#: lib/perfect_paper_web/components/app_shell.ex:268
+#: lib/perfect_paper_web/live/history_live/index.ex:11
+#: lib/perfect_paper_web/live/history_live/index.html.heex:1
+#, elixir-autogen, elixir-format
+msgid "History"
+msgstr "Geschiedenis"
+
+#: lib/perfect_paper_web/live/sso_live.html.heex:189
+#, elixir-autogen, elixir-format
+msgid "IdP SSO URL"
+msgstr "IdP SSO URL"
+
+#: lib/perfect_paper_web/live/sso_live.html.heex:54
+#: lib/perfect_paper_web/live/sso_live.html.heex:195
+#, elixir-autogen, elixir-format
+msgid "IdP certificate"
+msgstr "IdP-certificaat"
+
+#: lib/perfect_paper_web/live/sso_live.html.heex:183
+#, elixir-autogen, elixir-format
+msgid "IdP entity id"
+msgstr "IdP-entiteits-id"
+
+#: lib/perfect_paper_web/live/sso_live.html.heex:94
+#, elixir-autogen, elixir-format
+msgid "Identity provider"
+msgstr "Identiteitsprovider"
+
+#: lib/perfect_paper_web/live/user_live/login.ex:32
+#: lib/perfect_paper_web/live/user_live/registration.ex:33
+#, elixir-autogen, elixir-format
+msgid "If an account exists for %{email}, you'll receive a sign-in link shortly."
+msgstr "Als er een account bestaat voor %{email}, ontvangt u binnenkort een aanmeldlink."
+
+#: lib/perfect_paper_web/live/user_live/registration.ex:128
+#, elixir-autogen, elixir-format
+msgid "If an account exists, we've re-sent the link."
+msgstr "Als er een account bestaat, hebben we de link opnieuw verstuurd."
+
+#: lib/perfect_paper_web/live/webhooks_live.html.heex:52
+#, elixir-autogen, elixir-format
+msgid "Inactive"
+msgstr "Inactief"
+
+#: lib/perfect_paper_web/live/admin_live/billing.ex:48
+#, elixir-autogen, elixir-format
+msgid "Invalid contract terms"
+msgstr "Ongeldige contractvoorwaarden"
+
+#: lib/perfect_paper_web/live/history_live/show.ex:143
+#, elixir-autogen, elixir-format
+msgid "Invitation sent to %{email}."
+msgstr "Uitnodiging verstuurd naar %{email}."
+
+#: lib/perfect_paper_web/live/history_live/show.html.heex:223
+#, elixir-autogen, elixir-format
+msgid "Invite"
+msgstr "Uitnodigen"
+
+#: lib/perfect_paper_web/live/history_live/show.html.heex:205
+#, elixir-autogen, elixir-format
+msgid "Invite by email"
+msgstr "Uitnodigen via e-mail"
+
+#: lib/perfect_paper_web/live/earn_live.ex:78
+#, elixir-autogen, elixir-format
+msgid "Invite colleagues to PerfectPaper and both of you receive complimentary review credits when they make their first review. Share your personal referral link with anyone who has not yet created an account."
+msgstr "Nodig collega's uit voor PerfectPaper en u ontvangt beiden gratis beoordelingscredits wanneer zij hun eerste beoordeling uitvoeren. Deel uw persoonlijke verwijzingslink met iedereen die nog geen account heeft."
+
+#: lib/perfect_paper_web/live/admin_live/billing.html.heex:62
+#: lib/perfect_paper_web/live/org_billing_live.html.heex:47
+#, elixir-autogen, elixir-format
+msgid "Invoices"
+msgstr "Facturen"
+
+#: lib/perfect_paper_web/live/user_live/confirmation.ex:71
+#, elixir-autogen, elixir-format
+msgid "Keep me logged in on this device"
+msgstr "Mij aangemeld houden op dit apparaat"
+
+#: lib/perfect_paper_web/live/account_live.ex:239
+#, elixir-autogen, elixir-format
+msgid "Key generation and revocation are available via the API. Full management UI coming soon."
+msgstr "Het genereren en intrekken van sleutels is beschikbaar via de API. Volledige beheer-UI binnenkort beschikbaar."
+
+#: lib/perfect_paper_web/live/account_live.ex:229
+#, elixir-autogen, elixir-format
+msgid "Last used %{date}"
+msgstr "Laatst gebruikt op %{date}"
+
+#: lib/perfect_paper_web/live/user_live/login.ex:115
+#, elixir-autogen, elixir-format
+msgid "Log in and stay logged in"
+msgstr "Aanmelden en aangemeld blijven"
+
+#: lib/perfect_paper_web/live/user_live/login.ex:118
+#, elixir-autogen, elixir-format
+msgid "Log in only this time"
+msgstr "Alleen nu aanmelden"
+
+#: lib/perfect_paper_web/live/user_live/confirmation.ex:74
+#, elixir-autogen, elixir-format
+msgid "Log me in only this time"
+msgstr "Mij alleen nu aanmelden"
+
+#: lib/perfect_paper_web/live/user_live/confirmation.ex:61
+#: lib/perfect_paper_web/live/user_live/confirmation.ex:68
+#: lib/perfect_paper_web/live/user_live/confirmation.ex:73
+#, elixir-autogen, elixir-format
+msgid "Logging in..."
+msgstr "Aanmelden…"
+
+#: lib/perfect_paper_web/live/admin_live/billing.html.heex:11
+#: lib/perfect_paper_web/live/admin_live/credits.html.heex:14
+#, elixir-autogen, elixir-format
+msgid "Look up"
+msgstr "Opzoeken"
+
+#: lib/perfect_paper_web/live/user_live/confirmation.ex:104
+#, elixir-autogen, elixir-format
+msgid "Magic link is invalid or it has expired."
+msgstr "De magische link is ongeldig of verlopen."
+
+#: lib/perfect_paper_web/live/history_live/show.html.heex:11
+#, elixir-autogen, elixir-format
+msgid "Make private"
+msgstr "Privé maken"
+
+#: lib/perfect_paper_web/live/account_live.ex:136
+#, elixir-autogen, elixir-format
+msgid "Manage plan"
+msgstr "Abonnement beheren"
+
+#: lib/perfect_paper_web/components/review_components.ex:85
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Manuscript"
+msgstr "Manuscript"
+
+#: lib/perfect_paper_web/live/history_live/show.html.heex:3
+#: lib/perfect_paper_web/live/history_live/show.html.heex:9
+#, elixir-autogen, elixir-format
+msgid "Manuscript review"
+msgstr "Manuscriptbeoordeling"
+
+#: lib/perfect_paper_web/live/history_live/show.html.heex:81
+#, elixir-autogen, elixir-format
+msgid "Mark addressed"
+msgstr "Markeren als verwerkt"
+
+#: lib/perfect_paper_web/live/admin_live/billing.html.heex:78
+#, elixir-autogen, elixir-format
+msgid "Mark paid"
+msgstr "Markeren als betaald"
+
+#: lib/perfect_paper_web/live/new_live.html.heex:89
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Never used to train models"
+msgstr "Nooit gebruikt om modellen te trainen"
+
+#: lib/perfect_paper_web/components/app_shell.ex:207
+#: lib/perfect_paper_web/live/history_live/index.html.heex:27
+#, elixir-autogen, elixir-format
+msgid "New"
+msgstr "Nieuw"
+
+#: lib/perfect_paper_web/components/app_shell.ex:261
+#: lib/perfect_paper_web/live/new_live.ex:20
+#: lib/perfect_paper_web/live/new_live.html.heex:1
+#, elixir-autogen, elixir-format
+msgid "New review"
+msgstr "Nieuwe beoordeling"
+
+#: lib/perfect_paper_web/live/account_live.ex:212
+#, elixir-autogen, elixir-format
+msgid "No API keys yet. Keys you generate will appear here."
+msgstr "Nog geen API-sleutels. Sleutels die u genereert, verschijnen hier."
+
+#: lib/perfect_paper_web/live/admin_live/credits.ex:38
+#, elixir-autogen, elixir-format
+msgid "No account found for that email."
+msgstr "Geen account gevonden voor dat e-mailadres."
+
+#: lib/perfect_paper_web/live/history_live/show.html.heex:253
+#, elixir-autogen, elixir-format
+msgid "No collaborators yet. Invite someone above."
+msgstr "Nog geen medewerkers. Nodig iemand hierboven uit."
+
+#: lib/perfect_paper_web/components/review_components.ex:461
+#, elixir-autogen, elixir-format
+msgid "No comments yet — add one, or ask PerfectPaper."
+msgstr "Nog geen opmerkingen — voeg er een toe, of vraag PerfectPaper."
+
+#: lib/perfect_paper_web/live/admin_live/billing.html.heex:22
+#, elixir-autogen, elixir-format
+msgid "No contract."
+msgstr "Geen contract."
+
+#: lib/perfect_paper_web/live/webhooks_live.html.heex:88
+#, elixir-autogen, elixir-format
+msgid "No deliveries yet."
+msgstr "Nog geen afleveringen."
+
+#: lib/perfect_paper_web/live/admin_live/billing.ex:63
+#, elixir-autogen, elixir-format
+msgid "No draft contract to activate"
+msgstr "Geen conceptcontract om te activeren"
+
+#: lib/perfect_paper_web/live/webhooks_live.html.heex:15
+#, elixir-autogen, elixir-format
+msgid "No endpoints yet. Add one below to start receiving events."
+msgstr "Nog geen eindpunten. Voeg er hieronder een toe om gebeurtenissen te ontvangen."
+
+#: lib/perfect_paper_web/live/org_billing_live.html.heex:9
+#, elixir-autogen, elixir-format
+msgid "No enterprise contract is configured for this organization."
+msgstr "Er is geen enterprise-contract geconfigureerd voor deze organisatie."
+
+#: lib/perfect_paper_web/components/review_components.ex:224
+#: lib/perfect_paper_web/live/history_live/show.html.heex:20
+#, elixir-autogen, elixir-format
+msgid "No feedback on this manuscript yet."
+msgstr "Nog geen feedback op dit manuscript."
+
+#: lib/perfect_paper_web/live/org_billing_live.html.heex:48
+#, elixir-autogen, elixir-format
+msgid "No invoices yet."
+msgstr "Nog geen facturen."
+
+#: lib/perfect_paper_web/live/admin_live/billing.html.heex:63
+#, elixir-autogen, elixir-format
+msgid "No invoices."
+msgstr "Geen facturen."
+
+#: lib/perfect_paper_web/live/workspace_live.ex:199
+#, elixir-autogen, elixir-format
+msgid "No manuscript attached."
+msgstr "Geen manuscript bijgevoegd."
+
+#: lib/perfect_paper_web/live/earn_live.ex:182
+#, elixir-autogen, elixir-format
+msgid "No referrals yet. Share your link to get started."
+msgstr "Nog geen verwijzingen. Deel uw link om te beginnen."
+
+#: lib/perfect_paper_web/live/history_live/index.html.heex:6
+#, elixir-autogen, elixir-format
+msgid "No reviews yet. Upload a manuscript to get started."
+msgstr "Nog geen beoordelingen. Upload een manuscript om te beginnen."
+
+#: lib/perfect_paper_web/live/scim_live.html.heex:18
+#, elixir-autogen, elixir-format
+msgid "No token configured."
+msgstr "Geen token geconfigureerd."
+
+#: lib/perfect_paper_web/live/sso_live.html.heex:16
+#, elixir-autogen, elixir-format
+msgid "Not configured yet. Add your identity provider details below."
+msgstr "Nog niet geconfigureerd. Voeg hieronder de gegevens van uw identiteitsprovider toe."
+
+#: lib/perfect_paper_web/live/sso_live.html.heex:51
+#: lib/perfect_paper_web/live/sso_live.html.heex:56
+#, elixir-autogen, elixir-format
+msgid "Not set"
+msgstr "Niet ingesteld"
+
+#: lib/perfect_paper_web/live/sso_live.html.heex:35
+#, elixir-autogen, elixir-format
+msgid "Not verified"
+msgstr "Niet geverifieerd"
+
+#: lib/perfect_paper_web/live/org_billing_live.html.heex:52
+#, elixir-autogen, elixir-format
+msgid "Number"
+msgstr "Nummer"
+
+#: lib/perfect_paper_web/live/account_live.ex:186
+#, elixir-autogen, elixir-format
+msgid "Occasional emails about new features, improvements, and research tips. We never share your address with third parties."
+msgstr "Incidentele e-mails over nieuwe functies, verbeteringen en onderzoekstips. Wij delen uw adres nooit met derden."
+
+#: lib/perfect_paper_web/live/new_live.html.heex:104
+#, elixir-autogen, elixir-format
+msgid "Omer Tamuz"
+msgstr "Omer Tamuz"
+
+#: lib/perfect_paper_web/live/earn_live.ex:168
+#, elixir-autogen, elixir-format
+msgid "Once they complete their first review, you each receive free review credits — no further action needed."
+msgstr "Zodra zij hun eerste beoordeling voltooien, ontvangt u beiden gratis beoordelingscredits — geen verdere actie nodig."
+
+#: lib/perfect_paper_web/components/review_components.ex:534
+#, elixir-autogen, elixir-format
+msgid "Open"
+msgstr "Open"
+
+#: lib/perfect_paper_web/live/sso_live.html.heex:210
+#: lib/perfect_paper_web/live/webhooks_live.html.heex:224
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Optional"
+msgstr "Optioneel"
+
+#: lib/perfect_paper_web/live/admin_live/billing.html.heex:8
+#, elixir-autogen, elixir-format
+msgid "Organization id"
+msgstr "Organisatie-id"
+
+#: lib/perfect_paper_web/live/admin_live/billing.ex:29
+#, elixir-autogen, elixir-format
+msgid "Organization not found"
+msgstr "Organisatie niet gevonden"
+
+#: lib/perfect_paper_web/live/org_billing_live.html.heex:41
+#, elixir-autogen, elixir-format
+msgid "PO"
+msgstr "PO"
+
+#: lib/perfect_paper_web/live/admin_live/billing.html.heex:54
+#, elixir-autogen, elixir-format
+msgid "PO number"
+msgstr "PO-nummer"
+
+#: lib/perfect_paper_web/live/user_live/login.ex:110
+#, elixir-autogen, elixir-format
+msgid "Password"
+msgstr "Wachtwoord"
+
+#: lib/perfect_paper_web/live/earn_live.ex:237
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Pending"
+msgstr "In behandeling"
+
+#: lib/perfect_paper_web/live/org_billing_live.html.heex:53
+#, elixir-autogen, elixir-format
+msgid "Period"
+msgstr "Periode"
+
+#: lib/perfect_paper_web/live/history_live/show.html.heex:190
+#, elixir-autogen, elixir-format
+msgid "Post comment"
+msgstr "Opmerking plaatsen"
+
+#: lib/perfect_paper_web/live/history_live/show.html.heex:66
+#: lib/perfect_paper_web/live/history_live/show.html.heex:154
+#, elixir-autogen, elixir-format
+msgid "Post reply"
+msgstr "Antwoord plaatsen"
+
+#: lib/perfect_paper_web/live/user_live/registration.ex:81
+#, elixir-autogen, elixir-format
+msgid "Prefer a password? You can set one in Settings after your first sign-in."
+msgstr "Liever een wachtwoord? U kunt er een instellen in Instellingen na uw eerste aanmelding."
+
+#: lib/perfect_paper_web/live/org_billing_live.html.heex:32
+#, elixir-autogen, elixir-format
+msgid "Price per seat"
+msgstr "Prijs per gebruiker"
+
+#: lib/perfect_paper_web/live/admin_live/billing.html.heex:36
+#, elixir-autogen, elixir-format
+msgid "Price/seat (cents)"
+msgstr "Prijs/gebruiker (centen)"
+
+#: lib/perfect_paper_web/components/app_shell.ex:206
+#, elixir-autogen, elixir-format
+msgid "Primary"
+msgstr "Primair"
+
+#: lib/perfect_paper_web/live/workspace_live.ex:140
+#, elixir-autogen, elixir-format
+msgid "Print / save as PDF"
+msgstr "Afdrukken / opslaan als PDF"
+
+#: lib/perfect_paper_web/live/account_live.ex:183
+#, elixir-autogen, elixir-format
+msgid "Product updates and announcements"
+msgstr "Productupdates en aankondigingen"
+
+#: lib/perfect_paper_web/live/account_live.ex:67
+#, elixir-autogen, elixir-format
+msgid "Profile"
+msgstr "Profiel"
+
+#: lib/perfect_paper_web/live/history_live/index.html.heex:3
+#, elixir-autogen, elixir-format
+msgid "Proofreading history"
+msgstr "Proeflezingsgeschiedenis"
+
+#: lib/perfect_paper_web/live/sso_live.html.heex:20
+#: lib/perfect_paper_web/live/sso_live.html.heex:100
+#, elixir-autogen, elixir-format
+msgid "Protocol"
+msgstr "Protocol"
+
+#: lib/perfect_paper_web/live/admin_live/credits.html.heex:39
+#, elixir-autogen, elixir-format
+msgid "Reason"
+msgstr "Reden"
+
+#: lib/perfect_paper_web/live/webhooks_live.html.heex:7
+#, elixir-autogen, elixir-format
+msgid "Receive real-time event notifications for %{org}."
+msgstr "Ontvang real-time gebeurtenismeldingen voor %{org}."
+
+#: lib/perfect_paper_web/live/webhooks_live.html.heex:148
+#, elixir-autogen, elixir-format
+msgid "Redeliver"
+msgstr "Opnieuw afleveren"
+
+#: lib/perfect_paper_web/live/webhooks_live.ex:172
+#, elixir-autogen, elixir-format
+msgid "Redelivery enqueued."
+msgstr "Herlevering in wachtrij geplaatst."
+
+#: lib/perfect_paper_web/live/earn_live.ex:178
+#, elixir-autogen, elixir-format
+msgid "Referral history"
+msgstr "Verwijzingsgeschiedenis"
+
+#: lib/perfect_paper_web/live/earn_live.ex:75
+#, elixir-autogen, elixir-format
+msgid "Referral programme"
+msgstr "Verwijzingsprogramma"
+
+#: lib/perfect_paper_web/live/new_live.html.heex:53
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Remove"
+msgstr "Verwijderen"
+
+#: lib/perfect_paper_web/live/account_live.ex:121
+#, elixir-autogen, elixir-format
+msgid "Renews %{date}"
+msgstr "Verlengt op %{date}"
+
+#: lib/perfect_paper_web/live/user_live/registration.ex:38
+#, elixir-autogen, elixir-format
+msgid "Resend"
+msgstr "Opnieuw verzenden"
+
+#: lib/perfect_paper_web/components/review_components.ex:257
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Restore"
+msgstr "Herstellen"
+
+#: lib/perfect_paper_web/live/history_live/index.ex:25
+#, elixir-autogen, elixir-format
+msgid "Review deleted."
+msgstr "Beoordeling verwijderd."
+
+#: lib/perfect_paper_web/live/workspace_live.ex:26
+#, elixir-autogen, elixir-format
+msgid "Review not found."
+msgstr "Beoordeling niet gevonden."
+
+#: lib/perfect_paper_web/live/org_review_settings_live.ex:45
+#: lib/perfect_paper_web/live/org_review_settings_live.ex:51
+#, elixir-autogen, elixir-format
+msgid "Review settings"
+msgstr "Beoordelingsinstellingen"
+
+#: lib/perfect_paper_web/live/org_review_settings_live.ex:33
+#, elixir-autogen, elixir-format
+msgid "Review settings saved."
+msgstr "Beoordelingsinstellingen opgeslagen."
+
+#: lib/perfect_paper_web/components/review_components.ex:522
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Reviewer"
+msgstr "Beoordelaar"
+
+#: lib/perfect_paper_web/components/app_shell.ex:260
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Reviews"
+msgstr "Beoordelingen"
+
+#: lib/perfect_paper_web/live/history_live/show.html.heex:246
+#: lib/perfect_paper_web/live/scim_live.html.heex:35
+#, elixir-autogen, elixir-format
+msgid "Revoke"
+msgstr "Intrekken"
+
+#: lib/perfect_paper_web/live/earn_live.ex:239
+#, elixir-autogen, elixir-format
+msgid "Rewarded"
+msgstr "Beloond"
+
+#: lib/perfect_paper_web/live/scim_live.html.heex:27
+#, elixir-autogen, elixir-format
+msgid "Rotate token"
+msgstr "Token roteren"
+
+#: lib/perfect_paper_web/live/scim_live.html.heex:8
+#, elixir-autogen, elixir-format
+msgid "SCIM base URL"
+msgstr "SCIM basis-URL"
+
+#: lib/perfect_paper_web/live/sso_live.html.heex:208
+#, elixir-autogen, elixir-format
+msgid "SP entity id"
+msgstr "SP-entiteits-id"
+
+#: lib/perfect_paper_web/live/sso_live.html.heex:39
+#, elixir-autogen, elixir-format
+msgid "SSO"
+msgstr "SSO"
+
+#: lib/perfect_paper_web/live/sso_live.ex:51
+#, elixir-autogen, elixir-format
+msgid "SSO configuration saved."
+msgstr "SSO-configuratie opgeslagen."
+
+#: lib/perfect_paper_web/live/sso_live.ex:85
+#, elixir-autogen, elixir-format
+msgid "SSO disabled."
+msgstr "SSO uitgeschakeld."
+
+#: lib/perfect_paper_web/live/sso_live.ex:85
+#, elixir-autogen, elixir-format
+msgid "SSO enabled."
+msgstr "SSO ingeschakeld."
+
+#: lib/perfect_paper_web/live/org_review_settings_live.ex:63
+#, elixir-autogen, elixir-format
+msgid "Save"
+msgstr "Opslaan"
+
+#: lib/perfect_paper_web/live/sso_live.html.heex:220
+#, elixir-autogen, elixir-format
+msgid "Save configuration"
+msgstr "Configuratie opslaan"
+
+#: lib/perfect_paper_web/live/org_review_settings_live.ex:63
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Saving…"
+msgstr "Opslaan…"
+
+#: lib/perfect_paper_web/live/org_billing_live.html.heex:27
+#, elixir-autogen, elixir-format
+msgid "Seat overage"
+msgstr "Overschrijding van gebruikers"
+
+#: lib/perfect_paper_web/live/admin_live/billing.html.heex:32
+#, elixir-autogen, elixir-format
+msgid "Seats"
+msgstr "Gebruikers"
+
+#: lib/perfect_paper_web/live/org_billing_live.html.heex:21
+#, elixir-autogen, elixir-format
+msgid "Seats used / contracted"
+msgstr "Gebruikers in gebruik / gecontracteerd"
+
+#: lib/perfect_paper_web/live/billing_live.ex:120
+#, elixir-autogen, elixir-format
+msgid "Select the plan that best supports your research needs."
+msgstr "Selecteer het abonnement dat uw onderzoeksbehoeften het beste ondersteunt."
+
+#: lib/perfect_paper_web/components/app_shell.ex:465
+#: lib/perfect_paper_web/components/app_shell.ex:486
+#, elixir-autogen, elixir-format
+msgid "Send"
+msgstr "Verzenden"
+
+#: lib/perfect_paper_web/live/user_live/login.ex:85
+#: lib/perfect_paper_web/live/user_live/registration.ex:76
+#, elixir-autogen, elixir-format
+msgid "Send magic link"
+msgstr "Magische link versturen"
+
+#: lib/perfect_paper_web/live/user_live/login.ex:84
+#: lib/perfect_paper_web/live/user_live/registration.ex:75
+#, elixir-autogen, elixir-format
+msgid "Sending link..."
+msgstr "Link versturen…"
+
+#: lib/perfect_paper_web/live/history_live/show.ex:16
+#, elixir-autogen, elixir-format
+msgid "Session not found."
+msgstr "Sessie niet gevonden."
+
+#: lib/perfect_paper_web/live/sso_live.html.heex:51
+#: lib/perfect_paper_web/live/sso_live.html.heex:56
+#, elixir-autogen, elixir-format
+msgid "Set"
+msgstr "Instellen"
+
+#: lib/perfect_paper_web/live/history_live/show.html.heex:11
+#, elixir-autogen, elixir-format
+msgid "Share"
+msgstr "Delen"
+
+#: lib/perfect_paper_web/live/earn_live.ex:92
+#, elixir-autogen, elixir-format
+msgid "Share this link with colleagues. Credits are issued automatically once they complete their first review."
+msgstr "Deel deze link met collega's. Credits worden automatisch toegekend zodra zij hun eerste beoordeling voltooien."
+
+#: lib/perfect_paper_web/live/earn_live.ex:136
+#: lib/perfect_paper_web/live/earn_live.ex:148
+#, elixir-autogen, elixir-format
+msgid "Share your link"
+msgstr "Uw link delen"
+
+#: lib/perfect_paper_web/live/history_live/show.html.heex:186
+#, elixir-autogen, elixir-format
+msgid "Share your thoughts on this manuscript..."
+msgstr "Deel uw gedachten over dit manuscript…"
+
+#: lib/perfect_paper_web/components/review_components.ex:147
+#, elixir-autogen, elixir-format
+msgid "Show"
+msgstr "Tonen"
+
+#: lib/perfect_paper_web/components/review_components.ex:337
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Show in the doc"
+msgstr "Tonen in het document"
+
+#: lib/perfect_paper_web/live/user_live/login.ex:49
+#, elixir-autogen, elixir-format
+msgid "Sign up"
+msgstr "Registreren"
+
+#: lib/perfect_paper_web/live/sso_live.ex:108
+#: lib/perfect_paper_web/live/sso_live.html.heex:1
+#: lib/perfect_paper_web/live/sso_live.html.heex:4
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Single sign-on"
+msgstr "Single sign-on"
+
+#: lib/perfect_paper_web/live/new_live.html.heex:3
+#, elixir-autogen, elixir-format
+msgid "Start a new review"
+msgstr "Een nieuwe beoordeling starten"
+
+#: lib/perfect_paper_web/live/new_live.html.heex:73
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Start review"
+msgstr "Beoordeling starten"
+
+#: lib/perfect_paper_web/live/earn_live.ex:193
+#: lib/perfect_paper_web/live/org_billing_live.html.heex:18
+#: lib/perfect_paper_web/live/org_billing_live.html.heex:55
+#: lib/perfect_paper_web/live/sso_live.html.heex:13
+#, elixir-autogen, elixir-format
+msgid "Status"
+msgstr "Status"
+
+#: lib/perfect_paper_web/components/app_shell.ex:283
+#: lib/perfect_paper_web/live/account_live.ex:102
+#: lib/perfect_paper_web/live/billing_live.ex:86
+#, elixir-autogen, elixir-format
+msgid "Subscription"
+msgstr "Abonnement"
+
+#: lib/perfect_paper_web/live/billing_live.ex:30
+#: lib/perfect_paper_web/live/billing_live.ex:73
+#, elixir-autogen, elixir-format
+msgid "Subscription & credits"
+msgstr "Abonnement & credits"
+
+#: lib/perfect_paper_web/components/review_components.ex:287
+#: lib/perfect_paper_web/components/review_components.ex:319
+#: lib/perfect_paper_web/live/history_live/show.html.heex:27
+#, elixir-autogen, elixir-format
+msgid "Suggestion"
+msgstr "Suggestie"
+
+#: lib/perfect_paper_web/live/sso_live.html.heex:156
+#, elixir-autogen, elixir-format
+msgid "Tenant id"
+msgstr "Tenant-id"
+
+#: lib/perfect_paper_web/live/org_billing_live.html.heex:38
+#, elixir-autogen, elixir-format
+msgid "Term"
+msgstr "Looptijd"
+
+#: lib/perfect_paper_web/live/new_live.ex:116
+#, elixir-autogen, elixir-format
+msgid "That file is larger than 25 MB."
+msgstr "Dat bestand is groter dan 25 MB."
+
+#: lib/perfect_paper_web/live/org_review_settings_live.ex:36
+#, elixir-autogen, elixir-format
+msgid "That prompt is too long (max 4000 characters)."
+msgstr "Die instructie is te lang (maximaal 4000 tekens)."
+
+#: lib/perfect_paper_web/live/new_live.html.heex:99
+#, elixir-autogen, elixir-format
+msgid "The depth of the reading was impressive, and identified subtle issues — even working with ChatGPT Pro."
+msgstr "De diepgang van de lezing was indrukwekkend en identificeerde subtiele problemen — zelfs als u ook met ChatGPT Pro werkt."
+
+#: lib/perfect_paper_web/components/review_components.ex:92
+#, elixir-autogen, elixir-format
+msgid "The manuscript text appears here once the review has passages to display."
+msgstr "De manuscripttekst verschijnt hier zodra de beoordeling te tonen passages heeft."
+
+#: lib/perfect_paper_web/components/review_components.ex:165
+#, elixir-autogen, elixir-format
+msgid "The overall assessment for this manuscript will appear here once the review is complete. It summarizes the most consequential issues across the paper and the recommended path to a stronger submission."
+msgstr "De algehele beoordeling van dit manuscript verschijnt hier zodra de beoordeling is voltooid. Het vat de meest wezenlijke problemen in het artikel samen en het aanbevolen traject naar een sterkere indiening."
+
+#: lib/perfect_paper_web/live/new_live.ex:119
+#, elixir-autogen, elixir-format
+msgid "There was a problem with that file."
+msgstr "Er was een probleem met dat bestand."
+
+#: lib/perfect_paper_web/live/user_live/confirmation.ex:80
+#, elixir-autogen, elixir-format
+msgid "Tip: If you prefer passwords, you can enable them in the user settings."
+msgstr "Tip: Als u de voorkeur geeft aan wachtwoorden, kunt u deze inschakelen in de gebruikersinstellingen."
+
+#: lib/perfect_paper_web/live/user_live/login.ex:60
+#, elixir-autogen, elixir-format
+msgid "To see sent emails, visit"
+msgstr "Ga naar de volgende pagina om verstuurde e-mails te bekijken:"
+
+#: lib/perfect_paper_web/live/billing_live.ex:298
+#, elixir-autogen, elixir-format
+msgid "Top-up packs are coming soon. Unused credits never expire."
+msgstr "Ophoogpakketten zijn binnenkort beschikbaar. Ongebruikte credits vervallen nooit."
+
+#: lib/perfect_paper_web/live/webhooks_live.html.heex:168
+#, elixir-autogen, elixir-format
+msgid "URL"
+msgstr "URL"
+
+#: lib/perfect_paper_web/components/review_components.ex:308
+#: lib/perfect_paper_web/components/review_components.ex:451
+#: lib/perfect_paper_web/live/history_live/show.html.heex:98
+#, elixir-autogen, elixir-format
+msgid "Undo"
+msgstr "Ongedaan maken"
+
+#: lib/perfect_paper_web/live/account_live.ex:222
+#, elixir-autogen, elixir-format
+msgid "Unnamed key"
+msgstr "Naamloze sleutel"
+
+#: lib/perfect_paper_web/live/history_live/index.html.heex:21
+#: lib/perfect_paper_web/live/workspace_live.ex:113
+#: lib/perfect_paper_web/live/workspace_live.ex:181
+#, elixir-autogen, elixir-format
+msgid "Untitled manuscript"
+msgstr "Naamloos manuscript"
+
+#: lib/perfect_paper_web/live/account_live.ex:93
+#, elixir-autogen, elixir-format
+msgid "Update your login credentials on the settings page."
+msgstr "Werk uw aanmeldgegevens bij op de instellingenpagina."
+
+#: lib/perfect_paper_web/live/account_live.ex:137
+#, elixir-autogen, elixir-format
+msgid "Upgrade"
+msgstr "Upgraden"
+
+#: lib/perfect_paper_web/live/new_live.ex:117
+#, elixir-autogen, elixir-format
+msgid "Upload a .docx file."
+msgstr "Upload een .docx-bestand."
+
+#: lib/perfect_paper_web/live/new_live.ex:118
+#, elixir-autogen, elixir-format
+msgid "Upload one manuscript at a time."
+msgstr "Upload één manuscript tegelijk."
+
+#: lib/perfect_paper_web/live/new_live.html.heex:5
+#, elixir-autogen, elixir-format
+msgid "Upload your manuscript and PerfectPaper will read it the way a thoughtful reviewer would."
+msgstr "Upload uw manuscript en PerfectPaper leest het zoals een weloverwogen beoordelaar dat zou doen."
+
+#: lib/perfect_paper_web/live/new_live.html.heex:71
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Uploading…"
+msgstr "Uploaden…"
+
+#: lib/perfect_paper_web/live/user_live/login.ex:124
+#, elixir-autogen, elixir-format
+msgid "Use a magic link instead"
+msgstr "Gebruik in plaats daarvan een magische link"
+
+#: lib/perfect_paper_web/live/user_live/login.ex:124
+#, elixir-autogen, elixir-format
+msgid "Use a password instead"
+msgstr "Gebruik in plaats daarvan een wachtwoord"
+
+#: lib/perfect_paper_web/components/app_shell.ex:173
+#, elixir-autogen, elixir-format
+msgid "User menu"
+msgstr "Gebruikersmenu"
+
+#: lib/perfect_paper_web/live/sso_live.html.heex:29
+#, elixir-autogen, elixir-format
+msgid "Verified"
+msgstr "Geverifieerd"
+
+#: lib/perfect_paper_web/live/sso_live.html.heex:69
+#, elixir-autogen, elixir-format
+msgid "Verify domain"
+msgstr "Domein verifiëren"
+
+#: lib/perfect_paper_web/live/sso_live.ex:93
+#: lib/perfect_paper_web/live/sso_live.html.heex:86
+#, elixir-autogen, elixir-format
+msgid "Verify the domain before enabling SSO."
+msgstr "Verifieer het domein voordat u SSO inschakelt."
+
+#: lib/perfect_paper_web/live/webhooks_live.html.heex:77
+#, elixir-autogen, elixir-format
+msgid "View delivery log"
+msgstr "Afleveringslog bekijken"
+
+#: lib/perfect_paper_web/live/history_live/show.html.heex:220
+#, elixir-autogen, elixir-format
+msgid "Viewer"
+msgstr "Kijker"
+
+#: lib/perfect_paper_web/live/earn_live.ex:53
+#, elixir-autogen, elixir-format
+msgid "We couldn't generate your referral link. Please try again."
+msgstr "We konden uw verwijzingslink niet genereren. Probeer het opnieuw."
+
+#: lib/perfect_paper_web/live/workspace_live.ex:197
+#, elixir-autogen, elixir-format
+msgid "We couldn't process that file."
+msgstr "We konden dat bestand niet verwerken."
+
+#: lib/perfect_paper_web/live/new_live.ex:86
+#, elixir-autogen, elixir-format
+msgid "We couldn't process that file. Please try again."
+msgstr "We konden dat bestand niet verwerken. Probeer het opnieuw."
+
+#: lib/perfect_paper_web/live/new_live.html.heex:83
+#, elixir-autogen, elixir-format
+msgid "We email you when ready"
+msgstr "Wij sturen u een e-mail wanneer het klaar is"
+
+#: lib/perfect_paper_web/live/billing_live.ex:62
+#, elixir-autogen, elixir-format
+msgid "We were unable to change your plan. Please try again."
+msgstr "We konden uw abonnement niet wijzigen. Probeer het opnieuw."
+
+#: lib/perfect_paper_web/live/webhooks_live.html.heex:1
+#: lib/perfect_paper_web/live/webhooks_live.html.heex:5
+#, elixir-autogen, elixir-format
+msgid "Webhooks"
+msgstr "Webhooks"
+
+#: lib/perfect_paper_web/live/user_live/confirmation.ex:12
+#, elixir-autogen, elixir-format
+msgid "Welcome %{email}"
+msgstr "Welkom %{email}"
+
+#: lib/perfect_paper_web/live/workspace_live.ex:42
+#, elixir-autogen, elixir-format
+msgid "Workspace"
+msgstr "Werkruimte"
+
+#: lib/perfect_paper_web/live/history_live/show.html.heex:62
+#: lib/perfect_paper_web/live/history_live/show.html.heex:150
+#, elixir-autogen, elixir-format
+msgid "Write a reply..."
+msgstr "Schrijf een antwoord…"
+
+#: lib/perfect_paper_web/live/webhooks_live.ex:93
+#, elixir-autogen, elixir-format
+msgid "You are not authorised to create endpoints."
+msgstr "U bent niet gemachtigd om eindpunten aan te maken."
+
+#: lib/perfect_paper_web/live/webhooks_live.ex:129
+#, elixir-autogen, elixir-format
+msgid "You are not authorised to delete that endpoint."
+msgstr "U bent niet gemachtigd om dat eindpunt te verwijderen."
+
+#: lib/perfect_paper_web/live/webhooks_live.ex:178
+#, elixir-autogen, elixir-format
+msgid "You are not authorised to redeliver."
+msgstr "U bent niet gemachtigd om opnieuw af te leveren."
+
+#: lib/perfect_paper_web/live/sso_live.ex:54
+#, elixir-autogen, elixir-format
+msgid "You are not authorized to configure SSO."
+msgstr "U bent niet gemachtigd om SSO te configureren."
+
+#: lib/perfect_paper_web/live/billing_live.ex:148
+#, elixir-autogen, elixir-format
+msgid "You are on the %{plan} plan."
+msgstr "U gebruikt het %{plan}-abonnement."
+
+#: lib/perfect_paper_web/live/user_live/login.ex:58
+#, elixir-autogen, elixir-format
+msgid "You are running the local mail adapter."
+msgstr "U gebruikt de lokale mailadapter."
+
+#: lib/perfect_paper_web/live/earn_live.ex:116
+#, elixir-autogen, elixir-format
+msgid "You do not have a referral link yet. Generate one to start earning credits for every colleague you bring aboard."
+msgstr "U heeft nog geen verwijzingslink. Genereer er een om credits te verdienen voor elke collega die u meebrengt."
+
+#: lib/perfect_paper_web/live/account_live.ex:163
+#, elixir-autogen, elixir-format
+msgid "You have no credits. Upgrade your plan or purchase additional credits to continue reviewing."
+msgstr "U heeft geen credits. Upgrade uw abonnement of koop extra credits om door te gaan met beoordelen."
+
+#: lib/perfect_paper_web/live/webhooks_live.ex:25
+#, elixir-autogen, elixir-format
+msgid "You must be an organisation admin to manage webhooks."
+msgstr "U moet organisatiebeheerder zijn om webhooks te beheren."
+
+#: lib/perfect_paper_web/live/org_review_settings_live.ex:18
+#, elixir-autogen, elixir-format
+msgid "You must be an organization admin to edit review settings."
+msgstr "U moet organisatiebeheerder zijn om beoordelingsinstellingen te bewerken."
+
+#: lib/perfect_paper_web/live/scim_live.ex:17
+#, elixir-autogen, elixir-format
+msgid "You must be an organization admin to manage SCIM."
+msgstr "U moet organisatiebeheerder zijn om SCIM te beheren."
+
+#: lib/perfect_paper_web/live/sso_live.ex:26
+#, elixir-autogen, elixir-format
+msgid "You must be an organization admin to manage SSO."
+msgstr "U moet organisatiebeheerder zijn om SSO te beheren."
+
+#: lib/perfect_paper_web/live/org_billing_live.ex:21
+#, elixir-autogen, elixir-format
+msgid "You must be an organization admin to view billing."
+msgstr "U moet organisatiebeheerder zijn om facturering te bekijken."
+
+#: lib/perfect_paper_web/live/user_live/login.ex:43
+#, elixir-autogen, elixir-format
+msgid "You need to reauthenticate to perform sensitive actions on your account."
+msgstr "U moet opnieuw authenticeren om gevoelige acties op uw account uit te voeren."
+
+#: lib/perfect_paper_web/live/billing_live.ex:131
+#, elixir-autogen, elixir-format
+msgid "You're on free previews — a preview of the full review, on us. Subscribe for full reviews every month."
+msgstr "U gebruikt gratis voorvertoningen — een voorvertoning van de volledige beoordeling, van ons. Abonneer u voor volledige beoordelingen elke maand."
+
+#: lib/perfect_paper_web/live/new_live.ex:77
+#, elixir-autogen, elixir-format
+msgid "You're out of credits. Earn free preview credits by inviting colleagues, or buy reviews."
+msgstr "U heeft geen credits meer. Verdien gratis voorvertoningscredits door collega's uit te nodigen, of koop beoordelingen."
+
+#: lib/perfect_paper_web/live/earn_live.ex:158
+#, elixir-autogen, elixir-format
+msgid "Your colleague registers using your link. Their account is automatically associated with your referral."
+msgstr "Uw collega registreert zich via uw link. Hun account wordt automatisch aan uw verwijzing gekoppeld."
+
+#: lib/perfect_paper_web/live/billing_live.ex:269
+#, elixir-autogen, elixir-format
+msgid "Your credits"
+msgstr "Uw credits"
+
+#: lib/perfect_paper_web/live/account_live.ex:104
+#, elixir-autogen, elixir-format
+msgid "Your current billing plan."
+msgstr "Uw huidige factureringsplan."
+
+#: lib/perfect_paper_web/live/account_live.ex:69
+#, elixir-autogen, elixir-format, fuzzy
+msgid "Your identity on PerfectPaper."
+msgstr "Uw identiteit op PerfectPaper."
+
+#: lib/perfect_paper_web/live/billing_live.ex:57
+#, elixir-autogen, elixir-format
+msgid "Your plan has been updated to %{plan}."
+msgstr "Uw abonnement is bijgewerkt naar %{plan}."
+
+#: lib/perfect_paper_web/live/earn_live.ex:86
+#: lib/perfect_paper_web/live/earn_live.ex:102
+#, elixir-autogen, elixir-format
+msgid "Your referral link"
+msgstr "Uw verwijzingslink"
+
+#: lib/perfect_paper_web/live/earn_live.ex:46
+#, elixir-autogen, elixir-format
+msgid "Your referral link is ready."
+msgstr "Uw verwijzingslink is klaar."
+
+#: lib/perfect_paper_web/live/new_live.ex:70
+#, elixir-autogen, elixir-format
+msgid "Your review is ready."
+msgstr "Uw beoordeling is klaar."
+
+#: lib/perfect_paper_web/live/new_live.html.heex:29
+#, elixir-autogen, elixir-format
+msgid "browse"
+msgstr "bladeren"
+
+#: lib/perfect_paper_web/live/history_live/show.html.heex:211
+#, elixir-autogen, elixir-format
+msgid "colleague@example.com"
+msgstr "collega@voorbeeld.nl"
+
+#: lib/perfect_paper_web/live/account_live.ex:159
+#, elixir-autogen, elixir-format
+msgid "credit remaining"
+msgstr "credit resterend"
+
+#: lib/perfect_paper_web/live/billing_live.ex:281
+#: lib/perfect_paper_web/live/billing_live.ex:288
+#, elixir-autogen, elixir-format
+msgid "credits"
+msgstr "credits"
+
+#: lib/perfect_paper_web/live/account_live.ex:159
+#, elixir-autogen, elixir-format
+msgid "credits remaining"
+msgstr "credits resterend"
+
+#: lib/perfect_paper_web/live/webhooks_live.html.heex:107
+#, elixir-autogen, elixir-format
+msgid "delivered"
+msgstr "afgeleverd"
+
+#: lib/perfect_paper_web/live/org_review_settings_live.ex:61
+#, elixir-autogen, elixir-format
+msgid "e.g. We use APA 7. Emphasize methods and statistical rigor."
+msgstr "bijv. Wij gebruiken APA 7. Benadruk methoden en statistische nauwkeurigheid."
+
+#: lib/perfect_paper_web/live/webhooks_live.html.heex:113
+#, elixir-autogen, elixir-format
+msgid "failed"
+msgstr "mislukt"
+
+#: lib/perfect_paper_web/live/user_live/login.ex:49
+#, elixir-autogen, elixir-format
+msgid "for an account now."
+msgstr "nu voor een account."
+
+#: lib/perfect_paper_web/live/user_live/registration.ex:39
+#, elixir-autogen, elixir-format, fuzzy
+msgid "log in"
+msgstr "aanmelden"
+
+#: lib/perfect_paper_web/live/scim_live.html.heex:16
+#, elixir-autogen, elixir-format
+msgid "never"
+msgstr "nooit"
+
+#: lib/perfect_paper_web/live/user_live/registration.ex:39
+#, elixir-autogen, elixir-format
+msgid "or"
+msgstr "of"
+
+#: lib/perfect_paper_web/live/webhooks_live.html.heex:119
+#, elixir-autogen, elixir-format, fuzzy
+msgid "pending"
+msgstr "in behandeling"
+
+#: lib/perfect_paper_web/live/admin_live/credits.html.heex:40
+#, elixir-autogen, elixir-format
+msgid "sorry for the outage"
+msgstr "sorry voor de storing"
+
+#: lib/perfect_paper_web/live/user_live/login.ex:60
+#, elixir-autogen, elixir-format
+msgid "the mailbox page"
+msgstr "de mailboxpagina"
+
+#: lib/perfect_paper_web/live/user_live/registration.ex:52
+#, elixir-autogen, elixir-format
+msgid "to your account now."
+msgstr "nu naar uw account."
+
+#: lib/perfect_paper_web/live/new_live.html.heex:105
+#, elixir-autogen, elixir-format
+msgid "· Professor, Caltech"
+msgstr "· Professor, Caltech"
+
+#: lib/perfect_paper_web/live/new_live.html.heex:96
+#, elixir-autogen, elixir-format, fuzzy
+msgid "“Would have taken an expert many hours to complete.”"
+msgstr "”Zou een expert vele uren hebben gekost.”"

@@ -1,0 +1,89 @@
+<div class="mx-auto max-w-3xl p-6">
+  <h1 class="ds-h2">{gettext("Billing admin")}</h1>
+
+  <form id="org-lookup" phx-submit="lookup" class="mt-4 flex gap-2">
+    <input
+      type="text"
+      name="org_id"
+      placeholder={gettext("Organization id")}
+      class="input input-bordered flex-1"
+    />
+    <button class="btn btn-primary">{gettext("Look up")}</button>
+  </form>
+  <p :if={@lookup_error} id="lookup-error" class="ds-p mt-2 text-error">{@lookup_error}</p>
+
+  <section :if={@org} class="mt-6 space-y-6">
+    <div class="rounded-box border border-base-300 bg-base-100 p-4">
+      <h2 class="ds-h3">{@org.name}</h2>
+
+      <p :if={@contract} id="admin-contract-status" class="ds-p">
+        Contract: <span class="font-medium capitalize">{@contract.status}</span>, {@contract.seats} seats
+      </p>
+      <p :if={is_nil(@contract)} class="ds-p">{gettext("No contract.")}</p>
+
+      <button id="contract-activate" class="btn btn-secondary mt-2" phx-click="activate">
+        {gettext("Activate latest draft")}
+      </button>
+    </div>
+
+    <div class="rounded-box border border-base-300 bg-base-100 p-4">
+      <h2 class="ds-h3">{gettext("Create draft contract")}</h2>
+      <form id="contract-create" phx-submit="create" class="mt-2 grid grid-cols-2 gap-2">
+        <input
+          type="number"
+          name="seats"
+          placeholder={gettext("Seats")}
+          class="input input-bordered"
+        />
+        <input
+          type="number"
+          name="price_per_seat_cents"
+          placeholder={gettext("Price/seat (cents)")}
+          class="input input-bordered"
+        />
+        <input
+          type="number"
+          name="per_seat_credits"
+          placeholder={gettext("Credits/seat")}
+          class="input input-bordered"
+        />
+        <select name="interval" class="select select-bordered">
+          <option value="monthly">monthly</option>
+          <option value="annual">annual</option>
+        </select>
+        <input type="date" name="term_start" class="input input-bordered" />
+        <input type="date" name="term_end" class="input input-bordered" />
+        <input
+          type="text"
+          name="po_number"
+          placeholder={gettext("PO number")}
+          class="input input-bordered col-span-2"
+        />
+        <button class="btn btn-primary col-span-2">{gettext("Create draft")}</button>
+      </form>
+    </div>
+
+    <div class="rounded-box border border-base-300 bg-base-100 p-4">
+      <h2 class="ds-h3">{gettext("Invoices")}</h2>
+      <p :if={@invoices == []} class="ds-p">{gettext("No invoices.")}</p>
+      <ul class="mt-2 space-y-1 text-sm">
+        <li
+          :for={inv <- @invoices}
+          id={"admin-invoice-#{inv.id}"}
+          class="flex items-center justify-between border-t border-base-200 py-1"
+        >
+          <span class="font-mono text-xs">{inv.number}</span>
+          <span class="capitalize">{inv.status}</span>
+          <button
+            :if={inv.status == :issued}
+            class="btn btn-xs btn-ghost"
+            phx-click="mark-paid"
+            phx-value-id={inv.id}
+          >
+            {gettext("Mark paid")}
+          </button>
+        </li>
+      </ul>
+    </div>
+  </section>
+</div>

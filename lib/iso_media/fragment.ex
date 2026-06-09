@@ -169,7 +169,9 @@ defmodule ISOMedia.Fragment do
     # The mdat's size_mode follows from its payload size (the placement total is
     # independent of the header), so the moof-relative data_offsets below are measured
     # against the right header width even for an oversized fragment.
-    payload_size = Enum.sum(Enum.map(active, fn {_m, run} -> Enum.sum(Enum.map(run, & &1.size)) end))
+    payload_size =
+      Enum.sum(Enum.map(active, fn {_m, run} -> Enum.sum(Enum.map(run, & &1.size)) end))
+
     mdat_mode = Box.size_mode_for_body(payload_size)
     payload_start = Layout.box_size(moof0) + Box.header_base(mdat_mode)
 

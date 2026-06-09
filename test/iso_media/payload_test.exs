@@ -48,10 +48,15 @@ defmodule ISOMedia.PayloadTest do
     test "a range spanning segments returns a sub-segment list", %{path: path} do
       parts = [<<0, 1, 2, 3>>, %FileSlice{path: path, offset: 0, length: 4}]
       # bytes [2, 6) -> tail of the binary (2,3) + head of the slice (offset 0, len 2)
-      assert Payload.slice(parts, 2, 4) == [<<2, 3>>, %FileSlice{path: path, offset: 0, length: 2}]
+      assert Payload.slice(parts, 2, 4) == [
+               <<2, 3>>,
+               %FileSlice{path: path, offset: 0, length: 2}
+             ]
     end
 
-    test "slicing a synthesized segment list is read-equivalent to slicing its bytes", %{path: path} do
+    test "slicing a synthesized segment list is read-equivalent to slicing its bytes", %{
+      path: path
+    } do
       parts = [<<10, 11>>, %FileSlice{path: path, offset: 0, length: 6}, [<<20>>, <<21, 22>>]]
       whole = Payload.read(parts)
 
@@ -64,7 +69,13 @@ defmodule ISOMedia.PayloadTest do
   describe "slice_paths/1" do
     test "collects FileSlice paths, ignoring in-memory bytes", %{path: path} do
       other = path <> ".other"
-      parts = [<<0>>, %FileSlice{path: path, offset: 0, length: 1}, [%FileSlice{path: other, offset: 0, length: 1}]]
+
+      parts = [
+        <<0>>,
+        %FileSlice{path: path, offset: 0, length: 1},
+        [%FileSlice{path: other, offset: 0, length: 1}]
+      ]
+
       assert Payload.slice_paths(parts) == [path, other]
       assert Payload.slice_paths(<<0, 0>>) == []
       assert Payload.slice_paths(%FileSlice{path: path, offset: 0, length: 1}) == [path]

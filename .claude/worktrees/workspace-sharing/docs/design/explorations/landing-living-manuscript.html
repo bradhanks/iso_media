@@ -1,0 +1,814 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PerfectPaper — your paper, peer-reviewed before you submit it</title>
+<meta name="description" content="PerfectPaper is an AI peer reviewer for academic papers. Upload a draft, get reviewer-grade feedback as margin comments, and act on it before you submit." />
+
+<!-- A scholarly serif to read, a soft display serif to title, a machine mono for the reviewer's voice. -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..600&family=Newsreader:ital,opsz,wght@0,6..72,300..600;1,6..72,300..500&family=Spline+Sans+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+
+<style>
+/* ============================================================
+   PerfectPaper — "The Living Manuscript"
+   A standalone landing-page exploration. Not wired to the app.
+   ============================================================ */
+
+:root{
+  /* Paper & ink */
+  --paper:      #f4eee1;   /* warm ivory stock            */
+  --paper-deep: #ece3d1;   /* a deeper panel              */
+  --paper-dark: #20242b;   /* the inverted, "print proof" band */
+  --ink:        #211c18;   /* warm near-black             */
+  --ink-soft:   #574c41;   /* secondary ink               */
+  --ink-faint:  #8a7c6b;   /* meta / marginalia ink       */
+
+  /* The pens */
+  --redpen:     #8c2f3e;   /* reviewer's correction red (oxblood) */
+  --redpen-br:  #b23a48;   /* brighter strike of the same pen     */
+  --teal:       #1f5e58;   /* "addressed / accepted"     */
+  --gold:       #c28a3a;   /* gilt — fills & rules only  */
+
+  /* Rules & tints */
+  --rule:        rgba(33,28,24,.16);
+  --rule-soft:   rgba(33,28,24,.08);
+  --red-wash:    rgba(140,47,62,.10);
+  --teal-wash:   rgba(31,94,88,.12);
+  --gold-wash:   rgba(194,138,58,.16);
+
+  --col: 40rem;            /* the manuscript measure */
+  --ease: cubic-bezier(.22,.61,.36,1);
+}
+
+*,*::before,*::after{ box-sizing:border-box; }
+
+html{ -webkit-text-size-adjust:100%; scroll-behavior:smooth; }
+
+body{
+  margin:0;
+  background:var(--paper);
+  color:var(--ink);
+  font-family:"Newsreader", Georgia, serif;
+  font-optical-sizing:auto;
+  font-size:clamp(1.02rem, .55rem + .85vw, 1.2rem);
+  line-height:1.62;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+  overflow-x:hidden;
+}
+
+/* ---- Paper grain & a faint vignette, fixed behind everything ---- */
+body::before{           /* grain */
+  content:""; position:fixed; inset:0; z-index:0; pointer-events:none;
+  opacity:.5; mix-blend-mode:multiply;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.42'/%3E%3C/svg%3E");
+}
+body::after{            /* vignette */
+  content:""; position:fixed; inset:0; z-index:0; pointer-events:none;
+  background:radial-gradient(120% 90% at 50% -10%, transparent 60%, rgba(33,28,24,.06) 100%);
+}
+
+main, header, footer{ position:relative; z-index:1; }
+
+/* ============================================================
+   Shared type helpers
+   ============================================================ */
+.eyebrow{
+  font-family:"Spline Sans Mono", ui-monospace, monospace;
+  font-size:.72rem; font-weight:500; letter-spacing:.26em; text-transform:uppercase;
+  color:var(--redpen);
+}
+.mono{ font-family:"Spline Sans Mono", ui-monospace, monospace; }
+.serif-i{ font-style:italic; }
+
+h1,h2,h3{ font-family:"Fraunces", Georgia, serif; font-weight:430; letter-spacing:-.012em; line-height:1.03; margin:0; }
+
+a{ color:inherit; }
+
+/* ============================================================
+   Masthead
+   ============================================================ */
+.masthead{
+  position:sticky; top:0; z-index:40;
+  display:flex; align-items:center; gap:1.5rem;
+  padding:.7rem clamp(1rem,4vw,3rem);
+  background:color-mix(in srgb, var(--paper) 86%, transparent);
+  backdrop-filter:saturate(115%) blur(8px);
+  border-bottom:1px solid var(--rule);
+}
+.brand{
+  display:flex; align-items:baseline; gap:.6rem; text-decoration:none; white-space:nowrap;
+}
+.brand .glyph{
+  font-family:"Fraunces", serif; font-weight:600; font-size:1.28rem; letter-spacing:-.02em;
+}
+.brand .glyph b{ color:var(--redpen); font-weight:600; }
+.brand .vol{
+  font-family:"Spline Sans Mono", monospace; font-size:.64rem; letter-spacing:.18em;
+  text-transform:uppercase; color:var(--ink-faint);
+  border:1px solid var(--rule); border-radius:2px; padding:.16rem .4rem;
+}
+.mast-nav{ margin-left:auto; display:flex; align-items:center; gap:1.6rem; }
+.mast-nav a{
+  font-family:"Spline Sans Mono", monospace; font-size:.74rem; letter-spacing:.08em;
+  text-decoration:none; color:var(--ink-soft); position:relative;
+}
+.mast-nav a:not(.btn)::after{
+  content:""; position:absolute; left:0; right:100%; bottom:-4px; height:1px;
+  background:var(--redpen); transition:right .35s var(--ease);
+}
+.mast-nav a:not(.btn):hover::after{ right:0; }
+@media (max-width:760px){ .mast-nav a.lnk{ display:none; } }
+
+.btn{
+  font-family:"Spline Sans Mono", monospace; font-size:.74rem; letter-spacing:.06em;
+  text-decoration:none; cursor:pointer; border:0;
+  display:inline-flex; align-items:center; gap:.5ch;
+  padding:.62rem 1rem; border-radius:3px; line-height:1;
+  transition:transform .25s var(--ease), box-shadow .25s var(--ease), background .25s var(--ease);
+}
+.btn-primary{
+  background:var(--ink); color:var(--paper);
+  box-shadow:3px 3px 0 0 var(--redpen);
+}
+.btn-primary:hover{ transform:translate(-1px,-1px); box-shadow:5px 5px 0 0 var(--redpen); }
+.btn-primary:active{ transform:translate(1px,1px); box-shadow:1px 1px 0 0 var(--redpen); }
+.btn-ghost{ background:transparent; color:var(--ink); border:1px solid var(--rule); }
+.btn-ghost:hover{ background:var(--paper-deep); border-color:var(--ink-faint); }
+
+/* ============================================================
+   Hero — the manuscript, marked up live
+   ============================================================ */
+.hero{
+  display:grid;
+  grid-template-columns:minmax(0,var(--col)) minmax(0,18rem);
+  gap:clamp(1.5rem,4vw,4rem);
+  align-items:start;
+  max-width:74rem; margin:0 auto;
+  padding:clamp(2.5rem,7vw,6rem) clamp(1rem,4vw,3rem) clamp(2rem,5vw,4rem);
+}
+@media (max-width:900px){
+  .hero{ grid-template-columns:1fr; }
+}
+
+.dateline{
+  display:flex; align-items:center; gap:.9rem; flex-wrap:wrap;
+  font-family:"Spline Sans Mono", monospace; font-size:.7rem; letter-spacing:.12em;
+  text-transform:uppercase; color:var(--ink-faint);
+  margin-bottom:1.5rem;
+}
+.dateline .dot{ width:5px; height:5px; border-radius:50%; background:var(--gold); }
+.dateline .live{ color:var(--redpen); display:inline-flex; align-items:center; gap:.5ch; }
+.dateline .live .pulse{
+  width:7px; height:7px; border-radius:50%; background:var(--redpen);
+  box-shadow:0 0 0 0 rgba(140,47,62,.5); animation:pulse 2.2s infinite;
+}
+@keyframes pulse{
+  0%{ box-shadow:0 0 0 0 rgba(140,47,62,.5); }
+  70%{ box-shadow:0 0 0 7px rgba(140,47,62,0); }
+  100%{ box-shadow:0 0 0 0 rgba(140,47,62,0); }
+}
+
+.title{
+  font-size:clamp(2.6rem, 1.3rem + 5.4vw, 5.1rem);
+  line-height:1.0;
+  letter-spacing:-.02em;
+  font-weight:430;
+}
+.title .reveal{
+  display:block; overflow:hidden;
+}
+.title .reveal > span{
+  display:block;
+  transform:translateY(102%);
+  opacity:0;
+}
+.is-loaded .title .reveal > span{
+  transform:translateY(0); opacity:1;
+  transition:transform .9s var(--ease), opacity .9s var(--ease);
+}
+.is-loaded .title .reveal:nth-child(1) > span{ transition-delay:.05s; }
+.is-loaded .title .reveal:nth-child(2) > span{ transition-delay:.16s; }
+.is-loaded .title .reveal:nth-child(3) > span{ transition-delay:.27s; }
+
+/* the live mark-ups inside the title */
+.mark{ position:relative; white-space:nowrap; }
+
+/* red-pen underline, drawn by JS adding .drawn */
+.mark.underline::after{
+  content:""; position:absolute; left:-.06em; right:-.06em; bottom:.04em; height:.5em;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='14' viewBox='0 0 120 14' preserveAspectRatio='none'%3E%3Cpath d='M2 9 C 22 3, 38 12, 60 7 S 100 3, 118 8' fill='none' stroke='%238c2f3e' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E")
+    left center / 100% 100% no-repeat;
+  clip-path:inset(0 100% 0 0);
+  transition:clip-path 1s var(--ease) .9s;
+  pointer-events:none;
+}
+.is-loaded .mark.underline.drawn::after{ clip-path:inset(0 0 0 0); }
+
+/* struck word + the gilded correction floating above */
+.mark.edit .old{
+  position:relative; color:var(--ink-soft);
+  transition:color .4s var(--ease);
+}
+.mark.edit .old::before{           /* the strike */
+  content:""; position:absolute; left:-.04em; right:-.04em; top:.52em; height:.12em;
+  background:var(--redpen-br); transform:scaleX(0); transform-origin:left center;
+  transition:transform .55s var(--ease) 1.4s;
+}
+.is-loaded .mark.edit.struck .old::before{ transform:scaleX(1); }
+.is-loaded .mark.edit.struck .old{ color:var(--ink-faint); }
+.mark.edit .new{
+  position:absolute; left:50%; top:-.92em; transform:translate(-50%,6px);
+  font-family:"Newsreader", serif; font-style:italic; font-weight:500;
+  font-size:.34em; letter-spacing:0; color:var(--teal); white-space:nowrap;
+  opacity:0; transition:opacity .5s var(--ease) 1.9s, transform .5s var(--ease) 1.9s;
+}
+.mark.edit .new::before{ content:"↳ "; color:var(--teal); }
+.is-loaded .mark.edit.struck .new{ opacity:1; transform:translate(-50%,0); }
+
+.lede{
+  max-width:34rem; margin:1.9rem 0 0;
+  font-size:1.18rem; line-height:1.6; color:var(--ink-soft);
+}
+.lede b{ color:var(--ink); font-weight:600; }
+
+.cta-row{
+  display:flex; flex-wrap:wrap; align-items:center; gap:1rem; margin-top:2.1rem;
+}
+.cta-row .btn{ font-size:.82rem; padding:.85rem 1.3rem; }
+.cta-row .arrow{ text-decoration:none; color:var(--ink); display:inline-flex; align-items:center; gap:.5ch;
+  font-family:"Spline Sans Mono", monospace; font-size:.8rem; }
+.cta-row .arrow .a{ transition:transform .3s var(--ease); }
+.cta-row .arrow:hover .a{ transform:translateX(4px); }
+
+.trust{
+  margin-top:2.4rem; padding-top:1.4rem; border-top:1px solid var(--rule);
+  display:flex; align-items:center; gap:1rem; flex-wrap:wrap;
+  font-family:"Spline Sans Mono", monospace; font-size:.72rem; letter-spacing:.04em;
+  color:var(--ink-faint);
+}
+.stamps{ display:flex; }
+.stamps span{
+  width:26px; height:26px; border-radius:50%; display:grid; place-items:center;
+  font-family:"Fraunces", serif; font-size:.7rem; color:var(--paper);
+  background:var(--ink); border:1.5px solid var(--paper); margin-left:-8px;
+}
+.stamps span:first-child{ margin-left:0; }
+.stamps span:nth-child(2){ background:var(--redpen); }
+.stamps span:nth-child(3){ background:var(--teal); }
+.stamps span:nth-child(4){ background:var(--gold); color:var(--ink); }
+
+/* ---- The margin: where reviewers live ---- */
+.margin{
+  position:sticky; top:5rem;
+  display:flex; flex-direction:column; gap:1.1rem;
+  padding-top:.4rem;
+}
+@media (max-width:900px){ .margin{ position:static; top:auto; } }
+
+.margin-rail{
+  font-family:"Spline Sans Mono", monospace; font-size:.64rem; letter-spacing:.2em;
+  text-transform:uppercase; color:var(--ink-faint);
+  display:flex; align-items:center; gap:.6rem;
+}
+.margin-rail::after{ content:""; flex:1; height:1px; background:var(--rule); }
+
+.note{
+  --accent:var(--redpen);
+  position:relative;
+  background:var(--paper-deep);
+  border:1px solid var(--rule);
+  border-left:3px solid var(--accent);
+  border-radius:4px;
+  padding:.9rem 1rem .85rem;
+  opacity:0; transform:translateX(14px);
+  box-shadow:0 1px 0 rgba(255,255,255,.5) inset, 2px 3px 0 -1px rgba(33,28,24,.05);
+}
+.is-loaded .note{ transition:opacity .7s var(--ease), transform .7s var(--ease); opacity:1; transform:none; }
+.is-loaded .note.n2{ transition-delay:2.3s; }
+.is-loaded .note.n3{ transition-delay:2.7s; }
+.note.n1{ transition-delay:1.0s; }
+
+.note .who{
+  display:flex; align-items:center; gap:.5rem; margin-bottom:.5rem;
+  font-family:"Spline Sans Mono", monospace; font-size:.66rem; letter-spacing:.08em;
+  text-transform:uppercase; color:var(--accent);
+}
+.note .who .tag{ width:6px; height:6px; border-radius:50%; background:var(--accent); }
+.note .who .meta{ margin-left:auto; color:var(--ink-faint); letter-spacing:.04em; }
+.note p{ margin:0; font-size:.94rem; line-height:1.5; color:var(--ink); }
+.note p em{ color:var(--accent); font-style:italic; }
+.note.teal{ --accent:var(--teal); }
+.note.gold{ --accent:var(--gold); }
+
+/* When a note is linked to text, both brighten */
+.note.is-active{ border-color:var(--accent); box-shadow:0 0 0 1px var(--accent), 4px 5px 0 -2px rgba(33,28,24,.08); transform:translateX(-2px); }
+
+/* ============================================================
+   Section scaffolding
+   ============================================================ */
+section{ position:relative; }
+.wrap{ max-width:74rem; margin:0 auto; padding-inline:clamp(1rem,4vw,3rem); }
+.measure{ max-width:46rem; }
+
+.section-head{ display:flex; align-items:flex-end; justify-content:space-between; gap:2rem; flex-wrap:wrap;
+  padding-block:clamp(2rem,5vw,3.4rem) 1.6rem; border-top:1px solid var(--rule); }
+.section-head h2{ font-size:clamp(1.9rem,1.1rem+2.6vw,3rem); max-width:20ch; }
+.section-head .idx{ font-family:"Spline Sans Mono", monospace; font-size:.72rem; letter-spacing:.18em;
+  text-transform:uppercase; color:var(--ink-faint); white-space:nowrap; }
+
+/* reveal-on-scroll */
+.rise{ opacity:0; transform:translateY(22px); transition:opacity .8s var(--ease), transform .8s var(--ease); }
+.rise.in{ opacity:1; transform:none; }
+
+/* ---- Three reviewers ---- */
+.reviewers{ display:grid; grid-template-columns:repeat(3,1fr); gap:1px;
+  background:var(--rule); border:1px solid var(--rule); border-radius:6px; overflow:hidden;
+  margin-bottom:clamp(2.5rem,6vw,4.5rem); }
+@media (max-width:820px){ .reviewers{ grid-template-columns:1fr; } }
+.rev{ background:var(--paper); padding:1.8rem 1.6rem 2rem; position:relative; transition:background .4s var(--ease); }
+.rev:hover{ background:var(--paper-deep); }
+.rev .num{ font-family:"Fraunces", serif; font-size:3.2rem; line-height:1; color:var(--redpen);
+  font-weight:430; opacity:.9; }
+.rev:nth-child(2) .num{ color:var(--teal); }
+.rev:nth-child(3) .num{ color:var(--gold); }
+.rev h3{ font-size:1.34rem; margin:.7rem 0 .5rem; }
+.rev p{ margin:0; color:var(--ink-soft); font-size:.98rem; }
+.rev .ck{ margin-top:1.1rem; display:flex; flex-direction:column; gap:.45rem; }
+.rev .ck span{ font-family:"Spline Sans Mono", monospace; font-size:.72rem; color:var(--ink-faint);
+  display:flex; align-items:center; gap:.55rem; }
+.rev .ck span::before{ content:""; width:14px; height:14px; border:1px solid var(--ink-faint);
+  border-radius:3px; background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath d='M1.5 5.2 4 7.5 8.5 2.5' fill='none' stroke='%231f5e58' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/8px no-repeat; }
+
+/* ============================================================
+   The showpiece — a real paragraph being reviewed, with the
+   actual product mechanic: dismiss / address / undo.
+   ============================================================ */
+.demo{
+  background:var(--paper-dark); color:#e9e3d6;
+  border-radius:10px; overflow:hidden;
+  box-shadow:0 30px 60px -30px rgba(20,16,12,.6);
+  margin-bottom:clamp(2.5rem,6vw,4.5rem);
+}
+.demo-bar{ display:flex; align-items:center; gap:.7rem; padding:.85rem 1.2rem;
+  border-bottom:1px solid rgba(255,255,255,.09);
+  font-family:"Spline Sans Mono", monospace; font-size:.72rem; letter-spacing:.06em; color:#b9b0a0; }
+.demo-bar .lights{ display:flex; gap:.4rem; }
+.demo-bar .lights i{ width:10px; height:10px; border-radius:50%; background:rgba(255,255,255,.16); }
+.demo-bar .lights i:first-child{ background:var(--redpen-br); }
+.demo-bar .file{ margin-left:.4rem; color:#e9e3d6; }
+.demo-bar .status{ margin-left:auto; display:inline-flex; align-items:center; gap:.5ch; color:var(--gold); }
+
+.demo-body{
+  display:grid; grid-template-columns:minmax(0,1fr) 19rem; gap:0;
+}
+@media (max-width:820px){ .demo-body{ grid-template-columns:1fr; } }
+
+.manuscript{
+  padding:clamp(1.6rem,3vw,2.6rem);
+  font-family:"Newsreader", serif; font-size:1.08rem; line-height:1.74; color:#e9e3d6;
+  border-right:1px solid rgba(255,255,255,.08);
+}
+.manuscript .h{ font-family:"Fraunces", serif; font-size:1.4rem; color:#fff; margin:0 0 .2rem; font-weight:430; }
+.manuscript .sub{ font-family:"Spline Sans Mono", monospace; font-size:.7rem; letter-spacing:.1em;
+  text-transform:uppercase; color:#9a917f; margin-bottom:1.2rem; }
+.dropcap::first-letter{
+  font-family:"Fraunces", serif; font-weight:500; float:left; font-size:3.5rem; line-height:.8;
+  padding:.15rem .12rem 0 0; color:var(--gold);
+}
+
+/* highlighted spans anchored to comments */
+.anno{
+  cursor:pointer; border-radius:2px; padding:0 .06em;
+  background:linear-gradient(transparent 62%, var(--hl,rgba(178,58,72,.4)) 62%);
+  transition:background .3s var(--ease), color .3s var(--ease);
+}
+.anno[data-pen="rigor"]{ --hl:rgba(178,58,72,.42); }
+.anno[data-pen="clarity"]{ --hl:rgba(194,138,58,.42); }
+.anno[data-pen="cite"]{ --hl:rgba(80,160,150,.40); }
+.anno.is-active{ background:var(--hl); }
+.anno.resolved{ background:transparent; color:#e9e3d6; text-decoration:line-through .04em rgba(255,255,255,.25); }
+
+.comments{ padding:1.1rem; display:flex; flex-direction:column; gap:.8rem; background:rgba(0,0,0,.14); }
+.comments .rail{ font-family:"Spline Sans Mono", monospace; font-size:.64rem; letter-spacing:.2em;
+  text-transform:uppercase; color:#8c8372; display:flex; align-items:center; gap:.5rem; }
+.comments .rail .count{ margin-left:auto; color:var(--gold); }
+
+.cmt{
+  --c:var(--redpen-br);
+  background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08);
+  border-left:3px solid var(--c); border-radius:5px; padding:.75rem .8rem;
+  transition:transform .3s var(--ease), border-color .3s var(--ease), opacity .35s var(--ease), background .3s var(--ease);
+}
+.cmt[data-pen="clarity"]{ --c:var(--gold); }
+.cmt[data-pen="cite"]{ --c:#50a096; }
+.cmt.is-active{ background:rgba(255,255,255,.08); transform:translateX(-3px); border-color:var(--c); }
+.cmt .top{ display:flex; align-items:center; gap:.5rem; margin-bottom:.4rem;
+  font-family:"Spline Sans Mono", monospace; font-size:.62rem; letter-spacing:.07em; text-transform:uppercase; color:var(--c); }
+.cmt .top .meta{ margin-left:auto; color:#857c6b; }
+.cmt p{ margin:0 0 .6rem; font-family:"Newsreader",serif; font-size:.9rem; line-height:1.45; color:#ded7c8; }
+.cmt .acts{ display:flex; gap:.4rem; }
+.cmt .acts button{
+  font-family:"Spline Sans Mono", monospace; font-size:.66rem; letter-spacing:.04em; cursor:pointer;
+  background:transparent; color:#cfc7b6; border:1px solid rgba(255,255,255,.16);
+  padding:.34rem .6rem; border-radius:3px; transition:all .2s var(--ease);
+}
+.cmt .acts button:hover{ border-color:rgba(255,255,255,.4); color:#fff; }
+.cmt .acts button.address:hover{ background:var(--teal); border-color:var(--teal); color:#fff; }
+.cmt .acts button.dismiss:hover{ background:var(--redpen); border-color:var(--redpen); color:#fff; }
+
+.cmt.done{ opacity:.5; }
+.cmt.done .acts{ display:none; }
+.cmt .resolved-row{ display:none; align-items:center; gap:.55rem;
+  font-family:"Spline Sans Mono", monospace; font-size:.66rem; color:#9a917f; }
+.cmt.done .resolved-row{ display:flex; }
+.cmt .resolved-row .badge{ color:var(--teal); }
+.cmt.dismissed .resolved-row .badge{ color:var(--redpen-br); }
+.cmt .resolved-row button{ margin-left:auto; background:none; border:0; cursor:pointer;
+  color:#9a917f; text-decoration:underline; font:inherit; }
+.cmt .resolved-row button:hover{ color:#fff; }
+
+/* ============================================================
+   Closing band + footer colophon
+   ============================================================ */
+.closer{ text-align:center; padding-block:clamp(3rem,8vw,6rem); border-top:1px solid var(--rule); }
+.closer .kicker{ margin-bottom:1rem; }
+.closer h2{ font-size:clamp(2.1rem,1.2rem+3.4vw,4rem); max-width:18ch; margin:0 auto 1.6rem;
+  font-style:italic; font-weight:400; }
+.closer .btn{ font-size:.85rem; padding:.95rem 1.5rem; }
+
+.colophon{ background:var(--paper-dark); color:#cfc7b6; }
+.colophon .wrap{ display:grid; grid-template-columns:2fr 1fr 1fr 1fr; gap:2rem;
+  padding-block:clamp(2.5rem,5vw,3.5rem); }
+@media (max-width:760px){ .colophon .wrap{ grid-template-columns:1fr 1fr; } }
+.colophon .lead .glyph{ font-family:"Fraunces", serif; font-size:1.5rem; color:#fff; }
+.colophon .lead .glyph b{ color:var(--redpen-br); }
+.colophon .lead p{ max-width:30ch; color:#9a917f; font-size:.92rem; margin:.7rem 0 0; }
+.colophon h4{ font-family:"Spline Sans Mono", monospace; font-size:.66rem; letter-spacing:.16em;
+  text-transform:uppercase; color:#857c6b; margin:0 0 .9rem; font-weight:500; }
+.colophon ul{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:.55rem; }
+.colophon a{ text-decoration:none; color:#cfc7b6; font-family:"Spline Sans Mono", monospace; font-size:.78rem;
+  transition:color .2s var(--ease); }
+.colophon a:hover{ color:#fff; }
+.colophon .foot{ border-top:1px solid rgba(255,255,255,.1); }
+.colophon .foot .wrap{ display:flex; justify-content:space-between; gap:1rem; flex-wrap:wrap;
+  padding-block:1.1rem; font-family:"Spline Sans Mono", monospace; font-size:.68rem; color:#857c6b; }
+
+::selection{ background:var(--redpen); color:var(--paper); }
+
+/* ---- Respect reduced motion: land everything in its final state ---- */
+@media (prefers-reduced-motion: reduce){
+  *{ animation:none !important; transition:none !important; }
+  .title .reveal > span{ transform:none !important; opacity:1 !important; }
+  .mark.underline::after{ clip-path:inset(0 0 0 0) !important; }
+  .mark.edit .old::before{ transform:scaleX(1) !important; }
+  .mark.edit .new{ opacity:1 !important; transform:translate(-50%,0) !important; }
+  .note{ opacity:1 !important; transform:none !important; }
+  .rise{ opacity:1 !important; transform:none !important; }
+  .dateline .pulse{ box-shadow:none !important; }
+}
+</style>
+</head>
+
+<body>
+
+<!-- ============================ MASTHEAD ============================ -->
+<header class="masthead">
+  <a class="brand" href="#top" aria-label="PerfectPaper home">
+    <span class="glyph">Perfect<b>Paper</b></span>
+    <span class="vol">Vol. I · No. 4</span>
+  </a>
+  <nav class="mast-nav" aria-label="Primary">
+    <a class="lnk" href="#reviewers">Reviewers</a>
+    <a class="lnk" href="#sample">A sample review</a>
+    <a class="lnk" href="#pricing">Pricing</a>
+    <a class="btn btn-primary" href="#upload">Upload draft</a>
+  </nav>
+</header>
+
+<main id="top">
+
+  <!-- ============================ HERO ============================ -->
+  <section class="hero" aria-labelledby="hero-title">
+    <div class="hero-col">
+      <p class="dateline">
+        <span>Peer review</span><span class="dot"></span>
+        <span>before submission</span><span class="dot"></span>
+        <span class="live"><span class="pulse"></span> reviewing&hellip;</span>
+      </p>
+
+      <h1 class="title" id="hero-title">
+        <span class="reveal"><span>Your paper,</span></span>
+        <span class="reveal"><span><span class="mark underline" data-link="n1">peer&#8209;reviewed</span></span></span>
+        <span class="reveal"><span>before you
+          <span class="mark edit" data-link="n2"><span class="old">send</span><span class="new">submit</span></span> it.</span></span>
+      </h1>
+
+      <p class="lede">
+        Upload a draft and three tireless reviewers read it like a journal panel would —
+        flagging <b>unsupported claims</b>, <b>muddy prose</b>, and <b>thin citations</b> as margin
+        comments you can address, dismiss, or undo. The feedback you'd wait three months for,
+        the afternoon you write it.
+      </p>
+
+      <div class="cta-row">
+        <a class="btn btn-primary" href="#upload">Upload your draft <span aria-hidden="true">→</span></a>
+        <a class="arrow" href="#sample">Read a sample review <span class="a" aria-hidden="true">↘</span></a>
+      </div>
+
+      <div class="trust">
+        <div class="stamps" aria-hidden="true"><span>R</span><span>K</span><span>M</span><span>+</span></div>
+        <span>Trusted by 1,200+ researchers across 40 institutions.</span>
+      </div>
+    </div>
+
+    <!-- The margin: reviewers annotating the title above -->
+    <aside class="margin" aria-label="Reviewer notes">
+      <p class="margin-rail">In the margin</p>
+
+      <article class="note n1" data-note="n1">
+        <p class="who"><span class="tag"></span> Reviewer I · Clarity <span class="meta">09:14</span></p>
+        <p>Strong phrase — but make the promise concrete. <em>Peer-reviewed</em> by whom, against what bar?</p>
+      </article>
+
+      <article class="note n2 teal" data-note="n2">
+        <p class="who"><span class="tag"></span> Reviewer II · Word choice <span class="meta">09:14</span></p>
+        <p>&ldquo;Send&rdquo; undersells it. <em>Submit</em> matches the stakes of a journal deadline.</p>
+      </article>
+
+      <article class="note n3 gold" data-note="n3">
+        <p class="who"><span class="tag"></span> Editor's note <span class="meta">09:15</span></p>
+        <p>Two of three reviewers recommend revisions. Average turnaround: <em>under 90 seconds.</em></p>
+      </article>
+    </aside>
+  </section>
+
+  <!-- ============================ REVIEWERS ============================ -->
+  <section id="reviewers" class="reviewers-section">
+    <div class="wrap">
+      <div class="section-head">
+        <h2 class="rise">A full review panel,<br>not a grammar checker.</h2>
+        <span class="idx rise">§ 01 — The panel</span>
+      </div>
+
+      <div class="reviewers rise">
+        <div class="rev">
+          <div class="num">I</div>
+          <h3>The methodologist</h3>
+          <p>Reads for rigor. Pushes on every claim that outruns its evidence and every result the data can't quite carry.</p>
+          <div class="ck">
+            <span>Overstated findings</span>
+            <span>Missing controls &amp; caveats</span>
+            <span>Statistical hand-waving</span>
+          </div>
+        </div>
+        <div class="rev">
+          <div class="num">II</div>
+          <h3>The editor</h3>
+          <p>Reads for clarity. Untangles long sentences, kills hedging, and keeps your argument moving from line to line.</p>
+          <div class="ck">
+            <span>Buried topic sentences</span>
+            <span>Passive, padded prose</span>
+            <span>Undefined jargon</span>
+          </div>
+        </div>
+        <div class="rev">
+          <div class="num">III</div>
+          <h3>The librarian</h3>
+          <p>Reads for the record. Checks that claims are cited, sources are real, and the literature you lean on actually says what you say.</p>
+          <div class="ck">
+            <span>Uncited assertions</span>
+            <span>Misattributed quotes</span>
+            <span>Gaps in related work</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ THE SAMPLE REVIEW ============================ -->
+  <section id="sample">
+    <div class="wrap">
+      <div class="section-head">
+        <h2 class="rise">Every comment is<br>an action, not a verdict.</h2>
+        <span class="idx rise">§ 02 — A live review</span>
+      </div>
+
+      <figure class="demo rise" aria-label="A sample review you can act on">
+        <div class="demo-bar">
+          <span class="lights" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="file">draft_v3 · Methods.tex</span>
+          <span class="status"><span class="pulse-dot">●</span> <span data-open-count>3</span> open comments</span>
+        </div>
+
+        <div class="demo-body">
+          <div class="manuscript">
+            <p class="h">2.1 — Experimental setup</p>
+            <p class="sub">Section 2 · Methods · paragraph 1</p>
+            <p class="dropcap">
+              Participants were recruited online and, as expected,
+              <span class="anno" data-pen="rigor" data-cmt="c1">the intervention dramatically improved every outcome we measured</span>.
+              Following standard practice
+              <span class="anno" data-pen="cite" data-cmt="c3">(Smith et al.)</span>,
+              we excluded incomplete responses. The remaining sample was, in our view,
+              <span class="anno" data-pen="clarity" data-cmt="c2">more than sufficiently large enough to robustly detect the kind of effect we were broadly anticipating</span>,
+              and results held across every specification we tried.
+            </p>
+          </div>
+
+          <aside class="comments" aria-label="Reviewer comments">
+            <p class="rail">Reviewer comments <span class="count"><span data-open-count>3</span> open</span></p>
+
+            <article class="cmt" data-pen="rigor" data-cmt="c1">
+              <p class="top"><span>Reviewer I · Rigor</span><span class="meta">L. 1</span></p>
+              <p>&ldquo;Dramatically improved <em>every</em> outcome&rdquo; is a strong, unhedged claim. State effect sizes and confidence intervals, or soften to what the data support.</p>
+              <div class="acts">
+                <button class="address" data-act="address">Address</button>
+                <button class="dismiss" data-act="dismiss">Dismiss</button>
+              </div>
+              <div class="resolved-row"><span class="badge">✓ addressed</span> <span class="rtext">Suggestion applied.</span> <button data-act="undo">undo</button></div>
+            </article>
+
+            <article class="cmt" data-pen="clarity" data-cmt="c2">
+              <p class="top"><span>Reviewer II · Clarity</span><span class="meta">L. 3</span></p>
+              <p>This sentence stacks four hedges. Try: &ldquo;the sample was large enough to detect the anticipated effect.&rdquo;</p>
+              <div class="acts">
+                <button class="address" data-act="address">Address</button>
+                <button class="dismiss" data-act="dismiss">Dismiss</button>
+              </div>
+              <div class="resolved-row"><span class="badge">✓ addressed</span> <span class="rtext">Suggestion applied.</span> <button data-act="undo">undo</button></div>
+            </article>
+
+            <article class="cmt" data-pen="cite" data-cmt="c3">
+              <p class="top"><span>Reviewer III · Citations</span><span class="meta">L. 2</span></p>
+              <p>Incomplete reference — no year or venue. Did you mean Smith, Okonkwo &amp; Lee (2021)? Confirm before submission.</p>
+              <div class="acts">
+                <button class="address" data-act="address">Address</button>
+                <button class="dismiss" data-act="dismiss">Dismiss</button>
+              </div>
+              <div class="resolved-row"><span class="badge">✓ addressed</span> <span class="rtext">Suggestion applied.</span> <button data-act="undo">undo</button></div>
+            </article>
+          </aside>
+        </div>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ============================ CLOSER ============================ -->
+  <section id="upload" class="closer">
+    <div class="wrap measure" style="margin-inline:auto;">
+      <p class="eyebrow kicker rise">Submit with conviction</p>
+      <h2 class="rise">Find what a reviewer would, while there's still time to fix it.</h2>
+      <div class="rise">
+        <a class="btn btn-primary" href="#upload">Upload your draft</a>
+      </div>
+      <p class="rise mono" style="margin-top:1.3rem; font-size:.72rem; letter-spacing:.06em; color:var(--ink-faint);">
+        Your first review is free · PDF, DOCX, LaTeX · nothing is used to train models
+      </p>
+    </div>
+  </section>
+</main>
+
+<!-- ============================ COLOPHON / FOOTER ============================ -->
+<footer class="colophon">
+  <div class="wrap">
+    <div class="lead">
+      <span class="glyph">Perfect<b>Paper</b></span>
+      <p>An AI peer reviewer for academic papers. Measured, warm, and exacting — the panel you wish you'd had before you hit submit.</p>
+    </div>
+    <div>
+      <h4>Product</h4>
+      <ul>
+        <li><a href="#reviewers">The panel</a></li>
+        <li><a href="#sample">Sample review</a></li>
+        <li><a href="#pricing">Pricing</a></li>
+        <li><a href="#upload">Upload a draft</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>For institutions</h4>
+      <ul>
+        <li><a href="#">Departments</a></li>
+        <li><a href="#">Site licenses</a></li>
+        <li><a href="#">API access</a></li>
+        <li><a href="#">Security</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>The record</h4>
+      <ul>
+        <li><a href="#">How it works</a></li>
+        <li><a href="#">Privacy</a></li>
+        <li><a href="#">Contact</a></li>
+        <li><a href="#">Status</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="foot">
+    <div class="wrap">
+      <span>© 2026 PerfectPaper — set in Fraunces, Newsreader &amp; Spline Sans Mono.</span>
+      <span>Printed on warm paper. No models trained on your work.</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* ---- Hero load sequence ---- */
+  function ignite(){
+    document.body.classList.add("is-loaded");
+    // draw the red-pen underline & strike once the title lines have risen
+    var delay = reduce ? 0 : 700;
+    setTimeout(function(){
+      var u = document.querySelector(".mark.underline");
+      var e = document.querySelector(".mark.edit");
+      if (u) u.classList.add("drawn");
+      if (e) e.classList.add("struck");
+    }, delay);
+  }
+  if (document.readyState === "complete") ignite();
+  else window.addEventListener("load", ignite, { once:true });
+  // failsafe in case fonts/load stall
+  setTimeout(ignite, 1200);
+
+  /* ---- Link hero margin notes to the title mark-ups (hover both ways) ---- */
+  function pair(markSel, attr){
+    document.querySelectorAll(markSel).forEach(function(el){
+      var id = el.getAttribute(attr);
+      var partner = document.querySelector('[data-note="'+id+'"]');
+      if (!partner) return;
+      var on  = function(){ el.classList.add("is-active"); partner.classList.add("is-active"); };
+      var off = function(){ el.classList.remove("is-active"); partner.classList.remove("is-active"); };
+      [el, partner].forEach(function(n){
+        n.addEventListener("mouseenter", on);
+        n.addEventListener("mouseleave", off);
+        n.addEventListener("focus", on, true);
+        n.addEventListener("blur", off, true);
+      });
+    });
+  }
+  pair(".mark[data-link]", "data-link");
+
+  /* ---- Demo: link annotated text <-> comment cards ---- */
+  function byCmt(id){ return document.querySelectorAll('[data-cmt="'+id+'"]'); }
+  document.querySelectorAll('.anno, .cmt').forEach(function(node){
+    var id = node.getAttribute('data-cmt');
+    node.addEventListener('mouseenter', function(){ byCmt(id).forEach(function(n){ n.classList.add('is-active'); }); });
+    node.addEventListener('mouseleave', function(){ byCmt(id).forEach(function(n){ n.classList.remove('is-active'); }); });
+  });
+
+  /* ---- Demo: dismiss / address / undo, with live open-count ---- */
+  function refreshCount(){
+    var open = document.querySelectorAll('.cmt:not(.done)').length;
+    document.querySelectorAll('[data-open-count]').forEach(function(n){ n.textContent = open; });
+  }
+  document.querySelectorAll('.cmt .acts button, .cmt .resolved-row button').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var cmt = btn.closest('.cmt');
+      var id  = cmt.getAttribute('data-cmt');
+      var act = btn.getAttribute('data-act');
+      var anno = document.querySelector('.anno[data-cmt="'+id+'"]');
+      if (act === 'address'){
+        cmt.classList.add('done'); cmt.classList.remove('dismissed');
+        if (anno) anno.classList.add('resolved');
+      } else if (act === 'dismiss'){
+        cmt.classList.add('done','dismissed');
+        var badge = cmt.querySelector('.resolved-row .badge');
+        var rtext = cmt.querySelector('.resolved-row .rtext');
+        if (badge) badge.textContent = '✕ dismissed';
+        if (rtext) rtext.textContent = 'Comment dismissed.';
+      } else if (act === 'undo'){
+        cmt.classList.remove('done','dismissed');
+        var b2 = cmt.querySelector('.resolved-row .badge');
+        var t2 = cmt.querySelector('.resolved-row .rtext');
+        if (b2) b2.textContent = '✓ addressed';
+        if (t2) t2.textContent = 'Suggestion applied.';
+        if (anno) anno.classList.remove('resolved');
+      }
+      refreshCount();
+    });
+  });
+
+  /* ---- Reveal-on-scroll ---- */
+  if (reduce){
+    document.querySelectorAll('.rise').forEach(function(n){ n.classList.add('in'); });
+  } else {
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){
+        if (en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); }
+      });
+    }, { threshold:.18, rootMargin:'0px 0px -8% 0px' });
+    document.querySelectorAll('.rise').forEach(function(n){ io.observe(n); });
+  }
+})();
+</script>
+</body>
+</html>

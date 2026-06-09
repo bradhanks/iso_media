@@ -1,0 +1,58 @@
+<.app
+  active={:history}
+  title={gettext("History")}
+  flash={@flash}
+  current_scope={@current_scope}
+  credit_alert={@credit_alert}
+  low_credit_dismissed?={@low_credit_dismissed?}
+  current_workspace={@current_workspace}
+  workspaces={@workspaces}
+>
+  <div class="mx-auto max-w-3xl">
+    <h1 class="ds-h2 mb-6">{gettext("Proofreading history")}</h1>
+
+    <div :if={@sessions == []} class="text-base-content/60 font-serif">
+      {gettext("No reviews yet. Upload a manuscript to get started.")}
+    </div>
+
+    <ul class="space-y-3">
+      <li
+        :for={session <- @sessions}
+        id={"session-#{session.id}"}
+        class="card card-border bg-base-100"
+      >
+        <div class="card-body flex-row items-center justify-between py-4">
+          <div>
+            <.link
+              navigate={~p"/history/#{session.id}"}
+              class="link link-hover font-display text-lg"
+            >
+              {session.title || gettext("Untitled manuscript")}
+            </.link>
+            <div class="mt-1 flex items-center gap-2">
+              <.badge color="secondary" variant="soft" size="sm">
+                {session.processing_status}
+              </.badge>
+              <.badge :if={not session.viewed} color="primary" size="sm">{gettext("New")}</.badge>
+            </div>
+          </div>
+          <div class="flex items-center gap-4">
+            <span class="text-sm text-base-content/50 font-sans">
+              {gettext("%{count} comments", count: session.comments_count)}
+            </span>
+            <button
+              type="button"
+              id={"session-#{session.id}-delete"}
+              class="btn btn-ghost btn-xs text-base-content/40 hover:text-error font-sans"
+              phx-click="delete"
+              phx-value-id={session.id}
+              data-confirm={gettext("Delete this review permanently? This cannot be undone.")}
+            >
+              {gettext("Delete")}
+            </button>
+          </div>
+        </div>
+      </li>
+    </ul>
+  </div>
+</.app>

@@ -11,5 +11,6 @@ defmodule ISOMedia.FullBox do
   def encode(version, <<_::24>> = flags, payload), do: [<<version::8>>, flags, payload]
 
   @doc "Like `encode/3` but returns a binary — the form every typed view's `encode/1` needs."
-  def encode_data(version, flags, payload), do: IO.iodata_to_binary(encode(version, flags, payload))
+  def encode_data(version, flags, payload),
+    do: IO.iodata_to_binary(encode(version, flags, payload))
 end
