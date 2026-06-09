@@ -5,7 +5,7 @@ defmodule ISOMedia.MdatSource do
   is lazy, or a `binary` slice when it is in memory. Shared by `Extract` and `Trim`.
   """
 
-  alias ISOMedia.{FileSlice, Layout}
+  alias ISOMedia.{Box, FileSlice, Layout}
 
   @doc """
   Capture each top-level `mdat`'s absolute payload range from a single `Layout` walk:
@@ -30,6 +30,23 @@ defmodule ISOMedia.MdatSource do
       end)
 
     records
+  end
+
+  @doc """
+  Build a synthesized segment-list `mdat`, stamped with the basis position its chunk
+  offsets were written against. `payload_start` is the absolute byte offset of the mdat
+  payload in the layout its offsets were baked for (what the builder already computed to
+  place chunks). The stamp gives `ISOMedia.Offsets.fix_chunk_offsets/1` a basis, so the
+  table can be remapped if the mdat later moves — no disk round-trip needed.
+  """
+  def synthesized_mdat(segments, size_mode, payload_start) do
+    box = %Box{type: "mdat", data: segments, size_mode: size_mode}
+
+    %{
+      box
+      | source_offset: payload_start - Layout.header_size(box),
+        source_size: Layout.box_size(box)
+    }
   end
 
   @doc """
