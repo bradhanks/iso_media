@@ -75,34 +75,35 @@ defmodule ISOMedia do
   @spec fragment(tree(), keyword()) :: tree()
   def fragment(boxes, opts \\ []), do: ISOMedia.Fragment.fragment(boxes, opts)
 
-  @doc "Split a fragmented tree into a CMAF init segment + media segments. See `ISOMedia.Segment.split/1`."
+  @doc "Split a fragmented tree into a CMAF init segment + media segments. See `ISOMedia.Streaming.split_segments/1`."
   @spec split_segments(tree()) :: %{init: tree(), segments: [tree()]}
-  def split_segments(boxes), do: ISOMedia.Segment.split(boxes)
+  def split_segments(boxes), do: ISOMedia.Streaming.split_segments(boxes)
 
-  @doc "Write a fragmented tree's init + media segment files into `dir`. See `ISOMedia.Segment.write_segments/3`."
+  @doc "Write a fragmented tree's init + media segment files into `dir`. See `ISOMedia.Streaming.write_segments/3`."
   @spec write_segments(Path.t(), tree(), keyword()) :: {:ok, [Path.t()]} | {:error, term()}
   def write_segments(dir, boxes, opts \\ []),
-    do: ISOMedia.Segment.write_segments(dir, boxes, opts)
+    do: ISOMedia.Streaming.write_segments(dir, boxes, opts)
 
-  @doc "Generate the HLS media playlist (`.m3u8`) for a fragmented tree. See `ISOMedia.HLS.media_playlist/2`."
+  @doc "Generate the HLS media playlist (`.m3u8`) for a fragmented tree. See `ISOMedia.Streaming.hls_media_playlist/2`."
   @spec hls_media_playlist(tree(), keyword()) :: String.t()
-  def hls_media_playlist(boxes, opts \\ []), do: ISOMedia.HLS.media_playlist(boxes, opts)
+  def hls_media_playlist(boxes, opts \\ []), do: ISOMedia.Streaming.hls_media_playlist(boxes, opts)
 
-  @doc "Generate the HLS multivariant playlist (`.m3u8`) for a fragmented tree. See `ISOMedia.HLS.master_playlist/2`."
+  @doc "Generate the HLS multivariant playlist (`.m3u8`) for a fragmented tree. See `ISOMedia.Streaming.hls_master_playlist/2`."
   @spec hls_master_playlist(tree(), keyword()) :: String.t()
-  def hls_master_playlist(boxes, opts \\ []), do: ISOMedia.HLS.master_playlist(boxes, opts)
+  def hls_master_playlist(boxes, opts \\ []),
+    do: ISOMedia.Streaming.hls_master_playlist(boxes, opts)
 
-  @doc "Write a full HLS bundle (playlists + segments) into `dir`. See `ISOMedia.HLS.write_hls/3`."
+  @doc "Write a full HLS bundle (playlists + segments) into `dir`. See `ISOMedia.Streaming.write_hls/3`."
   @spec write_hls(Path.t(), tree(), keyword()) :: {:ok, [Path.t()]}
-  def write_hls(dir, boxes, opts \\ []), do: ISOMedia.HLS.write_hls(dir, boxes, opts)
+  def write_hls(dir, boxes, opts \\ []), do: ISOMedia.Streaming.write_hls(dir, boxes, opts)
 
-  @doc "Generate the DASH MPD (`.mpd`) for a fragmented tree. See `ISOMedia.DASH.manifest/2`."
+  @doc "Generate the DASH MPD (`.mpd`) for a fragmented tree. See `ISOMedia.Streaming.dash_manifest/2`."
   @spec dash_manifest(tree(), keyword()) :: String.t()
-  def dash_manifest(boxes, opts \\ []), do: ISOMedia.DASH.manifest(boxes, opts)
+  def dash_manifest(boxes, opts \\ []), do: ISOMedia.Streaming.dash_manifest(boxes, opts)
 
-  @doc "Write a full DASH bundle (MPD + segments) into `dir`. See `ISOMedia.DASH.write_dash/3`."
+  @doc "Write a full DASH bundle (MPD + segments) into `dir`. See `ISOMedia.Streaming.write_dash/3`."
   @spec write_dash(Path.t(), tree(), keyword()) :: {:ok, [Path.t()]}
-  def write_dash(dir, boxes, opts \\ []), do: ISOMedia.DASH.write_dash(dir, boxes, opts)
+  def write_dash(dir, boxes, opts \\ []), do: ISOMedia.Streaming.write_dash(dir, boxes, opts)
 
   @doc "Decode a track's codec + media metadata into `%ISOMedia.TrackInfo{}`. See `ISOMedia.Codec.info/1`."
   @spec track_info(tree(), pos_integer()) :: ISOMedia.TrackInfo.t()
@@ -121,23 +122,23 @@ defmodule ISOMedia do
   @spec faststart(tree()) :: tree()
   def faststart(boxes), do: ISOMedia.Offsets.faststart(boxes)
 
-  @doc "Build a `ISOMedia.SeekIndex` for random-access reads over a tree. See `ISOMedia.SeekIndex.build/1`."
+  @doc "Build a `ISOMedia.SeekIndex` for random-access reads over a tree. See `ISOMedia.Streaming.seek_index/1`."
   @spec seek_index(tree() | ISOMedia.Box.t()) :: ISOMedia.SeekIndex.t()
-  def seek_index(boxes), do: ISOMedia.SeekIndex.build(boxes)
+  def seek_index(boxes), do: ISOMedia.Streaming.seek_index(boxes)
 
-  @doc "Read bytes `[offset, offset+length)` of a tree's serialization. See `ISOMedia.SeekIndex.read_range/3`."
+  @doc "Read bytes `[offset, offset+length)` of a tree's serialization. See `ISOMedia.Streaming.read_range/3`."
   @spec read_range(ISOMedia.SeekIndex.t(), non_neg_integer(), non_neg_integer()) :: binary()
-  def read_range(index, offset, length), do: ISOMedia.SeekIndex.read_range(index, offset, length)
+  def read_range(index, offset, length), do: ISOMedia.Streaming.read_range(index, offset, length)
 
-  @doc "Lazily stream bytes `[offset, offset+length)` of a tree's serialization. See `ISOMedia.SeekIndex.stream_range/4`."
+  @doc "Lazily stream bytes `[offset, offset+length)` of a tree's serialization. See `ISOMedia.Streaming.stream_range/4`."
   @spec stream_range(ISOMedia.SeekIndex.t(), non_neg_integer(), non_neg_integer(), pos_integer()) ::
           Enumerable.t()
   def stream_range(index, offset, length, chunk_size \\ 65_536),
-    do: ISOMedia.SeekIndex.stream_range(index, offset, length, chunk_size)
+    do: ISOMedia.Streaming.stream_range(index, offset, length, chunk_size)
 
-  @doc "Total serialized size of the indexed tree (HTTP `Content-Length`). See `ISOMedia.SeekIndex.content_length/1`."
+  @doc "Total serialized size of the indexed tree (HTTP `Content-Length`). See `ISOMedia.Streaming.content_length/1`."
   @spec content_length(ISOMedia.SeekIndex.t()) :: non_neg_integer()
-  def content_length(index), do: ISOMedia.SeekIndex.content_length(index)
+  def content_length(index), do: ISOMedia.Streaming.content_length(index)
 
   @doc """
   Read a file and parse it. Pass `lazy: true` to keep large leaf payloads
