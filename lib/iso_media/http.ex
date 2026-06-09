@@ -268,9 +268,8 @@ defmodule ISOMedia.HTTP do
       {:ok, [{f, l}]} ->
         single(res, req, f, l)
 
-      {:ok, ranges} when length(ranges) > 1 ->
-        # TEMP stub until the multipart task; never asserted by this task's tests.
-        full(res, req)
+      {:ok, ranges} ->
+        multipart(res, req, ranges)
     end
   end
 
@@ -290,6 +289,101 @@ defmodule ISOMedia.HTTP do
         ]
 
     resp(206, headers, {:range, res.index, f, len}, req)
+  end
+
+  defp multipart(res, req, ranges) do
+    boundary = boundary(res.etag, ranges)
+
+    parts =
+      Enum.map(ranges, fn {f, l} ->
+        preamble =
+          IO.iodata_to_binary([
+            "--",
+            boundary,
+            "\r\nContent-Type: ",
+            res.content_type,
+            "\r\nContent-Range: bytes ",
+            Integer.to_string(f),
+            "-",
+            Integer.to_string(l),
+            "/",
+            Integer.to_string(res.content_length),
+            "\r\n\r\n"
+          ])
+
+        %{first: f, last: l, preamble: preamble}
+      end)
+
+    epilogue = "--" <> boundary <> "--\r\n"
+    len = multipart_length(parts, epilogue)
+
+    headers =
+      [{"accept-ranges", "bytes"}, {"etag", res.etag}] ++
+        last_modified_header(res) ++
+        [
+          {"content-type", "multipart/byteranges; boundary=" <> boundary},
+          {"content-length", Integer.to_string(len)}
+        ]
+
+    resp(206, headers, {:multipart, boundary, parts, res.index}, req)
+  end
+
+  defp multipart_length(parts, epilogue) do
+    Enum.reduce(parts, byte_size(epilogue), fn p, acc ->
+      acc + byte_size(p.preamble) + (p.last - p.first + 1) + 2
+    end)
+  end
+
+  defp boundary(etag, ranges) do
+    digest = :erlang.md5(etag <> :erlang.term_to_binary(ranges))
+    "ISOMedia" <> Base.encode16(digest, case: :lower)
+  end
+
+  @doc "Materialize the response body as iodata (small bodies / tests)."
+  @spec body_iodata(Response.t()) :: iodata()
+  def body_iodata(%Response{body: :empty}), do: []
+
+  def body_iodata(%Response{body: {:full, idx}}),
+    do: SeekIndex.read_range(idx, 0, SeekIndex.content_length(idx))
+
+  def body_iodata(%Response{body: {:range, idx, off, len}}),
+    do: SeekIndex.read_range(idx, off, len)
+
+  def body_iodata(%Response{body: {:multipart, boundary, parts, idx}}) do
+    parts_io =
+      Enum.flat_map(parts, fn p ->
+        [p.preamble, SeekIndex.read_range(idx, p.first, p.last - p.first + 1), "\r\n"]
+      end)
+
+    parts_io ++ ["--" <> boundary <> "--\r\n"]
+  end
+
+  @doc """
+  Lazily stream the response body as `chunk_size`-byte binaries (O(range), leak-safe over
+  `SeekIndex.stream_range`).
+  """
+  @spec body_stream(Response.t(), pos_integer()) :: Enumerable.t()
+  def body_stream(response, chunk_size \\ 65_536)
+
+  def body_stream(%Response{body: :empty}, _cs), do: Stream.concat([])
+
+  def body_stream(%Response{body: {:full, idx}}, cs),
+    do: SeekIndex.stream_range(idx, 0, SeekIndex.content_length(idx), cs)
+
+  def body_stream(%Response{body: {:range, idx, off, len}}, cs),
+    do: SeekIndex.stream_range(idx, off, len, cs)
+
+  def body_stream(%Response{body: {:multipart, boundary, parts, idx}}, cs) do
+    part_streams =
+      Enum.map(parts, fn p ->
+        Stream.concat([
+          [p.preamble],
+          SeekIndex.stream_range(idx, p.first, p.last - p.first + 1, cs),
+          ["\r\n"]
+        ])
+      end)
+
+    Stream.concat(part_streams ++ [["--" <> boundary <> "--\r\n"]])
   end
 
   defp resp(status, headers, _body, %Request{method: :head}),

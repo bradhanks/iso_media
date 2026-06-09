@@ -79,10 +79,12 @@ defmodule ISOMedia.HTTP.ServeTest do
       refute Enum.any?(resp.headers, fn {k, _} -> k == "accept-ranges" end)
     end
 
-    test "multi-range currently hits the temporary stub (200 full) until multipart lands" do
+    test "multi-range now produces a 206 multipart/byteranges response" do
       resp = HTTP.serve(res(), request("GET", %{"range" => "bytes=0-9,20-29"}))
-      assert resp.status == 200
-      assert match?({:full, _}, resp.body)
+      assert resp.status == 206
+      assert match?({:multipart, _boundary, _parts, _idx}, resp.body)
+      ct = resp.headers |> Enum.into(%{}) |> Map.fetch!("content-type")
+      assert String.starts_with?(ct, "multipart/byteranges; boundary=")
     end
   end
 end
