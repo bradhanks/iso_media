@@ -11,6 +11,7 @@
 **Spec:** `docs/superpowers/specs/2026-06-09-virtual-seekable-media-design.md` (phase doc: `docs/superpowers/specs/phase-1/2026-06-08-virtual-seekable-media.md`).
 
 **Branch:** `feat/virtual-seekable-media`. Attribution is disabled — do **not** add a `Co-Authored-By` trailer.
+> **Test cadence:** tests are written per task but **not run per task** — do not run `mix test`/`mix compile` during the build. The suite runs **once at the end** (Task 9). Commits within a task are made without an intermediate green check.
 
 ---
 
@@ -32,7 +33,7 @@
 - Modify: `lib/iso_media/serializer.ex` (add a public function near `encode_header/2`)
 - Test: `test/iso_media/serializer_test.exs`
 
-- [ ] **Step 1: Write the failing test**
+- [ ] **Step 1: Write the test**
 
 Add to `test/iso_media/serializer_test.exs` (inside the test module):
 
@@ -66,12 +67,7 @@ Add to `test/iso_media/serializer_test.exs` (inside the test module):
   end
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
-
-Run: `mix test test/iso_media/serializer_test.exs`
-Expected: FAIL — `(UndefinedFunctionError) function ISOMedia.Serializer.header_bytes/1 is undefined`.
-
-- [ ] **Step 3: Implement `header_bytes/1`**
+- [ ] **Step 2: Implement `header_bytes/1`**
 
 In `lib/iso_media/serializer.ex`, add this public function immediately above the private `encode_header/2` clauses (around line 68, after `encode_payload/1`):
 
@@ -89,12 +85,7 @@ In `lib/iso_media/serializer.ex`, add this public function immediately above the
   end
 ```
 
-- [ ] **Step 4: Run the test to verify it passes**
-
-Run: `mix test test/iso_media/serializer_test.exs`
-Expected: PASS.
-
-- [ ] **Step 5: Commit**
+- [ ] **Step 3: Commit**
 
 ```bash
 git add lib/iso_media/serializer.ex test/iso_media/serializer_test.exs
@@ -109,7 +100,7 @@ git commit -m "feat: public Serializer.header_bytes/1 (size+type+uuid) for index
 - Modify: `lib/iso_media/file_slice.ex`
 - Test: `test/iso_media/file_slice_test.exs`
 
-- [ ] **Step 1: Write the failing test**
+- [ ] **Step 1: Write the test**
 
 Add to `test/iso_media/file_slice_test.exs` (it already exercises `FileSlice`; use `@tag :tmp_dir` for the scratch file):
 
@@ -139,12 +130,7 @@ Add to `test/iso_media/file_slice_test.exs` (it already exercises `FileSlice`; u
   end
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
-
-Run: `mix test test/iso_media/file_slice_test.exs`
-Expected: FAIL — `(UndefinedFunctionError) function ISOMedia.FileSlice.read_range/3 is undefined`.
-
-- [ ] **Step 3: Implement `read_range/3`**
+- [ ] **Step 2: Implement `read_range/3`**
 
 In `lib/iso_media/file_slice.ex`, add after `read/1` (around line 35):
 
@@ -180,12 +166,7 @@ In `lib/iso_media/file_slice.ex`, add after `read/1` (around line 35):
 
 > Note: `:file.pread/3` with `len == 0` can return `:eof`; the `:eof when len == 0` clause returns `<<>>`. The `{:ok, data} when byte_size(data) == len` clause already covers a normal zero read on most platforms.
 
-- [ ] **Step 4: Run the test to verify it passes**
-
-Run: `mix test test/iso_media/file_slice_test.exs`
-Expected: PASS.
-
-- [ ] **Step 5: Commit**
+- [ ] **Step 3: Commit**
 
 ```bash
 git add lib/iso_media/file_slice.ex test/iso_media/file_slice_test.exs
@@ -200,7 +181,7 @@ git commit -m "feat: FileSlice.read_range/3 bounded leak-safe partial read"
 - Create: `lib/iso_media/seek_index.ex`
 - Test: `test/iso_media/seek_index_test.exs`
 
-- [ ] **Step 1: Write the failing test**
+- [ ] **Step 1: Write the test**
 
 Create `test/iso_media/seek_index_test.exs`:
 
@@ -237,12 +218,7 @@ defmodule ISOMedia.SeekIndexTest do
 end
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
-
-Run: `mix test test/iso_media/seek_index_test.exs`
-Expected: FAIL — `(UndefinedFunctionError) function ISOMedia.SeekIndex.build/1 is undefined`.
-
-- [ ] **Step 3: Implement the struct, `build/1`, `content_length/1`**
+- [ ] **Step 2: Implement the struct, `build/1`, `content_length/1`**
 
 Create `lib/iso_media/seek_index.ex`:
 
@@ -319,12 +295,7 @@ defmodule ISOMedia.SeekIndex do
 end
 ```
 
-- [ ] **Step 4: Run the test to verify it passes**
-
-Run: `mix test test/iso_media/seek_index_test.exs`
-Expected: PASS.
-
-- [ ] **Step 5: Commit**
+- [ ] **Step 3: Commit**
 
 ```bash
 git add lib/iso_media/seek_index.ex test/iso_media/seek_index_test.exs
@@ -339,7 +310,7 @@ git commit -m "feat: SeekIndex.build/1 + content_length/1 (flatten tree to offse
 - Modify: `lib/iso_media/seek_index.ex`
 - Test: `test/iso_media/seek_index_test.exs`
 
-- [ ] **Step 1: Write the failing property oracle + guard tests**
+- [ ] **Step 1: Write the property oracle + guard tests**
 
 Add to `test/iso_media/seek_index_test.exs` (the module already has `use ExUnitProperties`):
 
@@ -417,12 +388,7 @@ Add to `test/iso_media/seek_index_test.exs` (the module already has `use ExUnitP
   end
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
-
-Run: `mix test test/iso_media/seek_index_test.exs`
-Expected: FAIL — `(UndefinedFunctionError) function ISOMedia.SeekIndex.read_range/3 is undefined`.
-
-- [ ] **Step 3: Implement `read_range/3` + helpers**
+- [ ] **Step 2: Implement `read_range/3` + helpers**
 
 In `lib/iso_media/seek_index.ex`, add after `content_length/1`:
 
@@ -483,12 +449,7 @@ In `lib/iso_media/seek_index.ex`, add after `content_length/1`:
   defp read_provider({:slice, fs}, rel, n), do: FileSlice.read_range(fs, rel, n)
 ```
 
-- [ ] **Step 4: Run the tests to verify they pass**
-
-Run: `mix test test/iso_media/seek_index_test.exs`
-Expected: PASS (property + all unit tests).
-
-- [ ] **Step 5: Commit**
+- [ ] **Step 3: Commit**
 
 ```bash
 git add lib/iso_media/seek_index.ex test/iso_media/seek_index_test.exs
@@ -503,7 +464,7 @@ git commit -m "feat: SeekIndex.read_range/3 with clamp/bsearch/splice + input gu
 - Modify: `lib/iso_media/seek_index.ex`
 - Test: `test/iso_media/seek_index_test.exs`
 
-- [ ] **Step 1: Write the failing tests**
+- [ ] **Step 1: Write the tests**
 
 Add to `test/iso_media/seek_index_test.exs`:
 
@@ -553,12 +514,7 @@ Add to `test/iso_media/seek_index_test.exs`:
   end
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
-
-Run: `mix test test/iso_media/seek_index_test.exs`
-Expected: FAIL — `(UndefinedFunctionError) function ISOMedia.SeekIndex.stream_range/4 is undefined` (note the guard-clause `stream_range/4` that raises is also undefined yet, so the negative-input test errors as undefined too — that's fine, it passes once the function exists).
-
-- [ ] **Step 3: Implement `stream_range/4`**
+- [ ] **Step 2: Implement `stream_range/4`**
 
 In `lib/iso_media/seek_index.ex`, add after `read_provider/3`:
 
@@ -636,12 +592,7 @@ In `lib/iso_media/seek_index.ex`, add after `read_provider/3`:
   end
 ```
 
-- [ ] **Step 4: Run the tests to verify they pass**
-
-Run: `mix test test/iso_media/seek_index_test.exs`
-Expected: PASS.
-
-- [ ] **Step 5: Commit**
+- [ ] **Step 3: Commit**
 
 ```bash
 git add lib/iso_media/seek_index.ex test/iso_media/seek_index_test.exs
@@ -656,7 +607,7 @@ git commit -m "feat: SeekIndex.stream_range/4 lazy leak-safe streaming via Strea
 - Modify: `lib/iso_media.ex`
 - Test: `test/iso_media/seek_index_test.exs`
 
-- [ ] **Step 1: Write the failing test**
+- [ ] **Step 1: Write the test**
 
 Add to `test/iso_media/seek_index_test.exs`:
 
@@ -675,12 +626,7 @@ Add to `test/iso_media/seek_index_test.exs`:
   end
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
-
-Run: `mix test test/iso_media/seek_index_test.exs`
-Expected: FAIL — `(UndefinedFunctionError) function ISOMedia.seek_index/1 is undefined`.
-
-- [ ] **Step 3: Add the delegations**
+- [ ] **Step 2: Add the delegations**
 
 In `lib/iso_media.ex`, add after the `faststart/1` function (around line 121):
 
@@ -704,12 +650,7 @@ In `lib/iso_media.ex`, add after the `faststart/1` function (around line 121):
   def content_length(index), do: ISOMedia.SeekIndex.content_length(index)
 ```
 
-- [ ] **Step 4: Run the test to verify it passes**
-
-Run: `mix test test/iso_media/seek_index_test.exs`
-Expected: PASS.
-
-- [ ] **Step 5: Commit**
+- [ ] **Step 3: Commit**
 
 ```bash
 git add lib/iso_media.ex test/iso_media/seek_index_test.exs
@@ -798,12 +739,7 @@ Add to `test/iso_media/seek_index_test.exs`:
 
 > Note: the assertion `Enum.any?(... is_list(b.data) ...)` first confirms `trim` actually produced a segment-list `mdat`, so the oracle below genuinely exercises the segment-list provider path rather than passing vacuously.
 
-- [ ] **Step 2: Run the tests to verify they pass**
-
-Run: `mix test test/iso_media/seek_index_test.exs`
-Expected: PASS.
-
-- [ ] **Step 3: Commit**
+- [ ] **Step 2: Commit**
 
 ```bash
 git add test/iso_media/seek_index_test.exs
@@ -882,10 +818,7 @@ In `docs/ROADMAP.md`, under "## Shipped", add to the most recent version line (o
   streaming-origin primitive. Byte-exact against `serialize/1`.
 ```
 
-- [ ] **Step 4: Verify compile and commit**
-
-Run: `mix compile --warnings-as-errors`
-Expected: compiles with no warnings.
+- [ ] **Step 4: Commit**
 
 ```bash
 git add README.md CLAUDE.md docs/ROADMAP.md
