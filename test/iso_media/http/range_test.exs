@@ -63,6 +63,12 @@ defmodule ISOMedia.HTTP.RangeTest do
       header = "bytes=" <> Enum.map_join(0..200, ",", fn i -> "#{i * 10}-#{i * 10 + 1}" end)
       assert Range.parse(header, 1_000_000, max_ranges: 100) == :ignore
     end
+
+    test "a leading plus sign is a syntax error, not a number" do
+      assert Range.parse("bytes=+5-10", 1000) == :ignore
+      assert Range.parse("bytes=5-+10", 1000) == :ignore
+      assert Range.parse("bytes=-+5", 1000) == :ignore
+    end
   end
 
   describe "parse/3 — never raises (invariant #8)" do

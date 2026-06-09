@@ -44,7 +44,9 @@ defmodule ISOMedia.HTTP.Range do
   def parse(_header, total, _opts) when is_integer(total) and total >= 0, do: :ignore
 
   defp finalize(sat, coalesce?, max) do
-    ranges = if coalesce?, do: coalesce(Enum.sort(sat)), else: Enum.sort(sat)
+    sorted = Enum.sort(sat)
+    ranges = if coalesce?, do: coalesce(sorted), else: sorted
+    # Over the cap we intentionally degrade to a full 200 response (:ignore), not 416.
     if length(ranges) > max, do: :ignore, else: {:ok, ranges}
   end
 
@@ -81,36 +83,44 @@ defmodule ISOMedia.HTTP.Range do
 
   defp spec(spec, total) do
     case String.split(spec, "-", parts: 2) do
-      ["", suffix] ->
-        case int(suffix) do
-          {:ok, 0} -> :unsat
-          {:ok, n} -> {:ok, {max(0, total - n), total - 1}}
-          :error -> :error
-        end
-
-      [first, ""] ->
-        case int(first) do
-          {:ok, f} when f >= total -> :unsat
-          {:ok, f} -> {:ok, {f, total - 1}}
-          :error -> :error
-        end
-
-      [first, last] ->
-        case {int(first), int(last)} do
-          {{:ok, f}, {:ok, l}} when f <= l and f >= total -> :unsat
-          {{:ok, f}, {:ok, l}} when f <= l -> {:ok, {f, min(l, total - 1)}}
-          _ -> :error
-        end
-
-      _ ->
-        :error
+      ["", suffix] -> suffix_spec(suffix, total)
+      [first, ""] -> open_spec(first, total)
+      [first, last] -> closed_spec(first, last, total)
+      _ -> :error
     end
   end
 
-  defp int(s) do
-    case Integer.parse(s) do
-      {n, ""} when n >= 0 -> {:ok, n}
+  defp suffix_spec(suffix, total) do
+    case int(suffix) do
+      {:ok, 0} -> :unsat
+      {:ok, n} -> {:ok, {max(0, total - n), total - 1}}
+      :error -> :error
+    end
+  end
+
+  defp open_spec(first, total) do
+    case int(first) do
+      {:ok, f} when f >= total -> :unsat
+      {:ok, f} -> {:ok, {f, total - 1}}
+      :error -> :error
+    end
+  end
+
+  defp closed_spec(first, last, total) do
+    case {int(first), int(last)} do
+      {{:ok, f}, {:ok, l}} when f <= l and f >= total -> :unsat
+      {{:ok, f}, {:ok, l}} when f <= l -> {:ok, {f, min(l, total - 1)}}
       _ -> :error
+    end
+  end
+
+  # RFC 7233 byte-pos / suffix-length are 1*DIGIT — ASCII digits only.
+  # (Integer.parse/1 would accept a leading "+", so gate on digits first.)
+  defp int(s) do
+    if s != "" and String.match?(s, ~r/\A[0-9]+\z/) do
+      {:ok, String.to_integer(s)}
+    else
+      :error
     end
   end
 
