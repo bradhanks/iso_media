@@ -12,6 +12,8 @@
 
 **Branch:** `feat/synthesized-mdat-offsets`. Attribution is disabled — do **not** add a `Co-Authored-By` trailer to commits.
 
+> **Test cadence:** tests are written per task but **not run per task** — do not run `mix test`/`mix compile` during the build. The suite runs **once at the end** (final task). Commits within a task are made without an intermediate green check.
+
 ---
 
 ## File Structure
@@ -35,7 +37,7 @@
 - Modify: `lib/iso_media/mdat_source.ex:8` (alias) and add a function after `collect/1`
 - Test: `test/iso_media/mdat_source_test.exs`
 
-- [ ] **Step 1: Write the failing unit test**
+- [ ] **Step 1: Write the unit test**
 
 Add this `describe` block to `test/iso_media/mdat_source_test.exs` (the module already has `alias ISOMedia.{Box, FileSlice, MdatSource}`), after the existing `describe "collect/1" do ... end` block:
 
@@ -63,12 +65,7 @@ Add this `describe` block to `test/iso_media/mdat_source_test.exs` (the module a
   end
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
-
-Run: `mix test test/iso_media/mdat_source_test.exs`
-Expected: FAIL — `(UndefinedFunctionError) function ISOMedia.MdatSource.synthesized_mdat/3 is undefined`.
-
-- [ ] **Step 3: Implement the constructor**
+- [ ] **Step 2: Implement the constructor**
 
 In `lib/iso_media/mdat_source.ex`, add `Box` to the alias on line 8:
 
@@ -97,12 +94,7 @@ Then add this function immediately after the `collect/1` function (after its clo
   end
 ```
 
-- [ ] **Step 4: Run the test to verify it passes**
-
-Run: `mix test test/iso_media/mdat_source_test.exs`
-Expected: PASS (all tests in the file, including the 2 new ones).
-
-- [ ] **Step 5: Commit**
+- [ ] **Step 3: Commit**
 
 ```bash
 git add lib/iso_media/mdat_source.ex test/iso_media/mdat_source_test.exs
@@ -117,7 +109,7 @@ git commit -m "feat: MdatSource.synthesized_mdat/3 stamps offset basis on synthe
 - Modify: `lib/iso_media/progressive_build.ex:88`, `lib/iso_media/trim.ex` (the `mdat = %Box{...}` line), `lib/iso_media/extract.ex` (the `mdat = %Box{...}` line)
 - Test: `test/iso_media/offsets_test.exs`
 
-- [ ] **Step 1: Write the failing integration tests**
+- [ ] **Step 1: Write the integration tests**
 
 In `test/iso_media/offsets_test.exs`, add this module-level private helper next to the other helpers (e.g. after `stco_offsets/1`, before the first `test`):
 
@@ -172,12 +164,7 @@ Then add this `describe` block at the end of the module (before the final `end`)
   end
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
-
-Run: `mix test test/iso_media/offsets_test.exs`
-Expected: FAIL — the three new tests raise `(ArgumentError) fix_chunk_offsets: an mdat has no source position (synthesized?)...` (the synthesized `mdat` has no basis yet).
-
-- [ ] **Step 3: Apply the three one-line swaps**
+- [ ] **Step 2: Apply the three one-line swaps**
 
 In `lib/iso_media/progressive_build.ex`, replace line 88:
 
@@ -205,12 +192,7 @@ In `lib/iso_media/extract.ex`, replace the identical line (`mdat = %Box{type: "m
 
 (All three modules already `alias ISOMedia.{Box, ..., MdatSource}` and have `mdat_payload_start` in scope at this line.)
 
-- [ ] **Step 4: Run the tests to verify they pass**
-
-Run: `mix test test/iso_media/offsets_test.exs`
-Expected: PASS (all tests, including the 3 new ones).
-
-- [ ] **Step 5: Commit**
+- [ ] **Step 3: Commit**
 
 ```bash
 git add lib/iso_media/progressive_build.ex lib/iso_media/trim.ex lib/iso_media/extract.ex test/iso_media/offsets_test.exs
@@ -267,19 +249,7 @@ Inside the `describe "synthesized mdat (in-memory fix/faststart)"` block added i
     end
 ```
 
-- [ ] **Step 2: Run the tests to verify they pass**
-
-Run: `mix test test/iso_media/offsets_test.exs`
-Expected: PASS (all tests).
-
-- [ ] **Step 3: Verify the pre-existing stampless guard test still passes**
-
-The test `"raises when an mdat was synthesized (no source_offset)"` (offsets_test.exs:85) builds a **hand-built, stamp-less** `%Box{type: "mdat", data: <<1>>}` — which must still raise (we only stamp via `synthesized_mdat/3`). Confirm it is unchanged and green.
-
-Run: `mix test test/iso_media/offsets_test.exs:85`
-Expected: PASS (unchanged behavior).
-
-- [ ] **Step 4: Commit**
+- [ ] **Step 2: Commit**
 
 ```bash
 git add test/iso_media/offsets_test.exs
@@ -343,10 +313,7 @@ Because synthesized `mdat`s now carry a stamped basis (`MdatSource.synthesized_m
 in memory (no disk round-trip): a no-op when unmoved, a uniform per-`mdat` delta when relocated.
 ```
 
-- [ ] **Step 4: Verify compilation (docs don't break the build) and commit**
-
-Run: `mix compile --warnings-as-errors`
-Expected: compiles with no warnings.
+- [ ] **Step 4: Commit**
 
 ```bash
 git add lib/iso_media.ex docs/ROADMAP.md CLAUDE.md
