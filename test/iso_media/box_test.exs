@@ -202,4 +202,67 @@ defmodule ISOMedia.BoxTest do
       end
     end
   end
+
+  describe "sibling navigation" do
+    setup do
+      boxes = [
+        Box.leaf("ftyp", <<>>),
+        Box.container("moov", [
+          Box.leaf("mvhd", <<>>),
+          Box.leaf("trak", <<1>>),
+          Box.leaf("trak", <<2>>)
+        ]),
+        Box.leaf("mdat", <<>>)
+      ]
+
+      {:ok, boxes: boxes}
+    end
+
+    test "child/2 returns the first sibling of a type, or nil", %{boxes: boxes} do
+      assert Box.child(boxes, "moov").type == "moov"
+      assert Box.child(boxes, "free") == nil
+    end
+
+    test "children/2 returns all siblings of a type, in order", %{boxes: boxes} do
+      moov = Box.child(boxes, "moov")
+      assert Box.children(moov.children, "trak") |> Enum.map(& &1.data) == [<<1>>, <<2>>]
+      assert Box.children(boxes, "trak") == []
+    end
+
+    test "child!/3 raises with context when absent", %{boxes: boxes} do
+      assert Box.child!(boxes, "moov").type == "moov"
+
+      assert_raise ArgumentError, ~r/faststart: no moof box/, fn ->
+        Box.child!(boxes, "moof", "faststart")
+      end
+
+      assert_raise ArgumentError, ~r/^no moof box/, fn -> Box.child!(boxes, "moof") end
+    end
+
+    test "insert_after/3 slots boxes after the first of a type (front if absent)", %{boxes: boxes} do
+      moov = Box.child(boxes, "moov")
+      new = Box.insert_after(moov.children, "mvhd", [Box.leaf("trak", <<9>>)])
+      assert Enum.map(new, & &1.type) == ~w(mvhd trak trak trak)
+      assert Enum.at(new, 1).data == <<9>>
+
+      front = Box.insert_after([Box.leaf("a", <<>>)], "zz", [Box.leaf("b", <<>>)])
+      assert Enum.map(front, & &1.type) == ~w(b a)
+    end
+  end
+
+  describe "size encoding helpers" do
+    test "size_mode_for_body picks :compact until the 32-bit size field overflows" do
+      assert Box.size_mode_for_body(0) == :compact
+      # total = 8 + body; the largest compact total is 0xFFFFFFFF.
+      assert Box.size_mode_for_body(0xFFFFFFFF - 8) == :compact
+      assert Box.size_mode_for_body(0xFFFFFFFF - 7) == :large
+      assert Box.size_mode_for_body(0x1_0000_0000) == :large
+    end
+
+    test "header_base maps each size_mode to its header byte length" do
+      assert Box.header_base(:compact) == 8
+      assert Box.header_base(:large) == 16
+      assert Box.header_base(:eof) == 8
+    end
+  end
 end

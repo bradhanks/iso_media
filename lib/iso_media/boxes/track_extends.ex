@@ -39,6 +39,6 @@ defmodule ISOMedia.Boxes.TrackExtends do
       <<t.track_id::32, t.default_sample_description_index::32, t.default_sample_duration::32,
         t.default_sample_size::32, t.default_sample_flags::32>>
 
-    %Box{type: "trex", data: IO.iodata_to_binary(FullBox.encode(0, <<0, 0, 0>>, body))}
+    %Box{type: "trex", data: FullBox.encode_data(0, <<0, 0, 0>>, body)}
   end
 end

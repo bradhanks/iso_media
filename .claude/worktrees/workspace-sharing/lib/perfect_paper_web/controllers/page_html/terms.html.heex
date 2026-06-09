@@ -1,0 +1,287 @@
+<Layouts.app flash={@flash} current_scope={@current_scope}>
+  <% toc = [
+    {"acceptance", "Acceptance of these terms", "01"},
+    {"your-account", "Your account", "02"},
+    {"acceptable-use", "Acceptable use", "03"},
+    {"your-content", "Your manuscripts and content", "04"},
+    {"how-feedback-works", "How PerfectPaper reviews work", "05"},
+    {"credits-plans", "Credits, plans, and refunds", "06"},
+    {"organizations", "Organizations and workspaces", "07"},
+    {"api", "API access and keys", "08"},
+    {"our-ip", "Our intellectual property", "09"},
+    {"availability", "Service availability", "10"},
+    {"termination", "Termination", "11"},
+    {"disclaimers", "Disclaimers", "12"},
+    {"liability", "Limitation of liability", "13"},
+    {"indemnification", "Indemnification", "14"},
+    {"governing-law", "Governing law", "15"},
+    {"changes", "Changes to these terms", "16"},
+    {"contact", "Contact", "17"}
+  ] %>
+
+  <.document_record
+    kind="Terms of service"
+    version="v1.0"
+    effective="May 30, 2026"
+    reading_minutes={9}
+    jurisdiction="United States · GDPR · CCPA"
+    summary="The agreement between you and PerfectPaper. We've kept it plain: what you can expect from us, what we ask of you, and how your manuscripts are handled. Each section opens with a one-line summary — the bold paragraph is the binding version."
+  />
+
+  <section class="ds-container py-12 lg:py-16">
+    <div class="grid lg:grid-cols-12 gap-10 lg:gap-14">
+      <aside class="lg:col-span-3">
+        <.sticky_toc items={toc} />
+      </aside>
+
+      <div class="lg:col-span-9">
+        <.chapter_section number="01" title="Acceptance of these terms" id="acceptance">
+          <p>
+            These Terms of Service ("Terms") form a binding agreement between you and
+            PerfectPaper, Inc. ("PerfectPaper," "we," "us") governing your access to and use
+            of our website, applications, and services (together, the "Services"). By creating
+            an account or using the Services, you agree to these Terms and to our <.link
+              navigate={~p"/privacy"}
+              class="text-primary font-medium hover:underline"
+            >Privacy notice</.link>.
+          </p>
+          <p>
+            If you are agreeing on behalf of an institution or organization, you represent
+            that you have authority to bind it, and "you" refers to that organization.
+            If you do not agree, please do not use the Services.
+          </p>
+        </.chapter_section>
+
+        <.chapter_section number="02" title="Your account" id="your-account">
+          <:brief>
+            You must be 18 or older, keep your login credentials secure, and stay
+            responsible for activity under your account.
+          </:brief>
+          <p>
+            You must be at least 18 years old to use the Services. You agree to provide
+            accurate registration information and to keep it current. You are responsible
+            for safeguarding your password and any API keys, and for all activity that
+            occurs under your account.
+          </p>
+          <p>
+            Notify us promptly at
+            <a
+              href="mailto:security@perfectpaper.ink"
+              class="text-primary font-medium hover:underline"
+            >
+              security@perfectpaper.ink
+            </a>
+            if you suspect unauthorized use. We are not liable for losses arising from
+            your failure to keep your credentials secure.
+          </p>
+        </.chapter_section>
+
+        <.chapter_section number="03" title="Acceptable use" id="acceptable-use">
+          <:brief>
+            Use PerfectPaper for your own scholarly work. Don't abuse the Services or
+            upload anything you don't have the rights to.
+          </:brief>
+          <p>You agree not to:</p>
+          <ul class="list-disc pl-6 space-y-2">
+            <li>upload content you do not own or have permission to submit;</li>
+            <li>use the Services to violate the law or infringe anyone's rights;</li>
+            <li>attempt to access accounts, data, or systems that are not yours;</li>
+            <li>
+              probe, scrape, or overload the Services, or circumvent rate limits or access controls;
+            </li>
+            <li>
+              reverse engineer our models or resell the Services without our written consent;
+            </li>
+            <li>submit malware or any content designed to disrupt the Services.</li>
+          </ul>
+          <p>
+            We may suspend access to protect the Services or other users while we
+            investigate suspected misuse.
+          </p>
+        </.chapter_section>
+
+        <.chapter_section number="04" title="Your manuscripts and content" id="your-content">
+          <:brief>
+            You keep ownership of everything you upload. We never train AI models on your
+            drafts, and we never sell them.
+          </:brief>
+          <p>
+            You retain all rights to the manuscripts, documents, and other materials you
+            upload ("Your Content"). We claim no ownership of it.
+          </p>
+          <p>
+            You grant PerfectPaper a limited, worldwide, non-exclusive, royalty-free license
+            to host, process, and display Your Content
+            <strong>solely to provide the Services to you</strong>
+            —
+            for example, to generate feedback and let you act on it. This license ends when
+            you delete the content or close your account, except for backups that age out on
+            our normal retention schedule.
+          </p>
+          <p>
+            We do not use Your Content to train large language models, and we do not sell or
+            share it with third parties except the service providers needed to operate the
+            Services, under confidentiality obligations. Our handling of Your Content is
+            described in full in the <.link
+              navigate={~p"/privacy"}
+              class="text-primary font-medium hover:underline"
+            >Privacy notice</.link>.
+          </p>
+        </.chapter_section>
+
+        <.chapter_section
+          number="05"
+          title="How PerfectPaper reviews work"
+          id="how-feedback-works"
+        >
+          <:brief>
+            PerfectPaper gives you a careful, AI-generated read — not a guarantee of
+            acceptance, and not a substitute for your own judgment.
+          </:brief>
+          <p>
+            PerfectPaper uses artificial intelligence to read your manuscript and return
+            structured, sourced feedback as comments you can dismiss, address, or undo.
+            The feedback is intended to support your revision, not to replace peer review,
+            editorial decisions, or your professional judgment.
+          </p>
+          <p>
+            AI-generated feedback can be incomplete or wrong. You are responsible for
+            evaluating it before acting on it. We make no promise that using PerfectPaper
+            will result in acceptance, publication, or any particular outcome.
+          </p>
+        </.chapter_section>
+
+        <.chapter_section number="06" title="Credits, plans, and refunds" id="credits-plans">
+          <:brief>
+            Your first review is free. Paid reviews run on credits or a plan; a review
+            charges one credit when it begins.
+          </:brief>
+          <p>
+            Your first manuscript review is free. After that, reviews are paid — either by
+            purchasing credits or by subscribing to a plan. Current pricing is shown at
+            checkout and on our pricing page, and may change with notice for future purchases.
+          </p>
+          <p>
+            One credit is charged when a review begins. Purchased credits do not expire while
+            your account is active. Subscriptions renew automatically until cancelled; you can
+            cancel anytime and keep access through the end of the paid period.
+          </p>
+          <p>
+            If a review fails for a reason on our side, we will restore the credit. Beyond
+            that, fees are non-refundable except where required by law or stated in writing.
+            Payments are handled by our payment processor; you agree to keep your billing
+            details accurate.
+          </p>
+        </.chapter_section>
+
+        <.chapter_section number="07" title="Organizations and workspaces" id="organizations">
+          <:brief>
+            In a shared workspace, the organization's administrators control membership,
+            billing, and access to its content.
+          </:brief>
+          <p>
+            PerfectPaper lets organizations create shared workspaces. If you join one, an
+            administrator may manage your membership, view workspace activity and content,
+            and control billing and credits for the workspace. The organization is
+            responsible for its members' use of the Services and for the content in its
+            workspace.
+          </p>
+        </.chapter_section>
+
+        <.chapter_section number="08" title="API access and keys" id="api">
+          <p>
+            We may provide API access so you can use the Services programmatically. API keys
+            are credentials — keep them secret, and treat any activity authenticated with your
+            key as your own. We may set and adjust rate limits, and may revoke keys that are
+            abused or compromised. API use is subject to all of these Terms.
+          </p>
+        </.chapter_section>
+
+        <.chapter_section number="09" title="Our intellectual property" id="our-ip">
+          <p>
+            The Services — including our software, models, designs, and the PerfectPaper name
+            and marks — are owned by PerfectPaper and protected by intellectual-property laws.
+            These Terms grant you no rights in them except the limited right to use the
+            Services as permitted here. Feedback you choose to send us about the product may be
+            used by us without restriction.
+          </p>
+        </.chapter_section>
+
+        <.chapter_section number="10" title="Service availability" id="availability">
+          <p>
+            We work to keep the Services reliable, but we do not guarantee they will be
+            uninterrupted or error-free. We may modify, suspend, or discontinue features at
+            any time, and will give reasonable notice of material changes where we can.
+          </p>
+        </.chapter_section>
+
+        <.chapter_section number="11" title="Termination" id="termination">
+          <p>
+            You may stop using the Services and close your account at any time. We may
+            suspend or terminate your access if you breach these Terms, if required by law,
+            or to protect the Services or other users. On termination, your right to use the
+            Services ends; sections that by their nature should survive — such as content
+            licenses you've granted, disclaimers, and limits of liability — will survive.
+          </p>
+        </.chapter_section>
+
+        <.chapter_section number="12" title="Disclaimers" id="disclaimers">
+          <p>
+            The Services are provided "as is" and "as available," without warranties of any
+            kind, whether express or implied, including merchantability, fitness for a
+            particular purpose, and non-infringement. We do not warrant that the Services or
+            any AI-generated feedback will be accurate, complete, or fit for your purpose.
+          </p>
+        </.chapter_section>
+
+        <.chapter_section number="13" title="Limitation of liability" id="liability">
+          <p>
+            To the fullest extent permitted by law, PerfectPaper will not be liable for any
+            indirect, incidental, special, consequential, or punitive damages, or for lost
+            profits, data, or goodwill, arising from your use of the Services. Our total
+            liability for any claim relating to the Services will not exceed the amount you
+            paid us in the twelve months before the event giving rise to the claim. Some
+            jurisdictions do not allow these limits, so they may not apply to you.
+          </p>
+        </.chapter_section>
+
+        <.chapter_section number="14" title="Indemnification" id="indemnification">
+          <p>
+            You agree to defend and indemnify PerfectPaper and its people from claims,
+            damages, and costs arising from Your Content, your use of the Services, or your
+            breach of these Terms or of anyone's rights.
+          </p>
+        </.chapter_section>
+
+        <.chapter_section number="15" title="Governing law" id="governing-law">
+          <p>
+            These Terms are governed by the laws of the State of Delaware, United States,
+            without regard to its conflict-of-laws rules. Our failure to enforce a provision
+            is not a waiver of it.
+          </p>
+        </.chapter_section>
+
+        <.chapter_section number="16" title="Changes to these terms" id="changes">
+          <p>
+            We may update these Terms from time to time. If a change is material, we will give
+            reasonable notice — for example, by posting the updated Terms with a new effective
+            date or by emailing you. Continuing to use the Services after changes take effect
+            means you accept the revised Terms.
+          </p>
+        </.chapter_section>
+
+        <.chapter_section number="17" title="Contact" id="contact">
+          <p>
+            Questions about these Terms? Email <a
+              href="mailto:legal@perfectpaper.ink"
+              class="text-primary font-medium hover:underline"
+            >legal@perfectpaper.ink</a>,
+            or write to PerfectPaper, Inc., Legal Department, Delaware, USA.
+          </p>
+        </.chapter_section>
+      </div>
+    </div>
+  </section>
+
+  <.back_to_top />
+</Layouts.app>

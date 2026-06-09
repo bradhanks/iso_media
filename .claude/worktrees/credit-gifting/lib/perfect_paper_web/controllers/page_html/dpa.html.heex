@@ -1,0 +1,101 @@
+<Layouts.app flash={@flash} current_scope={@current_scope}>
+  <div class="max-w-3xl mx-auto px-4 py-12 sm:py-20">
+    <header class="mb-10">
+      <p class="ds-eyebrow mb-2">{gettext("Enterprise")}</p>
+      <h1 class="ds-h1 mb-4">{gettext("Data Processing Agreement")}</h1>
+      <p class="ds-lead">
+        {gettext(
+          "This page describes the basis on which PerfectPaper processes personal data on behalf of organizations that use our platform. A formal DPA is available on request."
+        )}
+      </p>
+    </header>
+
+    <div class="prose prose-sm max-w-none space-y-8">
+      <section>
+        <h2 class="ds-h3">{gettext("Roles")}</h2>
+        <p>
+          {gettext(
+            "Your organization (the \"Controller\") determines the purposes and means of processing personal data. PerfectPaper (the \"Processor\") processes personal data only on your behalf and under your documented instructions."
+          )}
+        </p>
+      </section>
+
+      <section>
+        <h2 class="ds-h3">{gettext("What we process")}</h2>
+        <p>
+          {gettext(
+            "On behalf of your organization we process the content of uploaded manuscripts and the personal data of your organization's members (name, email address, and account activity) solely to provide the PerfectPaper review service."
+          )}
+        </p>
+      </section>
+
+      <section>
+        <h2 class="ds-h3">{gettext("Subprocessors")}</h2>
+        <p>
+          {gettext("A current list of subprocessors is available on our")}
+          <a href="/privacy/subprocessors" class="text-primary hover:underline">
+            {gettext("subprocessors page")}
+          </a>. {gettext(
+            "We will notify you at least 30 days before adding or replacing a subprocessor."
+          )}
+        </p>
+      </section>
+
+      <section>
+        <h2 class="ds-h3">{gettext("Security")}</h2>
+        <p>
+          {gettext(
+            "We implement technical and organizational measures appropriate to the risk, including encryption in transit (TLS) and at rest, access controls, and regular security reviews. See our"
+          )}
+          <a href="/enterprise/security" class="text-primary hover:underline">
+            {gettext("security page")}
+          </a>
+          {gettext("for details.")}
+        </p>
+      </section>
+
+      <section>
+        <h2 class="ds-h3">{gettext("International transfers")}</h2>
+        <p>
+          {gettext(
+            "Where personal data is transferred outside the EEA or UK, the transfer is protected by the EU Standard Contractual Clauses (SCCs) or the UK International Data Transfer Agreement (IDTA), as applicable."
+          )}
+        </p>
+      </section>
+
+      <section>
+        <h2 class="ds-h3">{gettext("Retention and deletion")}</h2>
+        <p>
+          {gettext(
+            "We retain personal data only as long as required to provide the service or comply with applicable law. Members may delete their data at any time via the account settings. Organization owners may request bulk deletion by contacting us."
+          )}
+        </p>
+      </section>
+
+      <section>
+        <h2 class="ds-h3">{gettext("Data subject rights")}</h2>
+        <p>
+          {gettext(
+            "We will assist you in fulfilling data subject rights requests (access, correction, erasure, portability) within the timeframes required by law. Requests may be submitted via our"
+          )}
+          <a href="/privacy/rights" class="text-primary hover:underline">
+            {gettext("rights request form")}
+          </a>.
+        </p>
+      </section>
+
+      <section>
+        <h2 class="ds-h3">{gettext("Request a DPA")}</h2>
+        <p>
+          {gettext("Enterprise customers may request a signed DPA. Contact us at")}
+          <a href="mailto:privacy@perfectpaper.ink" class="text-primary hover:underline">
+            privacy@perfectpaper.ink
+          </a>
+          {gettext(
+            "with your organization name and the email address of your authorized signatory."
+          )}
+        </p>
+      </section>
+    </div>
+  </div>
+</Layouts.app>

@@ -22,9 +22,9 @@ defmodule ISOMedia.FragmentIndex do
 
   @doc "True when the tree is fragmented: has a `moov`/`mvex` and at least one `moof`."
   def fragmented?(boxes) when is_list(boxes) do
-    moov = Enum.find(boxes, &(&1.type == "moov"))
-    has_mvex = moov != nil and Enum.any?(moov.children, &(&1.type == "mvex"))
-    has_moof = Enum.any?(boxes, &(&1.type == "moof"))
+    moov = Box.child(boxes, "moov")
+    has_mvex = moov != nil and Box.child(moov.children, "mvex") != nil
+    has_moof = Box.child(boxes, "moof") != nil
     has_mvex and has_moof
   end
 
@@ -40,8 +40,8 @@ defmodule ISOMedia.FragmentIndex do
         ]
   def fragment_spans(boxes) do
     video_tid = video_track_id(boxes)
-    moofs = Enum.filter(boxes, &(&1.type == "moof"))
-    mdats = Enum.filter(boxes, &(&1.type == "mdat"))
+    moofs = Box.children(boxes, "moof")
+    mdats = Box.children(boxes, "mdat")
 
     moofs
     |> Enum.zip(mdats)
@@ -52,7 +52,7 @@ defmodule ISOMedia.FragmentIndex do
 
       duration_ts =
         traf.children
-        |> Enum.filter(&(&1.type == "trun"))
+        |> Box.children("trun")
         |> Enum.flat_map(fn t -> resolve_run(TrackRun.decode(t), defaults) end)
         |> Enum.map(& &1.duration)
         |> Enum.sum()
@@ -111,7 +111,7 @@ defmodule ISOMedia.FragmentIndex do
       end
 
     defaults = defaults(tfhd, trex)
-    truns = Enum.filter(traf.children, &(&1.type == "trun"))
+    truns = Box.children(traf.children, "trun")
 
     {acc, sidx, cidx, _dts} =
       Enum.reduce(truns, {acc, sidx, cidx, base_dts}, fn trun_box, {acc, si, ci, dts} ->
@@ -154,8 +154,8 @@ defmodule ISOMedia.FragmentIndex do
   end
 
   defp trex_for!(boxes, track_id) do
-    moov = Enum.find(boxes, &(&1.type == "moov")) || raise ArgumentError, "fMP4: no moov"
-    mvex = Enum.find(moov.children, &(&1.type == "mvex")) || raise ArgumentError, "fMP4: no mvex"
+    moov = Box.child(boxes, "moov") || raise ArgumentError, "fMP4: no moov"
+    mvex = Box.child(moov.children, "mvex") || raise ArgumentError, "fMP4: no mvex"
 
     box =
       Enum.find(mvex.children, fn b ->
@@ -183,13 +183,13 @@ defmodule ISOMedia.FragmentIndex do
     end
   end
 
-  defp first_traf(moof), do: Enum.find(moof.children, &(&1.type == "traf"))
+  defp first_traf(moof), do: Box.child(moof.children, "traf")
 
   defp video_track_id(boxes) do
-    moov = Enum.find(boxes, &(&1.type == "moov"))
+    moov = Box.child(boxes, "moov")
 
     moov.children
-    |> Enum.filter(&(&1.type == "trak"))
+    |> Box.children("trak")
     |> Enum.find_value(fn trak ->
       if Handler.decode(BoxPath.dig(trak, ~w(mdia hdlr))).handler_type == "vide" do
         TrackHeader.decode(BoxPath.dig(trak, ["tkhd"])).track_id
@@ -202,7 +202,7 @@ defmodule ISOMedia.FragmentIndex do
     MediaHeader.decode(BoxPath.dig(trak, ~w(mdia mdhd))).timescale
   end
 
-  defp child(%Box{children: children}, type), do: Enum.find(children, &(&1.type == type))
+  defp child(%Box{children: children}, type), do: Box.child(children, type)
 
   defp child!(box, type),
     do: child(box, type) || raise(ArgumentError, "fMP4: traf missing #{type}")

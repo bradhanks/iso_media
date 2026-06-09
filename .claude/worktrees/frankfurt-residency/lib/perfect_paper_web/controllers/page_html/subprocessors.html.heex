@@ -1,0 +1,83 @@
+<Layouts.app flash={@flash} current_scope={@current_scope}>
+  <div class="max-w-3xl mx-auto px-4 py-12 sm:py-20">
+    <header class="mb-10">
+      <p class="ds-eyebrow mb-2">{gettext("Privacy")}</p>
+      <h1 class="ds-h1 mb-4">{gettext("Subprocessors")}</h1>
+      <p class="ds-lead">
+        {gettext(
+          "PerfectPaper uses the following third-party services (subprocessors) to operate the platform. We have a Data Processing Agreement (DPA) or equivalent contractual safeguard in place with each."
+        )}
+      </p>
+      <p class="text-sm text-base-content/60 mt-3">
+        {gettext("Last updated: 30 May 2026.")}
+        {gettext("We will update this page when subprocessors change.")}
+      </p>
+    </header>
+
+    <div class="overflow-x-auto">
+      <table class="table table-zebra w-full text-sm">
+        <thead>
+          <tr>
+            <th>{gettext("Subprocessor")}</th>
+            <th>{gettext("Purpose")}</th>
+            <th>{gettext("Country")}</th>
+            <th>{gettext("Safeguard")}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="font-medium">Anthropic</td>
+            <td>{gettext("AI language model — generates review feedback")}</td>
+            <td>{gettext("United States")}</td>
+            <td>DPA / SCCs</td>
+          </tr>
+          <tr>
+            <td class="font-medium">Fly.io</td>
+            <td>{gettext("Cloud hosting and compute")}</td>
+            <td>{gettext("United States / EU")}</td>
+            <td>DPA / SCCs</td>
+          </tr>
+          <tr>
+            <td class="font-medium">Neon</td>
+            <td>{gettext("Managed PostgreSQL database")}</td>
+            <td>{gettext("United States / EU")}</td>
+            <td>DPA / SCCs</td>
+          </tr>
+          <tr>
+            <td class="font-medium">Stripe</td>
+            <td>{gettext("Payment processing and invoicing")}</td>
+            <td>{gettext("United States")}</td>
+            <td>DPA / SCCs</td>
+          </tr>
+          <tr>
+            <td class="font-medium">Postmark</td>
+            <td>{gettext("Transactional email delivery")}</td>
+            <td>{gettext("United States")}</td>
+            <td>DPA / SCCs</td>
+          </tr>
+          <tr>
+            <td class="font-medium">Cloudflare</td>
+            <td>{gettext("CDN, DDoS protection, and bot management")}</td>
+            <td>{gettext("United States / EU")}</td>
+            <td>DPA / SCCs</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <section class="mt-12 space-y-3 text-sm text-base-content/80">
+      <h2 class="ds-h3">{gettext("Standard Contractual Clauses (SCCs)")}</h2>
+      <p>
+        {gettext(
+          "Where a subprocessor is located outside the European Economic Area (EEA) or UK, transfers are protected by the European Commission's Standard Contractual Clauses (SCCs) or the UK International Data Transfer Agreement (IDTA), as applicable."
+        )}
+      </p>
+      <p>
+        {gettext("Questions? Email")}
+        <a href="mailto:privacy@perfectpaper.ink" class="text-primary hover:underline">
+          privacy@perfectpaper.ink
+        </a>.
+      </p>
+    </section>
+  </div>
+</Layouts.app>

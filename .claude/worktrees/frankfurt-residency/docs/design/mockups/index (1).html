@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="en" data-theme="paper">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PerfectPaper — Expert peer review before you submit</title>
+<link rel="icon" href="../../assets/perfectpaper-icon.svg" />
+<link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<style id="paper-inline">:root{color-scheme:light;
+--color-base-100:#fbf8f2;--color-base-200:#f4eee2;--color-base-300:#e9e0d0;--color-base-content:#211c18;
+--color-primary:#7a2e4e;--color-primary-content:#fbf8f2;--color-secondary:#1f5e58;--color-secondary-content:#fbf8f2;
+--color-accent:#c28a3a;--color-accent-content:#211c18;--color-neutral:#211c18;--color-neutral-content:#fbf8f2;
+--color-info:#2f6f8f;--color-info-content:#fbf8f2;--color-success:#5c7a45;--color-success-content:#fbf8f2;
+--color-warning:#c28a3a;--color-warning-content:#211c18;--color-error:#a3382f;--color-error-content:#fbf8f2;
+--color-taupe:#8c8377;--radius-selector:.25rem;--radius-field:.25rem;--radius-box:.375rem;
+--size-selector:.25rem;--size-field:.25rem;--border:1px;--depth:0;--noise:0;}</style>
+<link rel="stylesheet" href="../../brand-theme.css" />
+<link rel="stylesheet" href="../../fonts/fraunces.css" />
+<link rel="stylesheet" href="../../fonts/newsreader.css" />
+<link rel="stylesheet" href="../../fonts/outfit.css" />
+<style>
+  :root{--fr:"Fraunces",Georgia,serif;--nr:"Newsreader",Georgia,serif;--ot:"Outfit",system-ui,sans-serif}
+  html,body{margin:0}
+  body{font-family:var(--nr);background:var(--color-base-100);color:var(--color-base-content)}
+  .fr{font-family:var(--fr)} .nr{font-family:var(--nr)} .ot{font-family:var(--ot)}
+  .btn,.navlink,.badge,.eyebrow,.pill,.tag{font-family:var(--ot)}
+  .tile{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;position:relative;background:var(--color-primary)}
+  .tile .p{font-family:var(--fr);font-weight:600;font-size:21px;color:var(--color-primary-content);line-height:1}
+  .tile .dot{position:absolute;width:4px;height:4px;border-radius:50%;background:var(--color-accent);right:6px;bottom:7px}
+  .eyebrow{font-size:12px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--color-primary)}
+  .h-display{font-family:var(--fr);font-weight:600;letter-spacing:-0.025em;line-height:1.05}
+  .navlink{font-size:14px;color:color-mix(in oklab,var(--color-base-content) 75%,transparent);cursor:pointer}
+  .navlink:hover{color:var(--color-base-content)}
+  .reveal{opacity:0;transform:translateY(12px);animation:rv .8s cubic-bezier(.2,.7,.2,1) forwards}
+  @keyframes rv{to{opacity:1;transform:none}}
+  .card{background:var(--color-base-100);border:1px solid var(--color-base-300);border-radius:14px}
+  .soft{background:color-mix(in oklab,var(--color-base-200) 55%,var(--color-base-100))}
+  a{color:inherit;text-decoration:none}
+</style>
+</head>
+<body>
+  <!-- NAV -->
+  <header class="border-b border-base-300 sticky top-0 z-30" style="background:color-mix(in oklab,var(--color-base-100) 88%,transparent);backdrop-filter:blur(8px)">
+    <div class="max-w-6xl mx-auto px-5 sm:px-8 h-16 flex items-center gap-3">
+      <a class="flex items-center gap-2.5">
+        <span class="tile"><span class="p">P</span><span class="dot"></span></span>
+        <span class="fr" style="font-weight:600;font-size:20px;letter-spacing:-0.01em">Perfect<span style="color:var(--color-primary)">Paper</span><span style="color:var(--color-accent)">.</span></span>
+      </a>
+      <nav class="hidden md:flex items-center gap-7 ml-8">
+        <span class="navlink">Pricing</span><span class="navlink">Examples</span><span class="navlink">About</span><span class="navlink">FAQ</span>
+        <span class="navlink">For Institutions</span><span class="navlink">For Journals</span>
+      </nav>
+      <div class="ml-auto flex items-center gap-3">
+        <span class="navlink hidden sm:inline">Log in</span>
+        <a class="btn btn-primary btn-sm rounded-lg px-5" style="font-weight:600">Go to app</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <section class="max-w-6xl mx-auto px-5 sm:px-8 pt-16 pb-14 grid lg:grid-cols-2 gap-12 items-center">
+    <div>
+      <div class="eyebrow reveal mb-5">Peer review, before you submit</div>
+      <h1 class="h-display reveal" style="animation-delay:.08s;font-size:clamp(2.3rem,3.7vw,3.6rem)">
+        Expert feedback on your<br />manuscript — in <span style="color:var(--color-primary)">under an hour.</span>
+      </h1>
+      <p class="reveal nr" style="animation-delay:.18s;margin-top:20px;font-size:1.12rem;line-height:1.65;max-width:32rem;color:color-mix(in oklab,var(--color-base-content) 72%,transparent)">
+        PerfectPaper reads your full paper the way a thoughtful reviewer would, then returns structured, sourced feedback you can act on. Catch the issues a referee would flag — and walk into submission ready.
+      </p>
+      <div class="reveal flex flex-wrap gap-3 mt-7" style="animation-delay:.28s">
+        <a class="btn btn-primary btn-lg rounded-lg px-8" style="font-weight:600">Get your review</a>
+        <a class="btn btn-lg btn-outline rounded-lg px-7" style="font-weight:600;border-color:color-mix(in oklab,var(--color-base-content) 22%,transparent)">See examples</a>
+      </div>
+      <div class="reveal flex items-center gap-2 mt-6 ot" style="animation-delay:.36s;font-size:.82rem;color:color-mix(in oklab,var(--color-base-content) 50%,transparent)">
+        <span style="color:var(--color-accent)">★★★★★</span> Trusted by researchers at 40+ institutions
+      </div>
+    </div>
+
+    <!-- product preview -->
+    <div class="reveal" style="animation-delay:.2s">
+      <div class="card overflow-hidden" style="box-shadow:0 30px 60px -30px color-mix(in oklab,var(--color-base-content) 35%,transparent)">
+        <div class="flex items-center gap-2 px-4 h-10 border-b border-base-300 soft">
+          <span style="width:9px;height:9px;border-radius:50%;background:var(--color-base-300)"></span>
+          <span style="width:9px;height:9px;border-radius:50%;background:var(--color-base-300)"></span>
+          <span style="width:9px;height:9px;border-radius:50%;background:var(--color-base-300)"></span>
+          <span class="ot ml-2" style="font-size:11px;color:color-mix(in oklab,var(--color-base-content) 45%,transparent)">app.perfectpaper.ink</span>
+        </div>
+        <div class="grid grid-cols-2">
+          <div class="p-4 border-r border-base-300">
+            <div class="ot" style="font-size:9px;letter-spacing:.16em;color:color-mix(in oklab,var(--color-base-content) 40%,transparent)">DOCUMENT</div>
+            <div class="fr mt-2" style="font-weight:600;font-size:13px">3.2 Statistical Analyses</div>
+            <p class="nr mt-2" style="font-size:11px;line-height:1.6;color:color-mix(in oklab,var(--color-base-content) 75%,transparent)"><span style="background:color-mix(in oklab,var(--color-accent) 22%,transparent);padding:1px 0">As shown in Figure 2, directed acyclic graphs encoded a priori knowledge for estimating total effects.</span> Multivariate logistic regression estimated odds ratios.</p>
+          </div>
+          <div class="p-4 soft">
+            <div class="ot" style="font-size:9px;letter-spacing:.16em;color:color-mix(in oklab,var(--color-base-content) 40%,transparent)">FEEDBACK</div>
+            <div class="card p-3 mt-2">
+              <div class="fr" style="font-weight:600;font-size:12px"><span style="color:var(--color-primary);font-weight:700">#1</span> Causal adjustment underspecified</div>
+              <p class="nr" style="font-size:10.5px;line-height:1.5;margin-top:5px;color:color-mix(in oklab,var(--color-base-content) 72%,transparent)">Define the estimands and state the adjustment sets per exposure.</p>
+              <div class="flex gap-1.5 mt-2.5">
+                <span class="ot" style="font-size:9px;font-weight:600;background:var(--color-success);color:var(--color-success-content);border-radius:5px;padding:3px 8px">✓ Done</span>
+                <span class="ot" style="font-size:9px;font-weight:600;border:1px solid var(--color-base-300);border-radius:5px;padding:3px 8px;color:color-mix(in oklab,var(--color-base-content) 55%,transparent)">Chat</span>
+              </div>
+            </div>
+            <div class="card p-3 mt-2" style="opacity:.6">
+              <div class="fr" style="font-weight:600;font-size:12px"><span style="color:var(--color-primary);font-weight:700">#6</span> States contradiction</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TRUST STRIP -->
+  <section class="border-y border-base-300 soft">
+    <div class="max-w-6xl mx-auto px-5 sm:px-8 py-8 grid grid-cols-2 lg:grid-cols-4 gap-6">
+      <div class="flex items-start gap-3">
+        <span style="color:var(--color-primary)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+        <div><div class="ot" style="font-weight:600;font-size:13.5px">10–30 minutes</div><div class="nr" style="font-size:12.5px;color:color-mix(in oklab,var(--color-base-content) 60%,transparent)">Typical analysis time</div></div>
+      </div>
+      <div class="flex items-start gap-3">
+        <span style="color:var(--color-primary)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></span>
+        <div><div class="ot" style="font-weight:600;font-size:13.5px">Emailed when ready</div><div class="nr" style="font-size:12.5px;color:color-mix(in oklab,var(--color-base-content) 60%,transparent)">No waiting around</div></div>
+      </div>
+      <div class="flex items-start gap-3">
+        <span style="color:var(--color-primary)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg></span>
+        <div><div class="ot" style="font-weight:600;font-size:13.5px">Completely secure</div><div class="nr" style="font-size:12.5px;color:color-mix(in oklab,var(--color-base-content) 60%,transparent)">Your content stays private</div></div>
+      </div>
+      <div class="flex items-start gap-3">
+        <span style="color:var(--color-primary)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12h8"/></svg></span>
+        <div><div class="ot" style="font-weight:600;font-size:13.5px">Never used to train</div><div class="nr" style="font-size:12.5px;color:color-mix(in oklab,var(--color-base-content) 60%,transparent)">Your papers stay yours</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="max-w-6xl mx-auto px-5 sm:px-8 py-20">
+    <div class="max-w-xl mb-12">
+      <div class="eyebrow mb-2">How it works</div>
+      <h2 class="h-display" style="font-size:clamp(1.9rem,3.2vw,2.7rem)">From draft to submission-ready</h2>
+    </div>
+    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="card p-6">
+        <div class="fr" style="font-size:34px;font-weight:600;color:color-mix(in oklab,var(--color-primary) 30%,transparent)">01</div>
+        <h3 class="fr mt-2" style="font-weight:600;font-size:17px">Submit your paper</h3>
+        <p class="nr mt-1.5" style="font-size:13.5px;line-height:1.55;color:color-mix(in oklab,var(--color-base-content) 65%,transparent)">PDF, LaTeX, Word, Markdown — up to 70,000 words.</p>
+      </div>
+      <div class="card p-6">
+        <div class="fr" style="font-size:34px;font-weight:600;color:color-mix(in oklab,var(--color-primary) 30%,transparent)">02</div>
+        <h3 class="fr mt-2" style="font-weight:600;font-size:17px">It reads every section</h3>
+        <p class="nr mt-1.5" style="font-size:13.5px;line-height:1.55;color:color-mix(in oklab,var(--color-base-content) 65%,transparent)">Methods, results, figures and claims — closely, like a referee.</p>
+      </div>
+      <div class="card p-6">
+        <div class="fr" style="font-size:34px;font-weight:600;color:color-mix(in oklab,var(--color-primary) 30%,transparent)">03</div>
+        <h3 class="fr mt-2" style="font-weight:600;font-size:17px">Get sourced feedback</h3>
+        <p class="nr mt-1.5" style="font-size:13.5px;line-height:1.55;color:color-mix(in oklab,var(--color-base-content) 65%,transparent)">Each comment quotes your text and links back to the exact spot.</p>
+      </div>
+      <div class="card p-6">
+        <div class="fr" style="font-size:34px;font-weight:600;color:color-mix(in oklab,var(--color-primary) 30%,transparent)">04</div>
+        <h3 class="fr mt-2" style="font-weight:600;font-size:17px">Discuss &amp; revise</h3>
+        <p class="nr mt-1.5" style="font-size:13.5px;line-height:1.55;color:color-mix(in oklab,var(--color-base-content) 65%,transparent)">Talk through any comment in chat, then mark it done.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TESTIMONIAL -->
+  <section class="soft border-y border-base-300">
+    <div class="max-w-3xl mx-auto px-5 sm:px-8 py-20 text-center">
+      <div class="fr" style="font-size:40px;line-height:0;color:color-mix(in oklab,var(--color-accent) 70%,transparent)">“</div>
+      <p class="fr" style="font-weight:500;font-size:clamp(1.4rem,2.6vw,2rem);line-height:1.35;letter-spacing:-0.01em;margin-top:8px">
+        The depth of the reading was impressive, and identified subtle issues. This would have taken an expert many hours to complete — even when working with ChatGPT Pro.
+      </p>
+      <div class="mt-7 flex items-center justify-center gap-3">
+        <div class="ot" style="font-weight:600;font-size:14px">Omer Tamuz</div>
+        <span style="color:var(--color-base-300)">·</span>
+        <div class="nr" style="font-size:13.5px;color:color-mix(in oklab,var(--color-base-content) 60%,transparent)">Professor of Economics &amp; Mathematics, Caltech</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- EXAMPLES -->
+  <section class="max-w-6xl mx-auto px-5 sm:px-8 py-20">
+    <div class="text-center max-w-xl mx-auto mb-12">
+      <div class="eyebrow mb-2">Examples</div>
+      <h2 class="h-display" style="font-size:clamp(1.9rem,3.2vw,2.7rem)">See PerfectPaper in action</h2>
+      <p class="nr mt-3" style="color:color-mix(in oklab,var(--color-base-content) 60%,transparent)">Real reviews across disciplines.</p>
+    </div>
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <a class="card p-6 block hover:border-primary/40 transition-colors"><span class="ot" style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--color-primary)">Physics</span><h3 class="fr mt-2" style="font-weight:600;font-size:17px;line-height:1.3">Chaotic Balanced State in a Model of Cortical Circuits</h3></a>
+      <a class="card p-6 block hover:border-primary/40 transition-colors"><span class="ot" style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--color-primary)">Engineering</span><h3 class="fr mt-2" style="font-weight:600;font-size:17px;line-height:1.3">Coset Codes — Part I: Introduction and Geometrical Classification</h3></a>
+      <a class="card p-6 block hover:border-primary/40 transition-colors"><span class="ot" style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--color-primary)">Mathematics</span><h3 class="fr mt-2" style="font-weight:600;font-size:17px;line-height:1.3">Inference in molecular population genetics</h3></a>
+      <a class="card p-6 block hover:border-primary/40 transition-colors"><span class="ot" style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--color-primary)">Economics</span><h3 class="fr mt-2" style="font-weight:600;font-size:17px;line-height:1.3">Robust Market Interventions</h3></a>
+      <a class="card p-6 block hover:border-primary/40 transition-colors"><span class="ot" style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--color-primary)">Economics</span><h3 class="fr mt-2" style="font-weight:600;font-size:17px;line-height:1.3">Targeting Interventions in Networks</h3></a>
+      <a class="card p-6 block grid place-items-center" style="border-style:dashed"><span class="ot" style="font-size:13px;font-weight:600;color:var(--color-primary)">Browse all examples →</span></a>
+    </div>
+  </section>
+
+  <!-- ABOUT / FOUNDER -->
+  <section class="max-w-5xl mx-auto px-5 sm:px-8 py-20">
+    <div class="text-center max-w-xl mx-auto mb-12">
+      <div class="eyebrow mb-2">About us</div>
+      <h2 class="h-display" style="font-size:clamp(1.9rem,3.2vw,2.7rem)">Built by a researcher, for researchers</h2>
+    </div>
+    <div class="grid md:grid-cols-[210px_1fr] gap-10 items-start">
+      <div class="flex flex-col items-center text-center">
+        <div style="width:140px;height:140px;border-radius:50%;background:var(--color-primary);display:grid;place-items:center;box-shadow:0 14px 30px -16px color-mix(in oklab,var(--color-primary) 70%,transparent)">
+          <span class="fr" style="color:var(--color-primary-content);font-weight:600;font-size:46px;letter-spacing:-0.01em">DK</span>
+        </div>
+        <div class="fr mt-4" style="font-weight:600;font-size:19px">Deanna Kepka, PhD, MPH</div>
+        <div class="ot mt-1" style="font-size:12.5px;line-height:1.5;color:color-mix(in oklab,var(--color-base-content) 60%,transparent)">Founder &amp; Director<br />Professor, University of Utah College of Nursing<br />Investigator, Huntsman Cancer Institute</div>
+      </div>
+      <div>
+        <p class="nr" style="font-size:1.05rem;line-height:1.7;color:color-mix(in oklab,var(--color-base-content) 85%,transparent)">
+          PerfectPaper was founded by <b>Deanna Kepka, PhD, MPH</b> — a professor at the University of Utah College of Nursing and an investigator at Huntsman Cancer Institute, where her research on HPV vaccination and population health has informed public-health practice for over a decade.
+        </p>
+        <p class="nr mt-4" style="font-size:1.05rem;line-height:1.7;color:color-mix(in oklab,var(--color-base-content) 85%,transparent)">
+          Over her career she has reviewed hundreds of manuscripts — for journals, grant panels, and the researchers she mentors — and kept seeing the same pattern: strong work held back by fixable problems no one caught in time. PerfectPaper is the distillation of that work. She set out to encode her reviewing expertise and rigor into a system that gives every paper the same careful, exacting read — at scale, across many manuscripts at once.
+        </p>
+        <div class="flex flex-wrap gap-2 mt-6">
+          <span class="ot" style="font-size:11.5px;font-weight:600;border:1px solid color-mix(in oklab,var(--color-primary) 35%,var(--color-base-300));color:var(--color-primary);background:color-mix(in oklab,var(--color-primary) 7%,transparent);border-radius:999px;padding:5px 12px">NIH R01 grant recipient</span>
+          <span class="ot" style="font-size:11.5px;font-weight:600;border:1px solid color-mix(in oklab,var(--color-primary) 35%,var(--color-base-300));color:var(--color-primary);background:color-mix(in oklab,var(--color-primary) 7%,transparent);border-radius:999px;padding:5px 12px">Grant reviewer · American Cancer Society</span>
+          <span class="ot" style="font-size:11.5px;font-weight:600;border:1px solid color-mix(in oklab,var(--color-primary) 35%,var(--color-base-300));color:var(--color-primary);background:color-mix(in oklab,var(--color-primary) 7%,transparent);border-radius:999px;padding:5px 12px">Hundreds of manuscripts reviewed</span>
+        </div>
+        <blockquote class="fr mt-7" style="font-weight:500;font-style:italic;font-size:1.3rem;line-height:1.4;letter-spacing:-0.01em;padding-left:18px;border-left:3px solid var(--color-accent)">
+          "Every researcher deserves a thorough, honest read before they submit — not just the ones with the right networks."
+        </blockquote>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRICING -->
+  <section class="soft border-t border-base-300">
+    <div class="max-w-5xl mx-auto px-5 sm:px-8 py-20">
+      <div class="text-center max-w-xl mx-auto mb-12">
+        <div class="eyebrow mb-2">Pricing</div>
+        <h2 class="h-display" style="font-size:clamp(1.9rem,3.2vw,2.7rem)">Pay as you go. No subscription required.</h2>
+      </div>
+      <div class="grid md:grid-cols-3 gap-4 items-stretch">
+        <div class="card p-7 bg-base-100">
+          <h3 class="ot" style="font-weight:600;font-size:16px">1 Full Review</h3>
+          <div class="fr mt-1" style="font-weight:600;font-size:36px">$49.99</div>
+          <div class="ot" style="font-size:12px;color:var(--color-primary)">one-time-use</div>
+          <ul class="nr mt-5 flex flex-col gap-2.5" style="font-size:13.5px;color:color-mix(in oklab,var(--color-base-content) 75%,transparent)">
+            <li>✓ All PerfectPaper suggestions</li><li>✓ Full review in under an hour</li><li>✓ No subscription</li>
+          </ul>
+          <a class="btn btn-outline btn-block rounded-lg mt-6" style="font-weight:600;border-color:color-mix(in oklab,var(--color-base-content) 20%,transparent)">Buy now</a>
+        </div>
+        <div class="card p-7 bg-base-100" style="border-color:var(--color-primary);box-shadow:0 20px 40px -28px color-mix(in oklab,var(--color-primary) 60%,transparent)">
+          <div class="flex items-center justify-between">
+            <h3 class="ot" style="font-weight:600;font-size:16px">3 Full Reviews</h3>
+            <span class="ot" style="font-size:10px;font-weight:700;background:var(--color-primary);color:var(--color-primary-content);border-radius:999px;padding:3px 9px">Popular</span>
+          </div>
+          <div class="fr mt-1" style="font-weight:600;font-size:36px">$119.99</div>
+          <div class="ot" style="font-size:12px;color:var(--color-success)">Save $30</div>
+          <ul class="nr mt-5 flex flex-col gap-2.5" style="font-size:13.5px;color:color-mix(in oklab,var(--color-base-content) 75%,transparent)">
+            <li>✓ Everything in one-time-use</li><li>✓ Re-check drafts as you revise</li><li>✓ Use across multiple papers</li>
+          </ul>
+          <a class="btn btn-primary btn-block rounded-lg mt-6" style="font-weight:600">Buy now</a>
+        </div>
+        <div class="card p-7 bg-base-100">
+          <h3 class="ot" style="font-weight:600;font-size:16px">10 Full Reviews</h3>
+          <div class="fr mt-1" style="font-weight:600;font-size:36px">$299.99</div>
+          <div class="ot" style="font-size:12px;color:var(--color-success)">Save $200</div>
+          <ul class="nr mt-5 flex flex-col gap-2.5" style="font-size:13.5px;color:color-mix(in oklab,var(--color-base-content) 75%,transparent)">
+            <li>✓ Same manuscript at every stage</li><li>✓ Perfect for a final check</li><li>✓ Best value per review</li>
+          </ul>
+          <a class="btn btn-outline btn-block rounded-lg mt-6" style="font-weight:600;border-color:color-mix(in oklab,var(--color-base-content) 20%,transparent)">Buy now</a>
+        </div>
+      </div>
+      <p class="text-center nr mt-8" style="font-size:13.5px;color:color-mix(in oklab,var(--color-base-content) 60%,transparent)">Interested in an institutional subscription? <a style="color:var(--color-primary);text-decoration:underline">Learn about PerfectPaper for Institutions</a></p>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="border-t border-base-300">
+    <div class="max-w-6xl mx-auto px-5 sm:px-8 py-14 grid grid-cols-2 md:grid-cols-4 gap-8">
+      <div class="col-span-2 md:col-span-1">
+        <div class="flex items-center gap-2.5 mb-3">
+          <span class="tile"><span class="p">P</span><span class="dot"></span></span>
+          <span class="fr" style="font-weight:600;font-size:18px">Perfect<span style="color:var(--color-primary)">Paper</span><span style="color:var(--color-accent)">.</span></span>
+        </div>
+        <p class="nr" style="font-size:13px;color:color-mix(in oklab,var(--color-base-content) 60%,transparent);max-width:210px">Made for researchers, by researchers.</p>
+      </div>
+      <nav class="flex flex-col gap-2"><h6 class="ot" style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:color-mix(in oklab,var(--color-base-content) 45%,transparent);margin-bottom:4px">Product</h6>
+        <a class="navlink">Pricing &amp; Plans</a><a class="navlink">Example Reports</a><a class="navlink">FAQ</a><a class="navlink">Why PerfectPaper</a></nav>
+      <nav class="flex flex-col gap-2"><h6 class="ot" style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:color-mix(in oklab,var(--color-base-content) 45%,transparent);margin-bottom:4px">Company</h6>
+        <a class="navlink">For Institutions</a><a class="navlink">For Journals</a><a class="navlink">Contact</a><a class="navlink">Trust Center</a></nav>
+      <nav class="flex flex-col gap-2"><h6 class="ot" style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:color-mix(in oklab,var(--color-base-content) 45%,transparent);margin-bottom:4px">Legal</h6>
+        <a class="navlink">Privacy Policy</a><a class="navlink">Terms of Service</a><a class="navlink">Cookies</a></nav>
+    </div>
+    <div class="border-t border-base-300">
+      <div class="max-w-6xl mx-auto px-5 sm:px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-2 ot" style="font-size:12.5px;color:color-mix(in oklab,var(--color-base-content) 50%,transparent)">
+        <span>© 2026 PerfectPaper, Inc.</span><span>All systems operational</span>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

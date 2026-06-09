@@ -1,0 +1,127 @@
+<Layouts.app flash={@flash} current_scope={@current_scope}>
+  <section class="max-w-2xl mx-auto px-4 py-12 sm:py-20">
+    <header class="mb-10">
+      <p class="ds-eyebrow mb-2">{gettext("Privacy")}</p>
+      <h1 class="ds-h1 mb-4">{gettext("Your privacy rights")}</h1>
+      <p class="ds-lead">
+        {gettext(
+          "Under GDPR, UK GDPR, CCPA, and other applicable laws you have the right to access, correct, export, or delete the personal data we hold about you. Use the form below to make a request — we will respond within 30 days."
+        )}
+      </p>
+    </header>
+
+    <%= if @submitted do %>
+      <div class="alert alert-success" role="alert" data-testid="dsar-success">
+        <.icon name="hero-check-circle" class="size-5 shrink-0" />
+        <div>
+          <p class="font-medium">{gettext("Request received.")}</p>
+          <p class="text-sm mt-1">
+            {gettext(
+              "We have sent your request to our privacy team. We will be in touch within 30 days to verify your identity and fulfil your request."
+            )}
+          </p>
+        </div>
+      </div>
+    <% else %>
+      <.form
+        for={@form}
+        phx-change="validate"
+        phx-submit="submit"
+        class="space-y-6"
+        data-testid="dsar-form"
+      >
+        <.input
+          field={@form[:name]}
+          type="text"
+          label={gettext("Full name")}
+          required
+          data-testid="dsar-name"
+        />
+        <.input
+          field={@form[:email]}
+          type="email"
+          label={gettext("Email address")}
+          required
+          data-testid="dsar-email"
+        />
+        <.input
+          field={@form[:request_type]}
+          type="select"
+          label={gettext("Request type")}
+          options={DsarRequest.request_type_options()}
+          prompt={gettext("Select a right to exercise…")}
+          required
+          data-testid="dsar-type"
+        />
+        <.input
+          field={@form[:message]}
+          type="textarea"
+          label={gettext("Additional details (optional)")}
+          rows="4"
+          placeholder={gettext("Describe your request in more detail, if needed.")}
+          data-testid="dsar-message"
+        />
+        <p class="text-sm text-base-content/60">
+          {gettext(
+            "We will ask you to verify your identity before taking any action. We will not discriminate against you for exercising your rights."
+          )}
+        </p>
+        <.button type="submit" class="btn-primary" data-testid="dsar-submit">
+          {gettext("Submit request")}
+        </.button>
+      </.form>
+    <% end %>
+
+    <hr class="border-base-300 my-12" />
+
+    <section class="space-y-4 text-sm text-base-content/80">
+      <h2 class="ds-h3">{gettext("Rights at a glance")}</h2>
+      <dl class="space-y-3">
+        <div>
+          <dt class="font-semibold">{gettext("Access")}</dt>
+          <dd>{gettext("Obtain a copy of the personal data we hold about you.")}</dd>
+        </div>
+        <div>
+          <dt class="font-semibold">{gettext("Correction")}</dt>
+          <dd>{gettext("Ask us to correct inaccurate or incomplete information.")}</dd>
+        </div>
+        <div>
+          <dt class="font-semibold">{gettext("Erasure")}</dt>
+          <dd>
+            {gettext(
+              "Request deletion of your personal data where there is no overriding legal basis to keep it."
+            )}
+          </dd>
+        </div>
+        <div>
+          <dt class="font-semibold">{gettext("Portability")}</dt>
+          <dd>
+            {gettext(
+              "Receive your data in a structured, machine-readable format to transfer to another service."
+            )}
+          </dd>
+        </div>
+        <div>
+          <dt class="font-semibold">{gettext("Object / restrict")}</dt>
+          <dd>
+            {gettext(
+              "Object to certain processing activities or ask us to limit how we use your information."
+            )}
+          </dd>
+        </div>
+      </dl>
+      <p class="mt-4">
+        {gettext("You may also lodge a complaint with your local data protection authority.")}
+        {gettext("In the EU and UK, find your authority at")}
+        <a
+          href="https://edpb.europa.eu/about-edpb/about-edpb/members_en"
+          class="text-primary hover:underline"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          edpb.europa.eu
+        </a>.
+      </p>
+    </section>
+  </section>
+</Layouts.app>

@@ -1,0 +1,104 @@
+<Layouts.app flash={@flash} current_scope={@current_scope}>
+  <section class="ds-container py-16 text-center lg:py-24">
+    <p class="font-sans text-[11px] font-bold uppercase tracking-[0.16em] text-primary">
+      {gettext("Privacy, by design")}
+    </p>
+    <h1 class="ds-h1 mx-auto mt-3 max-w-3xl">
+      {gettext("Built for teams that take research data seriously")}
+    </h1>
+    <p class="mx-auto mt-5 max-w-2xl font-serif text-lg leading-relaxed text-base-content/70">
+      {gettext(
+        "PerfectPaper gives labs, departments, and institutions the security, access controls, and integrations they need — without getting in the way of the work."
+      )}
+    </p>
+  </section>
+
+  <section class="ds-container pb-4">
+    <div class="grid gap-6 md:grid-cols-3">
+      <.security_card
+        icon="hero-lock-closed"
+        title={gettext("Your content stays yours")}
+        body={
+          gettext(
+            "We protect your manuscripts with strong access controls and encrypted storage, in transit and at rest."
+          )
+        }
+        link_label={gettext("Privacy policy")}
+        link_href={~p"/privacy"}
+      />
+      <.security_card
+        icon="hero-no-symbol"
+        title={gettext("Never used to train AI")}
+        body={gettext("Your papers are yours. Nothing you upload is ever used as training data.")}
+        link_label={gettext("How we handle your data")}
+        link_href={~p"/enterprise/security"}
+      />
+      <.security_card
+        icon="hero-document-check"
+        title={gettext("A compliance roadmap")}
+        body={
+          gettext(
+            "We're pursuing SOC 2 and ISO 27001. Our data handling and subprocessors are documented for your IT team."
+          )
+        }
+        link_label={gettext("See compliance")}
+        link_href="#compliance"
+      />
+    </div>
+  </section>
+
+  <.enterprise_anchor_nav
+    class="mt-12 lg:mt-16"
+    links={[
+      {gettext("Security"), "#security"},
+      {gettext("Teams"), "#teams"},
+      {gettext("Access"), "#access"},
+      {gettext("Developers"), "#developers"},
+      {gettext("Compliance"), "#compliance"},
+      {gettext("Support"), "#support"}
+    ]}
+  />
+
+  <section
+    :for={area <- enterprise_areas()}
+    id={area.id}
+    class="ds-container scroll-mt-24 border-b border-base-300 py-14 lg:py-20"
+  >
+    <div class="grid gap-8 lg:grid-cols-[0.9fr_1.1fr]">
+      <div>
+        <span class="grid size-11 place-items-center rounded-xl bg-primary/10 text-primary">
+          <.icon name={area.icon} class="size-5" />
+        </span>
+        <h2 class="ds-h2 mt-4">{area.title}</h2>
+        <p class="mt-3 max-w-md font-serif text-base-content/70">{area.blurb}</p>
+        <a
+          :if={area.link_label && area.link_href}
+          href={area.link_href}
+          class="link link-primary mt-4 inline-block font-sans text-sm font-semibold"
+        >
+          {area.link_label}
+        </a>
+      </div>
+      <ul class="space-y-3 self-center">
+        <li
+          :for={point <- area.points}
+          class="flex items-start gap-2.5 font-serif text-base-content/80"
+        >
+          <.icon name="hero-check" class="mt-1 size-4 shrink-0 text-success" />
+          {point}
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <.cta_banner
+    heading={gettext("Talk to us about your team.")}
+    subcopy={
+      gettext(
+        "Tell us about your lab, department, or institution and we'll help you get set up — including security review, onboarding, and SLAs."
+      )
+    }
+    cta_label={gettext("Contact sales")}
+    cta_href={~p"/contact"}
+  />
+</Layouts.app>

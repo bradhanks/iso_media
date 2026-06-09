@@ -48,7 +48,7 @@ defmodule ISOMedia.Boxes.EditList do
   def encode(%__MODULE__{entries: entries}) do
     version = if Enum.any?(entries, &needs_v1?/1), do: 1, else: 0
     body = [<<length(entries)::32>>, Enum.map(entries, &encode_entry(version, &1))]
-    %Box{type: "elst", data: IO.iodata_to_binary(FullBox.encode(version, <<0, 0, 0>>, body))}
+    %Box{type: "elst", data: FullBox.encode_data(version, <<0, 0, 0>>, body)}
   end
 
   defp needs_v1?(%{segment_duration: seg, media_time: mt}) do

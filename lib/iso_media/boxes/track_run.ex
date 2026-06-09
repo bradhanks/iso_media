@@ -118,6 +118,6 @@ defmodule ISOMedia.Boxes.TrackRun do
       <<length(t.samples)::32, t.data_offset::signed-32>> <>
         fsf_bin <> samples
 
-    %Box{type: "trun", data: IO.iodata_to_binary(FullBox.encode(version, <<flags::24>>, body))}
+    %Box{type: "trun", data: FullBox.encode_data(version, <<flags::24>>, body)}
   end
 end

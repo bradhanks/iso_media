@@ -49,9 +49,4 @@ defmodule ISOMedia.LayoutTest do
     # header 8 + (3 + (2 + 10)) = 8 + 15 = 23
     assert Layout.box_size(box) == 23
   end
-
-  test "segments_size/1 sums binary, FileSlice and nested-list parts" do
-    parts = [<<0, 0>>, %FileSlice{path: "x", offset: 0, length: 4}, [<<0>>, <<0, 0, 0>>]]
-    assert Layout.segments_size(parts) == 2 + 4 + 4
-  end
 end

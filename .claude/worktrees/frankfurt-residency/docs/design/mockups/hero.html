@@ -1,0 +1,460 @@
+<!doctype html>
+<html lang="en" data-theme="paper">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PerfectPaper — Animated Hero Demo</title>
+<link rel="icon" href="../../assets/perfectpaper-icon.svg" />
+<link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<style id="paper-inline">:root{color-scheme:light;
+--color-base-100:#fbf8f2;--color-base-200:#f4eee2;--color-base-300:#e9e0d0;--color-base-content:#211c18;
+--color-primary:#7a2e4e;--color-primary-content:#fbf8f2;--color-secondary:#1f5e58;--color-secondary-content:#fbf8f2;
+--color-accent:#c28a3a;--color-accent-content:#211c18;--color-neutral:#211c18;--color-neutral-content:#fbf8f2;
+--color-info:#2f6f8f;--color-info-content:#fbf8f2;--color-success:#5c7a45;--color-success-content:#fbf8f2;
+--color-warning:#c28a3a;--color-warning-content:#211c18;--color-error:#a3382f;--color-error-content:#fbf8f2;
+--color-taupe:#8c8377;--radius-selector:.25rem;--radius-field:.25rem;--radius-box:.375rem;
+--size-selector:.25rem;--size-field:.25rem;--border:1px;--depth:0;--noise:0;}</style>
+<link rel="stylesheet" href="../../brand-theme.css" />
+<link rel="stylesheet" href="../../fonts/fraunces.css" />
+<link rel="stylesheet" href="../../fonts/newsreader.css" />
+<link rel="stylesheet" href="../../fonts/outfit.css" />
+<style>
+  :root { --fr: "Fraunces", Georgia, serif; --nr: "Newsreader", Georgia, serif; --ot: "Outfit", system-ui, sans-serif; }
+  html, body { margin: 0; }
+  body { font-family: var(--nr); background: var(--color-base-100); color: var(--color-base-content); }
+  .fr { font-family: var(--fr); }
+  .ot { font-family: var(--ot); }
+  .nr { font-family: var(--nr); }
+
+  /* ---- hero entrance ---- */
+  @keyframes heroReveal { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  .hero-reveal { opacity: 0; animation: heroReveal .7s cubic-bezier(.2,.7,.2,1) forwards; }
+
+  /* ============================================================
+     DEMO STAGE — a faux Credo app window cycling through 5 steps
+     ============================================================ */
+  .demo-wrap { position: relative; }
+  .demo-glow { position: absolute; inset: -8% -4% auto -4%; height: 70%; z-index: 0;
+    background: radial-gradient(60% 80% at 70% 20%, color-mix(in oklab, var(--color-primary) 22%, transparent), transparent 70%);
+    filter: blur(30px); pointer-events: none; }
+
+  .appwin { position: relative; z-index: 1; border-radius: 14px; overflow: hidden;
+    background: var(--color-base-100); border: 1px solid var(--color-base-300);
+    box-shadow: 0 30px 60px -25px color-mix(in oklab, var(--color-base-content) 38%, transparent),
+                0 2px 0 0 color-mix(in oklab, var(--color-base-content) 4%, transparent) inset; }
+
+  /* title bar */
+  .appwin-bar { display: flex; align-items: center; gap: 10px; padding: 9px 14px;
+    background: color-mix(in oklab, var(--color-base-200) 70%, var(--color-base-100));
+    border-bottom: 1px solid var(--color-base-300); }
+  .appwin-logo { width: 22px; height: 22px; border-radius: 6px; background: var(--color-primary);
+    color: var(--color-primary-content); display: grid; place-items: center; font-family: var(--fr); font-weight: 600; font-size: 14px; position: relative; }
+  .appwin-logo .dot { position:absolute; width:3px; height:3px; border-radius:50%; background:var(--color-accent); right:3px; bottom:4px; }
+  .appwin-title { font-family: var(--ot); font-size: 11.5px; color: color-mix(in oklab, var(--color-base-content) 55%, transparent);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 360px; }
+  .appwin-share { margin-left: auto; font-family: var(--ot); font-size: 10.5px; color: color-mix(in oklab,var(--color-base-content) 50%,transparent);
+    border: 1px solid var(--color-base-300); border-radius: 6px; padding: 3px 9px; }
+
+  /* sub bar: DOCUMENT | FEEDBACK */
+  .appwin-sub { display: grid; grid-template-columns: 1fr 1fr; }
+  .appwin-sub > div { padding: 8px 16px; font-family: var(--ot); font-size: 10px; letter-spacing: .16em; font-weight: 600;
+    color: color-mix(in oklab, var(--color-base-content) 45%, transparent); border-bottom: 1px solid var(--color-base-300); }
+  .appwin-sub > div:first-child { border-right: 1px solid var(--color-base-300); }
+
+  .appwin-body { display: grid; grid-template-columns: 1fr 1fr; height: 430px; position: relative; }
+  .pane { position: relative; overflow: hidden; }
+  .pane-doc { border-right: 1px solid var(--color-base-300); background: var(--color-base-100); }
+  .pane-fb { background: color-mix(in oklab, var(--color-base-200) 55%, var(--color-base-100)); }
+
+  /* ---- caption ---- */
+  .demo-caption { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); z-index: 6;
+    font-family: var(--ot); font-weight: 600; font-size: 12.5px; letter-spacing: .01em;
+    background: var(--color-neutral); color: var(--color-neutral-content); padding: 7px 16px; border-radius: 999px;
+    box-shadow: 0 8px 20px -8px color-mix(in oklab, var(--color-base-content) 50%, transparent); white-space: nowrap;
+    opacity: 0; }
+  .stage[data-step] .demo-caption.cap-on { animation: capIn .5s .15s both; }
+  @keyframes capIn { from { opacity: 0; transform: translate(-50%, 8px); } to { opacity: 1; transform: translate(-50%, 0); } }
+
+  /* ---------- DOCUMENT pane content ---------- */
+  .doc-pad { padding: 22px 24px; }
+  .doc-eyebrow { font-family: var(--ot); font-size: 8.5px; letter-spacing: .18em; font-weight: 700;
+    color: color-mix(in oklab, var(--color-base-content) 40%, transparent); text-transform: uppercase; }
+  .doc-title { font-family: var(--fr); font-weight: 600; font-size: 17px; line-height: 1.25; margin: 7px 0 14px;
+    letter-spacing: -0.01em; max-width: 92%; }
+  .doc-line { height: 7px; border-radius: 4px; background: color-mix(in oklab, var(--color-base-content) 12%, transparent); margin: 9px 0; }
+  .doc-line.sec { height: 9px; width: 38% !important; background: color-mix(in oklab, var(--color-base-content) 24%, transparent); margin-top: 18px; }
+  .doc-quote { background: color-mix(in oklab, var(--color-accent) 16%, transparent);
+    box-shadow: -3px 0 0 0 var(--color-accent); border-radius: 2px; padding: 2px 0; }
+
+  /* dropzone (step 0) */
+  .dropzone { position: absolute; inset: 26px; border: 2px dashed color-mix(in oklab, var(--color-primary) 45%, var(--color-base-300));
+    border-radius: 12px; display: grid; place-items: center; text-align: center; gap: 6px;
+    background: color-mix(in oklab, var(--color-primary) 5%, transparent); }
+  .dropzone-ic { width: 40px; height: 40px; border-radius: 10px; background: color-mix(in oklab, var(--color-primary) 12%, transparent);
+    color: var(--color-primary); display: grid; place-items: center; margin: 0 auto; }
+  .dropzone-hint { font-family: var(--ot); font-size: 12px; color: color-mix(in oklab, var(--color-base-content) 55%, transparent); }
+  .pdf-card { position: absolute; width: 116px; right: 18px; bottom: 16px; z-index: 5;
+    background: var(--color-base-100); border: 1px solid var(--color-base-300); border-radius: 10px; padding: 10px;
+    box-shadow: 0 14px 30px -12px color-mix(in oklab,var(--color-base-content) 45%,transparent); }
+  .pdf-card .pdf-badge { font-family: var(--ot); font-size: 8px; font-weight: 700; letter-spacing: .1em; color: var(--color-error); }
+  .pdf-card .pdf-name { font-family: var(--ot); font-size: 10px; margin-top: 4px; color: color-mix(in oklab,var(--color-base-content) 70%,transparent); }
+  .pdf-card .pdf-l { height: 4px; border-radius: 3px; background: color-mix(in oklab,var(--color-base-content) 12%,transparent); margin-top: 6px; }
+  @keyframes pdfDrop {
+    0% { transform: translate(0,0) scale(1) rotate(-3deg); opacity: 0; }
+    14% { opacity: 1; }
+    60% { transform: translate(-72px,-150px) scale(1) rotate(0deg); opacity: 1; }
+    82% { transform: translate(-72px,-150px) scale(.7) rotate(0deg); opacity: 1; }
+    100% { transform: translate(-72px,-150px) scale(.4) rotate(0deg); opacity: 0; }
+  }
+  @keyframes dzPulse { 0%,100% { background: color-mix(in oklab,var(--color-primary) 5%,transparent); } 70% { background: color-mix(in oklab,var(--color-success) 14%,transparent); border-color: var(--color-success); } }
+  .dz-done { opacity: 0; }
+  @keyframes dzDone { 0%,55% { opacity: 0; transform: translateY(6px); } 70%,100% { opacity: 1; transform: none; } }
+
+  /* scanning sweep (step 1) */
+  .doc-scan { position: absolute; left: 0; right: 0; height: 64px; z-index: 4; pointer-events: none;
+    background: linear-gradient(180deg, transparent, color-mix(in oklab,var(--color-primary) 18%,transparent) 55%, transparent);
+    border-top: 1px solid color-mix(in oklab,var(--color-primary) 55%,transparent); top: 0; }
+  @keyframes scanY { 0% { top: 4%; } 100% { top: 88%; } }
+  .doc-status { position: absolute; left: 18px; bottom: 16px; z-index: 5; display: flex; align-items: center; gap: 8px;
+    background: var(--color-base-100); border: 1px solid var(--color-base-300); border-radius: 999px; padding: 6px 12px;
+    font-family: var(--ot); font-size: 11px; box-shadow: 0 8px 18px -10px color-mix(in oklab,var(--color-base-content) 40%,transparent); }
+
+  /* ---------- FEEDBACK pane content ---------- */
+  .fb-pad { padding: 18px 18px; display: flex; flex-direction: column; gap: 12px; height: 100%; box-sizing: border-box; }
+  .fb-head { display: flex; align-items: center; gap: 7px; font-family: var(--ot); font-weight: 600; font-size: 12px;
+    color: color-mix(in oklab,var(--color-base-content) 70%,transparent); }
+  .fb-head .dot { width: 14px; height: 14px; color: var(--color-primary); }
+  .fb-card { background: var(--color-base-100); border: 1px solid var(--color-base-300); border-radius: 10px; padding: 13px 14px; }
+  .fb-card-title { font-family: var(--fr); font-weight: 600; font-size: 13.5px; margin-bottom: 6px; }
+  .fb-card-body { font-family: var(--nr); font-size: 11.5px; line-height: 1.5; color: color-mix(in oklab,var(--color-base-content) 72%,transparent); }
+  .fb-num { font-family: var(--ot); font-weight: 700; font-size: 11px; color: var(--color-primary); }
+  .fb-quote { font-family: var(--nr); font-style: italic; font-size: 11px; line-height: 1.5; margin-top: 8px; padding-left: 10px;
+    border-left: 2px solid color-mix(in oklab,var(--color-accent) 80%,transparent); color: color-mix(in oklab,var(--color-base-content) 75%,transparent); }
+  .fb-chip { display: inline-flex; align-items: center; gap: 5px; margin-top: 9px; font-family: var(--ot); font-size: 9.5px; font-weight: 600;
+    border: 1px solid var(--color-base-300); border-radius: 6px; padding: 4px 8px; color: color-mix(in oklab,var(--color-base-content) 60%,transparent); }
+  .fb-actions { display: flex; gap: 8px; margin-top: 11px; }
+  .fb-btn { font-family: var(--ot); font-size: 10px; font-weight: 600; border-radius: 7px; padding: 5px 11px; display: inline-flex; align-items: center; gap: 5px; }
+  .fb-btn-done { background: var(--color-success); color: var(--color-success-content); }
+  .fb-btn-ghost { border: 1px solid var(--color-base-300); color: color-mix(in oklab,var(--color-base-content) 60%,transparent); }
+
+  /* skeleton shimmer */
+  .sk { background: color-mix(in oklab,var(--color-base-content) 9%,transparent); border-radius: 6px; overflow: hidden; position: relative; }
+  .sk::after { content: ""; position: absolute; inset: 0; transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, color-mix(in oklab,var(--color-base-100) 75%,transparent), transparent);
+    animation: shimmer 1.3s infinite; }
+  @keyframes shimmer { 100% { transform: translateX(100%); } }
+
+  /* count pill */
+  .fb-count { margin-left: auto; font-family: var(--ot); font-size: 10px; font-weight: 700; background: var(--color-primary);
+    color: var(--color-primary-content); border-radius: 999px; padding: 2px 8px; }
+
+  /* slide-in helper for comments */
+  @keyframes slideUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes popCheck { 0% { transform: scale(0); } 70% { transform: scale(1.25); } 100% { transform: scale(1); } }
+
+  /* chat pane (step 3) — slides over feedback */
+  .chat { position: absolute; inset: 0; background: color-mix(in oklab,var(--color-base-200) 50%,var(--color-base-100));
+    display: flex; flex-direction: column; }
+  .chat-head { padding: 10px 16px; border-bottom: 1px solid var(--color-base-300); font-family: var(--ot); font-weight: 600; font-size: 11px;
+    letter-spacing: .14em; color: color-mix(in oklab,var(--color-base-content) 55%,transparent); display: flex; align-items: center; gap: 7px; }
+  .chat-body { flex: 1; padding: 16px; display: flex; flex-direction: column; gap: 10px; justify-content: flex-end; }
+  .bubble { max-width: 78%; font-family: var(--nr); font-size: 11.5px; line-height: 1.45; padding: 9px 12px; border-radius: 13px; }
+  .bubble-ai { align-self: flex-start; background: var(--color-base-100); border: 1px solid var(--color-base-300); border-bottom-left-radius: 4px; }
+  .bubble-me { align-self: flex-end; background: var(--color-primary); color: var(--color-primary-content); border-bottom-right-radius: 4px; }
+  .chat-input { margin: 12px; display: flex; align-items: center; gap: 8px; background: var(--color-base-100);
+    border: 1px solid var(--color-base-300); border-radius: 9px; padding: 8px 10px; font-family: var(--ot); font-size: 11px;
+    color: color-mix(in oklab,var(--color-base-content) 45%,transparent); }
+  .typing { display: inline-flex; gap: 3px; }
+  .typing span { width: 5px; height: 5px; border-radius: 50%; background: color-mix(in oklab,var(--color-base-content) 40%,transparent);
+    animation: typing 1s infinite; }
+  .typing span:nth-child(2) { animation-delay: .15s; } .typing span:nth-child(3) { animation-delay: .3s; }
+  @keyframes typing { 0%,60%,100% { opacity: .3; transform: translateY(0); } 30% { opacity: 1; transform: translateY(-3px); } }
+
+  /* progress (step 4) */
+  .fb-progress-wrap { background: var(--color-base-100); border: 1px solid var(--color-base-300); border-radius: 10px; padding: 12px 14px; }
+  .fb-progress { height: 7px; border-radius: 999px; background: var(--color-base-300); overflow: hidden; margin-top: 8px; }
+  .fb-progress > i { display: block; height: 100%; width: 0; background: var(--color-success); border-radius: 999px; }
+  @keyframes fill100 { from { width: 8%; } to { width: 100%; } }
+  .export-btn { margin-top: auto; font-family: var(--ot); font-weight: 600; font-size: 12px; background: var(--color-primary);
+    color: var(--color-primary-content); border-radius: 9px; padding: 11px; text-align: center; display: flex; align-items: center; justify-content: center; gap: 7px; }
+
+  /* ===== scene gating: show only the active step's bits ===== */
+  .only { display: none !important; }
+  .stage[data-step="0"] .s0 { display: var(--d, flex) !important; }
+  .stage[data-step="1"] .s1 { display: var(--d, flex) !important; }
+  .stage[data-step="2"] .s2 { display: var(--d, flex) !important; }
+  .stage[data-step="3"] .s3 { display: var(--d, flex) !important; }
+  .stage[data-step="4"] .s4 { display: var(--d, flex) !important; }
+  .s-block { --d: block; }
+  .d-block { --d: block; }
+  .d-grid { --d: grid; }
+  .d-flex { --d: flex; }
+
+  /* persistent manuscript visible from step 1 on */
+  .doc-paper { display: none; }
+  .stage[data-step="1"] .doc-paper, .stage[data-step="2"] .doc-paper,
+  .stage[data-step="3"] .doc-paper, .stage[data-step="4"] .doc-paper { display: block; }
+
+  /* animation hooks tied to active step (restart via display toggle) */
+  .stage[data-step="0"] .pdf-card { animation: pdfDrop 2.6s .3s cubic-bezier(.5,.1,.4,1) both; }
+  .stage[data-step="0"] .dropzone { animation: dzPulse 2.8s .3s both; }
+  .stage[data-step="0"] .dz-done { animation: dzDone 2.8s .3s both; }
+  .stage[data-step="1"] .doc-scan { animation: scanY 1.7s linear infinite alternate; }
+  .stage[data-step="2"] .fb-overall { animation: slideUp .5s .05s both; }
+  .stage[data-step="2"] .c1 { animation: slideUp .5s .35s both; }
+  .stage[data-step="2"] .c2 { animation: slideUp .5s .65s both; }
+  .stage[data-step="2"] .fb-count, .stage[data-step="4"] .fb-count { animation: fadeIn .5s .9s both; }
+  .stage[data-step="3"] .chat { animation: chatIn .5s both; }
+  @keyframes chatIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: none; } }
+  .stage[data-step="3"] .b1 { animation: slideUp .45s .35s both; }
+  .b-typing { overflow: hidden; }
+  .stage[data-step="3"] .b-typing { animation: typLife 1.2s .9s forwards; }
+  @keyframes typLife { 0% { opacity: 0; max-height: 0; } 16% { opacity: 1; max-height: 40px; } 68% { opacity: 1; max-height: 40px; } 100% { opacity: 0; max-height: 0; padding-top: 0; padding-bottom: 0; margin: 0; } }
+  .stage[data-step="3"] .b2 { animation: slideUp .45s 2.0s both; }
+  .stage[data-step="3"] .doc-quote { animation: qHi 2.4s .8s both; }
+  @keyframes qHi { 0%,30% { background: transparent; box-shadow: none; } 55%,100% { background: color-mix(in oklab,var(--color-accent) 16%,transparent); box-shadow: -3px 0 0 0 var(--color-accent); } }
+  .stage[data-step="4"] .d1 { animation: popCheck .4s .3s both; }
+  .stage[data-step="4"] .d2 { animation: popCheck .4s .7s both; }
+  .stage[data-step="4"] .fb-progress > i { animation: fill100 1.6s .5s cubic-bezier(.4,.7,.2,1) both; }
+  .stage[data-step="4"] .export-btn { animation: slideUp .5s 1.4s both; }
+  .stage[data-step="4"] .c2 { display: none !important; }
+
+  /* ===== step rail ===== */
+  .rail { display: flex; align-items: center; gap: 0; margin-top: 22px; }
+  .rail-step { background: none; border: none; cursor: pointer; display: flex; flex-direction: column; gap: 3px; padding: 0; text-align: left; }
+  .rail-num { font-family: var(--ot); font-weight: 700; font-size: 11px; color: color-mix(in oklab,var(--color-base-content) 35%,transparent); transition: color .3s; }
+  .rail-label { font-family: var(--ot); font-weight: 600; font-size: 12.5px; color: color-mix(in oklab,var(--color-base-content) 45%,transparent); transition: color .3s; white-space: nowrap; }
+  .rail-line { flex: 1; height: 2px; background: var(--color-base-300); margin: 0 12px; position: relative; overflow: hidden; }
+  .rail-line > i { position: absolute; inset: 0; background: var(--color-primary); transform: scaleX(0); transform-origin: left; }
+  .rail-step.active .rail-num { color: var(--color-primary); }
+  .rail-step.active .rail-label { color: var(--color-base-content); }
+  .rail-step.done .rail-num, .rail-step.done .rail-label { color: color-mix(in oklab,var(--color-base-content) 70%,transparent); }
+  .rail-line.fillrun > i { animation: railFill var(--ms,4500ms) linear forwards; }
+  .rail-line.filled > i { transform: scaleX(1); }
+  @keyframes railFill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+  @media (max-width: 1023px) { .demo-wrap { display: none; } }
+</style>
+</head>
+<body>
+  <section class="relative overflow-hidden">
+    <div class="max-w-7xl mx-auto px-5 sm:px-8 pt-14 pb-16 lg:pt-20">
+      <div class="flex flex-wrap items-center gap-y-10">
+
+        <!-- LEFT: copy -->
+        <div class="w-full lg:w-[42%] lg:pe-8 relative z-10 flex flex-col gap-6">
+          <div class="hero-reveal ot" style="animation-delay:0ms">
+            <span class="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em]" style="color:var(--color-primary)">
+              <span style="width:7px;height:7px;border-radius:50%;background:var(--color-accent);display:inline-block"></span>
+              Peer review, reimagined
+            </span>
+          </div>
+          <h1 class="hero-reveal fr" style="animation-delay:90ms;font-weight:600;letter-spacing:-0.025em;line-height:1.05;font-size:clamp(2.1rem,3.4vw,3.4rem)">
+            Expert feedback on<br />your manuscript,<br /><span style="color:var(--color-primary)">before you submit.</span>
+          </h1>
+          <p class="hero-reveal nr" style="animation-delay:200ms;font-size:1.075rem;line-height:1.65;max-width:30rem;color:color-mix(in oklab,var(--color-base-content) 72%,transparent)">
+            PerfectPaper reads your full paper the way a thoughtful reviewer would — then returns structured, sourced feedback you can act on. Discuss any comment, revise with confidence, and walk into submission ready.
+          </p>
+          <div class="hero-reveal flex flex-wrap items-center gap-3 pt-1" style="animation-delay:320ms">
+            <a href="#" class="btn btn-primary btn-lg ot rounded-lg px-8" style="font-weight:600;box-shadow:none">Get your review</a>
+            <a href="#" class="btn btn-lg btn-outline ot rounded-lg px-7" style="font-weight:600;border-color:color-mix(in oklab,var(--color-base-content) 22%,transparent);background:transparent">See a sample</a>
+          </div>
+          <div class="hero-reveal flex items-center gap-2 pt-1 ot" style="animation-delay:420ms;font-size:0.8rem;color:color-mix(in oklab,var(--color-base-content) 50%,transparent)">
+            <span style="display:flex">
+              <span style="width:22px;height:22px;border-radius:50%;background:var(--color-primary);border:2px solid var(--color-base-100)"></span>
+              <span style="width:22px;height:22px;border-radius:50%;background:var(--color-secondary);border:2px solid var(--color-base-100);margin-left:-7px"></span>
+              <span style="width:22px;height:22px;border-radius:50%;background:var(--color-accent);border:2px solid var(--color-base-100);margin-left:-7px"></span>
+            </span>
+            Trusted by researchers at 40+ institutions
+          </div>
+        </div>
+
+        <!-- RIGHT: animated demo -->
+        <div class="w-full lg:w-[58%] demo-wrap hero-reveal" style="animation-delay:240ms">
+          <div class="demo-glow"></div>
+          <div class="stage" id="stage" data-step="0">
+            <div class="appwin">
+              <!-- title bar -->
+              <div class="appwin-bar">
+                <span class="appwin-logo fr">P<span class="dot"></span></span>
+                <span class="fr" style="font-weight:600;font-size:14px;letter-spacing:-0.01em">Perfect<span style="color:var(--color-primary)">Paper</span><span style="color:var(--color-accent)">.</span></span>
+                <span class="appwin-title">Rural–Urban Divides and Cultural Dynamics: HPV &amp; COVID-19 Vaccine Hesitancy…</span>
+                <span class="appwin-share ot">Sharing</span>
+              </div>
+              <!-- sub bar -->
+              <div class="appwin-sub">
+                <div>DOCUMENT</div>
+                <div id="fbLabel">FEEDBACK</div>
+              </div>
+              <!-- body -->
+              <div class="appwin-body">
+                <!-- DOCUMENT pane -->
+                <div class="pane pane-doc">
+                  <!-- dropzone (step 0) -->
+                  <div class="dropzone s0 only d-grid">
+                    <div>
+                      <div class="dropzone-ic">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4m0 0l-4 4m4-4l4 4"/><path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
+                      </div>
+                      <div class="dropzone-hint">Drop your manuscript</div>
+                      <div class="dz-done ot" style="font-size:11px;font-weight:600;color:var(--color-success);margin-top:6px">manuscript.pdf · uploaded ✓</div>
+                    </div>
+                  </div>
+                  <div class="pdf-card s0 only s-block">
+                    <div class="pdf-badge">PDF</div>
+                    <div class="pdf-name">manuscript.pdf</div>
+                    <div class="pdf-l" style="width:90%"></div>
+                    <div class="pdf-l" style="width:70%"></div>
+                  </div>
+
+                  <!-- persistent manuscript (steps 1-4) -->
+                  <div class="doc-paper">
+                    <div class="doc-pad">
+                      <div class="doc-eyebrow">SSM — Population Health</div>
+                      <div class="doc-title fr">Rural–Urban Divides and Cultural Dynamics in Vaccine Hesitancy</div>
+                      <div class="doc-line" style="width:100%"></div>
+                      <div class="doc-line" style="width:94%"></div>
+                      <div class="doc-line sec"></div>
+                      <div class="doc-line" style="width:97%"></div>
+                      <div class="doc-quote"><div class="doc-line" style="width:99%;background:color-mix(in oklab,var(--color-base-content) 20%,transparent)"></div><div class="doc-line" style="width:62%;margin-top:7px;background:color-mix(in oklab,var(--color-base-content) 20%,transparent)"></div></div>
+                      <div class="doc-line" style="width:88%"></div>
+                      <div class="doc-line" style="width:76%"></div>
+                    </div>
+                    <!-- scan + status (step 1) -->
+                    <div class="doc-scan s1 only s-block"></div>
+                    <div class="doc-status s1 only">
+                      <span class="loading loading-spinner loading-xs" style="color:var(--color-primary)"></span>
+                      Reading Section 3.2 — methods
+                    </div>
+                  </div>
+                </div>
+
+                <!-- FEEDBACK pane -->
+                <div class="pane pane-fb">
+                  <!-- step 0 placeholder -->
+                  <div class="s0 only" style="height:100%;align-items:center;justify-content:center;flex-direction:column;gap:8px;color:color-mix(in oklab,var(--color-base-content) 38%,transparent)">
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 5h16M4 10h16M4 15h10" stroke-linecap="round"/></svg>
+                    <span class="ot" style="font-size:11px">Awaiting your manuscript</span>
+                  </div>
+
+                  <!-- step 1 skeleton -->
+                  <div class="s1 only fb-pad">
+                    <div class="fb-head"><span class="sk" style="width:90px;height:11px"></span></div>
+                    <div class="fb-card"><div class="sk" style="width:60%;height:11px"></div><div class="sk" style="width:100%;height:8px;margin-top:9px"></div><div class="sk" style="width:92%;height:8px;margin-top:6px"></div></div>
+                    <div class="fb-card"><div class="sk" style="width:50%;height:11px"></div><div class="sk" style="width:100%;height:8px;margin-top:9px"></div><div class="sk" style="width:80%;height:8px;margin-top:6px"></div></div>
+                  </div>
+
+                  <!-- step 2 & 4 feedback list -->
+                  <div class="s2 s4 only fb-pad">
+                    <div class="fb-head">
+                      <svg class="dot" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 12l2 2 4-4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="9"/></svg>
+                      Overall Feedback <span style="font-size:9px;font-weight:600;color:color-mix(in oklab,var(--color-base-content) 40%,transparent);border:1px solid var(--color-base-300);border-radius:4px;padding:1px 5px">Beta</span>
+                      <span class="fb-count">7</span>
+                    </div>
+                    <div class="fb-card fb-overall">
+                      <div class="fb-card-title fr">Construction of the hesitancy scales</div>
+                      <div class="fb-card-body">The three factor-derived scales in Section 3.1 anchor your conclusions — give readers more evidence for their psychometric security.</div>
+                      <div class="s4 only fb-actions"><span class="fb-btn fb-btn-done d1"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5 9-11" stroke-linecap="round" stroke-linejoin="round"/></svg>Done</span></div>
+                    </div>
+                    <div class="fb-card c1">
+                      <div class="fb-num">#1 · Causal adjustment underspecified in §3.2</div>
+                      <div class="fb-quote">As shown in Figure 2, directed acyclic graphs encoded a priori knowledge for estimating total effects…</div>
+                      <span class="fb-chip">← Show in the doc</span>
+                      <div class="s4 only fb-actions"><span class="fb-btn fb-btn-done d2"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5 9-11" stroke-linecap="round" stroke-linejoin="round"/></svg>Done</span></div>
+                    </div>
+                    <div class="fb-card c2">
+                      <div class="fb-num">#3 · Incorrect sample sizes in Table 4</div>
+                      <div class="fb-card-body" style="margin-top:6px">The Hispanic young-adult subgroup counts don't reconcile with the totals reported in §4.1.</div>
+                    </div>
+                    <!-- step 4 progress + export -->
+                    <div class="s4 only fb-progress-wrap d-block">
+                      <div class="ot" style="font-size:10.5px;font-weight:600;display:flex;justify-content:space-between"><span>Comments addressed</span><span style="color:var(--color-success)">7 / 7</span></div>
+                      <div class="fb-progress"><i></i></div>
+                    </div>
+                    <div class="s4 only export-btn">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12m0 0l-4-4m4 4l4-4"/><path d="M4 18h16"/></svg>
+                      Export revised manuscript
+                    </div>
+                  </div>
+
+                  <!-- step 3 chat -->
+                  <div class="s3 only chat">
+                    <div class="chat-head"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 12a8 8 0 01-11.5 7.2L4 20l1-4.8A8 8 0 1121 12z" stroke-linecap="round" stroke-linejoin="round"/></svg> CHAT · Comment #1</div>
+                    <div class="chat-body">
+                      <div class="bubble bubble-me b1">How should I strengthen the DAG justification in §3.2?</div>
+                      <div class="bubble bubble-ai b-typing" style="display:inline-flex"><span class="typing"><span></span><span></span><span></span></span></div>
+                      <div class="bubble bubble-ai b2">State each backdoor path you're closing and cite the assumption behind every included covariate — reviewers will want the minimally-sufficient set made explicit.</div>
+                    </div>
+                    <div class="chat-input ot"><span>Ask about this feedback…</span><svg style="margin-left:auto" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l16-8-6 16-3-7-7-1z"/></svg></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- step rail -->
+            <div class="rail" id="rail">
+              <button class="rail-step" data-i="0"><span class="rail-num">01</span><span class="rail-label">Submit</span></button>
+              <span class="rail-line"><i></i></span>
+              <button class="rail-step" data-i="1"><span class="rail-num">02</span><span class="rail-label">Review</span></button>
+              <span class="rail-line"><i></i></span>
+              <button class="rail-step" data-i="2"><span class="rail-num">03</span><span class="rail-label">Feedback</span></button>
+              <span class="rail-line"><i></i></span>
+              <button class="rail-step" data-i="3"><span class="rail-num">04</span><span class="rail-label">Discuss</span></button>
+              <span class="rail-line"><i></i></span>
+              <button class="rail-step" data-i="4"><span class="rail-num">05</span><span class="rail-label">Resolve</span></button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <script>
+  (function () {
+    const stage = document.getElementById("stage");
+    const rail = document.getElementById("rail");
+    const steps = [...rail.querySelectorAll(".rail-step")];
+    const lines = [...rail.querySelectorAll(".rail-line")];
+    const caption = ["Submit your manuscript","PerfectPaper reads every section","Structured, sourced feedback","Discuss any comment with PerfectPaper","Resolve & export — submission-ready"];
+    const DUR = [4200, 4200, 5400, 6200, 5200];
+    let cur = -1, timer = null;
+
+    // caption element (one, reused)
+    const cap = document.createElement("div");
+    cap.className = "demo-caption";
+    stage.querySelector(".appwin").appendChild(cap);
+
+    function setStep(i, auto) {
+      cur = i;
+      stage.setAttribute("data-step", i);
+      cap.textContent = caption[i];
+      cap.classList.remove("cap-on"); void cap.offsetWidth; cap.classList.add("cap-on");
+      steps.forEach((s, n) => { s.classList.toggle("active", n === i); s.classList.toggle("done", n < i); });
+      lines.forEach((ln, n) => {
+        ln.classList.remove("fillrun", "filled");
+        if (n < i) ln.classList.add("filled");
+      });
+      // animate the connector line leaving the current step
+      if (i < lines.length) {
+        const ln = lines[i];
+        ln.style.setProperty("--ms", DUR[i] + "ms");
+        void ln.offsetWidth; ln.classList.add("fillrun");
+      }
+      clearTimeout(timer);
+      timer = setTimeout(() => setStep((i + 1) % 5, true), DUR[i]);
+    }
+
+    steps.forEach((s) => s.addEventListener("click", () => setStep(+s.dataset.i, false)));
+
+    // pause on hover
+    stage.addEventListener("mouseenter", () => clearTimeout(timer));
+    stage.addEventListener("mouseleave", () => { clearTimeout(timer); timer = setTimeout(() => setStep((cur + 1) % 5, true), 1400); });
+
+    setStep(0, true);
+  })();
+  </script>
+</body>
+</html>

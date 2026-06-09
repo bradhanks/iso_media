@@ -1,0 +1,238 @@
+<.app
+  active={nil}
+  title={gettext("Single sign-on")}
+  flash={@flash}
+  current_scope={@current_scope}
+  current_workspace={@current_workspace}
+  workspaces={@workspaces}
+>
+  <div class="mx-auto max-w-3xl">
+    <div class="mb-6">
+      <h1 class="ds-h2">{gettext("Single sign-on")}</h1>
+      <p class="ds-lead mt-1 text-base-content/65">
+        {gettext("Configure enterprise SSO for %{org}.", org: @org.name)}
+      </p>
+    </div>
+
+    <%!-- ── Current status ─────────────────────────────────────────────── --%>
+    <section id="sso-status" aria-label="SSO status" class="card card-border bg-base-100 mb-8">
+      <div class="card-body py-4">
+        <h2 class="ds-h3 mb-3">{gettext("Status")}</h2>
+
+        <div :if={@config == nil} class="font-serif text-sm text-base-content/60">
+          {gettext("Not configured yet. Add your identity provider details below.")}
+        </div>
+
+        <dl :if={@config} class="grid grid-cols-2 gap-x-6 gap-y-2 font-sans text-sm">
+          <dt class="text-base-content/55">{gettext("Protocol")}</dt>
+          <dd id="status-protocol">{@config.protocol |> to_string() |> String.upcase()}</dd>
+
+          <dt class="text-base-content/55">{gettext("Email domain")}</dt>
+          <dd id="status-domain">{@config.email_domain}</dd>
+
+          <dt class="text-base-content/55">{gettext("Domain")}</dt>
+          <dd id="status-verified">
+            <span :if={@config.domain_verified} class="badge badge-success badge-soft badge-sm">
+              {gettext("Verified")}
+            </span>
+            <span
+              :if={not @config.domain_verified}
+              class="badge badge-neutral badge-soft badge-sm"
+            >
+              {gettext("Not verified")}
+            </span>
+          </dd>
+
+          <dt class="text-base-content/55">{gettext("SSO")}</dt>
+          <dd id="status-enabled">
+            <span :if={@config.enabled} class="badge badge-success badge-soft badge-sm">
+              {gettext("Enabled")}
+            </span>
+            <span :if={not @config.enabled} class="badge badge-neutral badge-soft badge-sm">
+              {gettext("Disabled")}
+            </span>
+          </dd>
+
+          <dt :if={@config.protocol == :oidc} class="text-base-content/55">
+            {gettext("Client secret")}
+          </dt>
+          <dd :if={@config.protocol == :oidc} id="status-oidc-secret">
+            {(secret_set?(@config.oidc_client_secret) && gettext("Set")) || gettext("Not set")}
+          </dd>
+
+          <dt :if={@config.protocol == :saml} class="text-base-content/55">
+            {gettext("IdP certificate")}
+          </dt>
+          <dd :if={@config.protocol == :saml} id="status-saml-cert">
+            {(secret_set?(@config.saml_idp_cert) && gettext("Set")) || gettext("Not set")}
+          </dd>
+        </dl>
+
+        <%!-- Verify + enable actions --%>
+        <div :if={@config} class="mt-4 flex flex-wrap gap-3 border-t border-base-200 pt-4">
+          <button
+            type="button"
+            id="sso-verify-domain"
+            class="btn btn-secondary btn-sm font-sans"
+            phx-click="verify_domain"
+            disabled={@config.domain_verified}
+          >
+            {(@config.domain_verified && gettext("Domain verified")) || gettext("Verify domain")}
+          </button>
+
+          <button
+            type="button"
+            id="sso-enable"
+            class="btn btn-primary btn-sm font-sans"
+            phx-click="toggle_enabled"
+            disabled={not @config.domain_verified}
+          >
+            {(@config.enabled && gettext("Disable SSO")) || gettext("Enable SSO")}
+          </button>
+
+          <p
+            :if={not @config.domain_verified}
+            class="self-center font-sans text-xs text-base-content/50"
+          >
+            {gettext("Verify the domain before enabling SSO.")}
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <%!-- ── Config form ────────────────────────────────────────────────── --%>
+    <section aria-label="SSO configuration">
+      <h2 class="ds-h3 mb-4">{gettext("Identity provider")}</h2>
+
+      <form id="sso-config-form" phx-submit="configure" class="card card-border bg-base-100">
+        <div class="card-body space-y-4">
+          <%!-- Protocol picker --%>
+          <div class="form-control">
+            <span class="label-text font-sans font-semibold mb-1">{gettext("Protocol")}</span>
+            <div class="join">
+              <label class="join-item btn btn-sm font-sans normal-case">
+                <input
+                  type="radio"
+                  name="config[protocol]"
+                  value="oidc"
+                  class="sr-only"
+                  id="protocol-oidc"
+                  checked={@selected_protocol == :oidc}
+                  phx-click="select_protocol"
+                  phx-value-protocol="oidc"
+                />
+                <span class={@selected_protocol == :oidc && "text-primary font-semibold"}>
+                  OIDC
+                </span>
+              </label>
+              <label class="join-item btn btn-sm font-sans normal-case">
+                <input
+                  type="radio"
+                  name="config[protocol]"
+                  value="saml"
+                  class="sr-only"
+                  id="protocol-saml"
+                  checked={@selected_protocol == :saml}
+                  phx-click="select_protocol"
+                  phx-value-protocol="saml"
+                />
+                <span class={@selected_protocol == :saml && "text-primary font-semibold"}>
+                  SAML
+                </span>
+              </label>
+            </div>
+            <p
+              :for={err <- field_errors(@form_errors, :protocol)}
+              class="mt-1 font-sans text-xs text-error"
+            >
+              {err}
+            </p>
+          </div>
+
+          <%!-- Email domain --%>
+          <.sso_field
+            id="config-email-domain"
+            name="config[email_domain]"
+            label={gettext("Email domain")}
+            value={@config && @config.email_domain}
+            placeholder="acme.test"
+            errors={field_errors(@form_errors, :email_domain)}
+          />
+
+          <%!-- OIDC fields --%>
+          <div :if={@selected_protocol == :oidc} id="oidc-fields" class="space-y-4">
+            <.sso_field
+              id="config-oidc-tenant-id"
+              name="config[oidc_tenant_id]"
+              label={gettext("Tenant id")}
+              value={@config && @config.oidc_tenant_id}
+            />
+            <.sso_field
+              id="config-oidc-client-id"
+              name="config[oidc_client_id]"
+              label={gettext("Client id")}
+              value={@config && @config.oidc_client_id}
+            />
+            <.sso_field
+              id="config-oidc-client-secret"
+              name="config[oidc_client_secret]"
+              label={gettext("Client secret")}
+              type="password"
+              placeholder="••••••••"
+              hint={
+                (@config && secret_set?(@config.oidc_client_secret) &&
+                   gettext("Currently set — leave blank to keep")) || nil
+              }
+            />
+          </div>
+
+          <%!-- SAML fields --%>
+          <div :if={@selected_protocol == :saml} id="saml-fields" class="space-y-4">
+            <.sso_field
+              id="config-saml-idp-entity-id"
+              name="config[saml_idp_entity_id]"
+              label={gettext("IdP entity id")}
+              value={@config && @config.saml_idp_entity_id}
+            />
+            <.sso_field
+              id="config-saml-idp-sso-url"
+              name="config[saml_idp_sso_url]"
+              label={gettext("IdP SSO URL")}
+              value={@config && @config.saml_idp_sso_url}
+            />
+            <.sso_field
+              id="config-saml-idp-cert"
+              name="config[saml_idp_cert]"
+              label={gettext("IdP certificate")}
+              type="textarea"
+              rows="3"
+              placeholder="-----BEGIN CERTIFICATE-----"
+              input_class="textarea textarea-bordered w-full font-mono text-xs"
+              hint={
+                (@config && secret_set?(@config.saml_idp_cert) &&
+                   gettext("Currently set — leave blank to keep")) || nil
+              }
+            />
+            <.sso_field
+              id="config-saml-sp-entity-id"
+              name="config[saml_sp_entity_id]"
+              label={gettext("SP entity id")}
+              value={@config && @config.saml_sp_entity_id}
+              hint={gettext("Optional")}
+            />
+          </div>
+
+          <div class="card-actions justify-end pt-2">
+            <button
+              id="sso-save-config"
+              type="submit"
+              class="btn btn-primary font-sans font-semibold"
+            >
+              {gettext("Save configuration")}
+            </button>
+          </div>
+        </div>
+      </form>
+    </section>
+  </div>
+</.app>

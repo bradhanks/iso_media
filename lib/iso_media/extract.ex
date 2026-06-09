@@ -9,8 +9,6 @@ defmodule ISOMedia.Extract do
   alias ISOMedia.{Box, BoxPath, Layout, MdatSource, SampleTable}
   alias ISOMedia.Boxes.{ChunkOffset, TrackHeader}
 
-  @uint32_max 0xFFFFFFFF
-
   @doc "List every track's `track_id`, in document order."
   def track_ids(boxes) do
     boxes
@@ -26,9 +24,9 @@ defmodule ISOMedia.Extract do
   end
 
   defp traks(boxes) do
-    case Enum.find(boxes, &(&1.type == "moov")) do
+    case Box.child(boxes, "moov") do
       nil -> []
-      moov -> Enum.filter(moov.children, &(&1.type == "trak"))
+      moov -> Box.children(moov.children, "trak")
     end
   end
 
@@ -44,7 +42,7 @@ defmodule ISOMedia.Extract do
   """
   def extract_track(boxes, track_id) do
     trak = find_trak(boxes, track_id) || raise ArgumentError, "no track with track_id #{track_id}"
-    ftyp = Enum.find(boxes, &(&1.type == "ftyp")) || raise ArgumentError, "file has no ftyp"
+    ftyp = Box.child(boxes, "ftyp") || raise ArgumentError, "file has no ftyp"
     mdats = MdatSource.collect(boxes)
 
     runs =
@@ -68,9 +66,9 @@ defmodule ISOMedia.Extract do
       Layout.box_size(ftyp) + Layout.box_size(rebuild_moov(boxes, trak, offset_box(:co64, zeros))) +
         16 + total
 
-    co_kind = if co64_bound > @uint32_max, do: :co64, else: :stco
-    mdat_mode = if 8 + total > @uint32_max, do: :large, else: :compact
-    mdat_header = if mdat_mode == :large, do: 16, else: 8
+    co_kind = ChunkOffset.kind_for(co64_bound)
+    mdat_mode = Box.size_mode_for_body(total)
+    mdat_header = Box.header_base(mdat_mode)
 
     # Size moov with dummy offsets of the chosen kind, then place real offsets.
     moov0 = rebuild_moov(boxes, trak, offset_box(co_kind, zeros))
@@ -91,7 +89,7 @@ defmodule ISOMedia.Extract do
   end
 
   defp rebuild_moov(boxes, trak, new_offset_box) do
-    moov = Enum.find(boxes, &(&1.type == "moov"))
+    moov = Box.child(boxes, "moov")
     kept = replace_offset_box(trak, new_offset_box)
     keep_id = track_id_of(trak)
 

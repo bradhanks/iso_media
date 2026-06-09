@@ -67,7 +67,7 @@ defmodule ISOMedia.Boxes.TrackFragmentHeader do
 
     %Box{
       type: "tfhd",
-      data: IO.iodata_to_binary(FullBox.encode(0, <<@default_base_is_moof::24>>, body))
+      data: FullBox.encode_data(0, <<@default_base_is_moof::24>>, body)
     }
   end
 

@@ -3,7 +3,9 @@ defmodule ISOMedia.Serializer do
 
   alias ISOMedia.Box
   alias ISOMedia.FileSlice
+  alias ISOMedia.IO.Raw
   alias ISOMedia.Layout
+  alias ISOMedia.Payload
 
   @doc "Serialize a box or list of boxes to a binary (materializes any FileSlice payloads)."
   def serialize(boxes), do: boxes |> materialize() |> to_iodata() |> IO.iodata_to_binary()
@@ -12,27 +14,12 @@ defmodule ISOMedia.Serializer do
   def materialize(%Box{} = box), do: materialize_box(box)
   def materialize(boxes) when is_list(boxes), do: Enum.map(boxes, &materialize_box/1)
 
-  defp materialize_box(%Box{data: %FileSlice{} = slice} = box),
-    do: %{box | data: FileSlice.read(slice)}
-
-  defp materialize_box(%Box{data: parts} = box) when is_list(parts) do
-    %{box | data: flatten_segments(parts)}
-  end
-
   defp materialize_box(%Box{data: nil, children: children} = box),
     do: %{box | children: Enum.map(children, &materialize_box/1)}
 
-  defp materialize_box(%Box{} = box), do: box
+  defp materialize_box(%Box{data: data} = box) when is_binary(data), do: box
 
-  defp flatten_segments(parts) do
-    parts
-    |> Enum.map(fn
-      %FileSlice{} = s -> FileSlice.read(s)
-      bin when is_binary(bin) -> bin
-      nested when is_list(nested) -> flatten_segments(nested)
-    end)
-    |> IO.iodata_to_binary()
-  end
+  defp materialize_box(%Box{data: data} = box), do: %{box | data: Payload.read(data)}
 
   @doc "Serialize a box or list of boxes to iodata (no full-binary materialization)."
   def to_iodata(%Box{} = box), do: to_iodata([box])
@@ -77,8 +64,18 @@ defmodule ISOMedia.Serializer do
     encode_header(box, body_len) <> u
   end
 
-  # compact: total size = 8 (header) + body
+  # compact: total size = 8 (header) + body. Refuse to emit a truncated 32-bit size
+  # field — a `:compact` box whose body overflows must be built as `:large` instead
+  # (`<<x::32>>` would silently wrap, corrupting the file). The check reuses the one
+  # compact↔large decision in `Box`, so it can never disagree with how builders stamp
+  # synthesized boxes.
   defp encode_header(%Box{type: type, size_mode: :compact}, body_len) do
+    if Box.size_mode_for_body(body_len) != :compact do
+      raise ArgumentError,
+            "box #{inspect(type)} has a #{body_len}-byte body that overflows the 32-bit " <>
+              "compact size field; build it with size_mode: :large (largesize)"
+    end
+
     <<8 + body_len::32, type::binary>>
   end
 
@@ -113,35 +110,13 @@ defmodule ISOMedia.Serializer do
     uuid = box.uuid || <<>>
     # body = uuid ++ payload; body length is derivable from Layout without reading.
     body_len = byte_size(uuid) + (Layout.box_size(box) - Layout.header_size(box))
-    write!(io, encode_header(box, body_len))
-    write!(io, uuid)
+    Raw.write!(io, encode_header(box, body_len), "Serializer.stream")
+    Raw.write!(io, uuid, "Serializer.stream")
     stream_payload(box, io, chunk_size)
-  end
-
-  defp stream_payload(%Box{data: %FileSlice{} = slice}, io, chunk),
-    do: FileSlice.stream(slice, io, chunk)
-
-  defp stream_payload(%Box{data: parts}, io, chunk) when is_list(parts) do
-    stream_segments(parts, io, chunk)
   end
 
   defp stream_payload(%Box{data: nil, children: children}, io, chunk),
     do: Enum.each(children, &stream_box(&1, io, chunk))
 
-  defp stream_payload(%Box{data: data}, io, _chunk) when is_binary(data), do: write!(io, data)
-
-  defp stream_segments(parts, io, chunk) do
-    Enum.each(parts, fn
-      %FileSlice{} = s -> FileSlice.stream(s, io, chunk)
-      bin when is_binary(bin) -> write!(io, bin)
-      nested when is_list(nested) -> stream_segments(nested, io, chunk)
-    end)
-  end
-
-  defp write!(io, data) do
-    case :file.write(io, data) do
-      :ok -> :ok
-      {:error, reason} -> raise "Serializer.stream: write failed: #{:file.format_error(reason)}"
-    end
-  end
+  defp stream_payload(%Box{data: data}, io, chunk), do: Payload.stream(data, io, chunk)
 end

@@ -10,6 +10,7 @@ defmodule ISOMedia.LazyParser do
   """
 
   alias ISOMedia.{Box, FileSlice, Parser, Registry}
+  alias ISOMedia.IO.Raw
 
   @default_threshold 1_048_576
 
@@ -43,7 +44,7 @@ defmodule ISOMedia.LazyParser do
   end
 
   defp parse_one(io, path, pos, file_size, threshold, heuristic) do
-    <<size::32, type::binary-size(4)>> = pread!(io, pos, 8)
+    <<size::32, type::binary-size(4)>> = Raw.pread!(io, pos, 8, "LazyParser")
     {size_mode, header_len, total_size} = resolve_size(io, pos, size, file_size)
     uuid_len = if type == "uuid", do: 16, else: 0
     payload_length = total_size - header_len - uuid_len
@@ -76,7 +77,7 @@ defmodule ISOMedia.LazyParser do
   # Re-parse a fully-read box's bytes through the in-memory parser so its structure
   # and absolute offsets are identical to the eager path.
   defp reparse(io, pos, total_size, heuristic) do
-    full = pread!(io, pos, total_size)
+    full = Raw.pread!(io, pos, total_size, "LazyParser")
     {:ok, [box]} = Parser.parse(full, offset: pos, heuristic: heuristic)
     box
   end
@@ -92,7 +93,7 @@ defmodule ISOMedia.LazyParser do
          payload_length,
          total_size
        ) do
-    uuid = if uuid_len == 16, do: pread!(io, pos + header_len, 16), else: nil
+    uuid = if uuid_len == 16, do: Raw.pread!(io, pos + header_len, 16, "LazyParser"), else: nil
     payload_offset = pos + header_len + uuid_len
 
     %Box{
@@ -109,25 +110,9 @@ defmodule ISOMedia.LazyParser do
   defp resolve_size(_io, pos, 0, file_size), do: {:eof, 8, file_size - pos}
 
   defp resolve_size(io, pos, 1, _file_size) do
-    <<largesize::64>> = pread!(io, pos + 8, 8)
+    <<largesize::64>> = Raw.pread!(io, pos + 8, 8, "LazyParser")
     {:large, 16, largesize}
   end
 
   defp resolve_size(_io, _pos, size, _file_size), do: {:compact, 8, size}
-
-  defp pread!(io, offset, length) do
-    case :file.pread(io, offset, length) do
-      {:ok, data} when byte_size(data) == length ->
-        data
-
-      {:ok, data} ->
-        raise "LazyParser: short read at #{offset}: wanted #{length}, got #{byte_size(data)}"
-
-      :eof ->
-        raise "LazyParser: unexpected EOF at #{offset} (wanted #{length} bytes)"
-
-      {:error, reason} ->
-        raise "LazyParser: #{:file.format_error(reason)} at #{offset}"
-    end
-  end
 end

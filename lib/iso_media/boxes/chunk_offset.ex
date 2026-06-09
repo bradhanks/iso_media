@@ -6,6 +6,8 @@ defmodule ISOMedia.Boxes.ChunkOffset do
 
   alias ISOMedia.{Box, FullBox}
 
+  @uint32_max 0xFFFFFFFF
+
   defstruct [:kind, :version, :flags, :offsets]
 
   @type t :: %__MODULE__{
@@ -14,6 +16,16 @@ defmodule ISOMedia.Boxes.ChunkOffset do
           flags: <<_::24>>,
           offsets: [non_neg_integer()]
         }
+
+  @doc """
+  Which chunk-offset table addresses a maximum offset of `max`: `:co64` once an offset
+  would exceed the 32-bit `stco` field (2^32 − 1), otherwise `:stco`. The one home for
+  the stco↔co64 choice, used by the progressive builders (`Trim`/`Extract`/`ProgressiveBuild`).
+  """
+  @spec kind_for(non_neg_integer()) :: :stco | :co64
+  def kind_for(max) when is_integer(max) and max >= 0 do
+    if max > @uint32_max, do: :co64, else: :stco
+  end
 
   @doc "Decode a `stco`/`co64` box into a `%ChunkOffset{}`."
   def decode(%Box{type: "stco", data: data}), do: do_decode(:stco, data, 32)
@@ -32,6 +44,6 @@ defmodule ISOMedia.Boxes.ChunkOffset do
   defp do_encode(%__MODULE__{version: v, flags: f, offsets: offs}, type, width) do
     entries = for o <- offs, into: <<>>, do: <<o::size(width)>>
     body = [<<length(offs)::32>>, entries]
-    %Box{type: type, data: IO.iodata_to_binary(FullBox.encode(v, f, body))}
+    %Box{type: type, data: FullBox.encode_data(v, f, body)}
   end
 end
