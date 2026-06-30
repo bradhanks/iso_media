@@ -245,6 +245,20 @@ defmodule ISOMedia.BoxTest do
     end
   end
 
+  describe "replace_data/2" do
+    test "accepts a binary, a FileSlice, or a segment list, dropping children" do
+      container = Box.container("mdat", [Box.leaf("x", <<>>)])
+
+      assert Box.replace_data(container, <<1, 2>>) == %Box{type: "mdat", data: <<1, 2>>, children: []}
+
+      fs = %ISOMedia.FileSlice{path: "x", offset: 0, length: 4}
+      assert Box.replace_data(container, fs) == %Box{type: "mdat", data: fs, children: []}
+
+      segs = [<<1>>, fs]
+      assert Box.replace_data(container, segs) == %Box{type: "mdat", data: segs, children: []}
+    end
+  end
+
   describe "size encoding helpers" do
     test "size_mode_for_body picks :compact until the 32-bit size field overflows" do
       assert Box.size_mode_for_body(0) == :compact

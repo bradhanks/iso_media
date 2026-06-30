@@ -211,9 +211,17 @@ defmodule ISOMedia.Box do
     pre ++ [box] ++ post
   end
 
-  @doc "Replace a box's payload, making it a leaf (drops any children)."
-  def replace_data(%__MODULE__{} = box, binary) when is_binary(binary) do
-    %{box | data: binary, children: []}
+  @doc """
+  Replace a box's payload, making it a leaf (drops any children). `data` may be any leaf
+  payload — a binary, an `ISOMedia.FileSlice`, or a segment list — so a bulk payload can be
+  swapped in by reference without materializing it.
+  """
+  def replace_data(%__MODULE__{} = box, %ISOMedia.FileSlice{} = data) do
+    %{box | data: data, children: []}
+  end
+
+  def replace_data(%__MODULE__{} = box, data) when is_binary(data) or is_list(data) do
+    %{box | data: data, children: []}
   end
 
   @doc """
